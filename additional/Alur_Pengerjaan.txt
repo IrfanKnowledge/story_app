@@ -1,0 +1,7 @@
+[Alur Pengerjaan]
+
+-Transformasi UI (Authentication Page, List Story Page, Add Story Page)
+-Penerapan Preferences untuk login
+-Penggunaan API untuk login
+-Penggunaan API untuk logout
+-Penggunaan API List Story Page
