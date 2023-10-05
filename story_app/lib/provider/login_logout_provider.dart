@@ -38,32 +38,21 @@ class LoginLogoutProvider extends ChangeNotifier {
         password: password,
       );
 
-      /// if error == true, _state = ResultState.error
-      if (loginWrap.error == true) {
-        _state = ResultState.error;
+      /// if token is empty, _state = ResultState.noData
+      if (loginWrap.loginResult!.token.isEmpty) {
+        _state = ResultState.noData;
         notifyListeners();
         _message = loginWrap.message;
-        print('loginWrap.error == true, $_message');
+        print('token is empty, ResultState.noData, $_message');
 
-
-      } else if (loginWrap.loginResult != null) {
-
-        /// if token is empty, _state = ResultState.noData
-        if (loginWrap.loginResult!.token.isEmpty) {
-          _state = ResultState.noData;
-          notifyListeners();
-          _message = loginWrap.message;
-          print('token is empty, ResultState.noData, $_message');
-
-          /// if token is not empty, _state = ResultState.hasData
-        } else {
-          _state = ResultState.hasData;
-          notifyListeners();
-          _loginWrap = loginWrap;
-          print('token not empty, ResultState.hasData, $_message');
-          print(loginWrap.loginResult!.name);
-          print(loginWrap.loginResult!.token);
-        }
+        /// if token is not empty, _state = ResultState.hasData
+      } else {
+        _state = ResultState.hasData;
+        notifyListeners();
+        _loginWrap = loginWrap;
+        print('token not empty, ResultState.hasData, $_message');
+        print(loginWrap.loginResult!.name);
+        print(loginWrap.loginResult!.token);
       }
 
       /// if no internet connection, _state = ResultState.error

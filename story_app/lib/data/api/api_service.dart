@@ -29,10 +29,10 @@ class ApiService {
     var statusCode = response.statusCode;
     final loginWrap = LoginWrap.fromRawJson(response.body);
 
-    if (statusCode == 200 || statusCode == 401) {
+    if (statusCode == 200) {
       return loginWrap;
     } else {
-      throw Exception(loginWrap.message);
+      throw loginWrap.message;
     }
   }
 }
