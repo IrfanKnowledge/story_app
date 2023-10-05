@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/data/model/login_model.dart';
+import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/login_logout_provider.dart';
+import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 
@@ -19,29 +21,44 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: _buildChangeNotifierProvider(),
+    return _buildMultiProvider();
+  }
+
+  Widget _buildMultiProvider() {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => LoginLogoutProvider(
+            apiService: ApiService(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => PreferencesProvider(
+            preferencesHelper: PreferencesHelper(
+              sharedPreferences: SharedPreferences.getInstance(),
+            ),
+          ),
+        ),
+      ],
+      child: _buildScaffold(),
     );
   }
 
-  Widget _buildChangeNotifierProvider() {
-    return ChangeNotifierProvider(
-      create: (_) => LoginLogoutProvider(
-        apiService: ApiService(),
-      ),
-      child: _buildLoginProgress(),
+  Widget _buildScaffold() {
+    return Scaffold(
+      body: _buildLoginProgress(),
     );
   }
 
   Widget _buildLoginProgress() {
     return Consumer<LoginLogoutProvider>(
-      builder: (context, provider, _) {
-        if (provider.state == ResultState.loading) {
+      builder: (context, providerLogin, __) {
+        if (providerLogin.state == ResultState.loading) {
           print('state loading');
           return const Center(
             child: CircularProgressIndicator(),
           );
-        } else if (provider.state == ResultState.hasData) {
+        } else if (providerLogin.state == ResultState.hasData) {
           print('state has data');
 
           /// using FutureBuilder.future to do automatic navigation,
@@ -49,7 +66,11 @@ class _LoginPageState extends State<LoginPage> {
           /// Navigator.push not return a Widget(),
           /// that is why Navigator.push almost always used inside Button.onPress: () {} (no need to return a Widget())
           return FutureBuilder(
-            future: _autoNavigate(context),
+            future: _autoNavigate(
+              context,
+              providerLogin.loginWrap.loginResult!
+                  .token, // use '!' because it's 100% not null
+            ),
             builder: (_, __) {
               return const Center(
                 child: CircularProgressIndicator(),
@@ -65,10 +86,18 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   /// automatic navigate if [_buildLoginProgress] == ResultState.hasData
-  Future<String> _autoNavigate(BuildContext context) async {
+  Future<String> _autoNavigate(
+    BuildContext context,
+    String token,
+  ) async {
     await Future.delayed(
       const Duration(seconds: 1),
       () {
+        var providerPrefs =
+            Provider.of<PreferencesProvider>(context, listen: false);
+        providerPrefs.setLoginStatus(true);
+        providerPrefs.setToken(token);
+
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(
@@ -90,7 +119,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildContainer() {
-    _controllerEmail.text = 'NPC002@gmail.com';
+    _controllerEmail.text = 'NPC001@gmail.com';
     _controllerPassword.text = 'npc00001';
 
     return Consumer<LoginLogoutProvider>(
@@ -129,13 +158,16 @@ class _LoginPageState extends State<LoginPage> {
               ),
               const SizedBox(height: 20),
               _buildTextField(
-                  labelText: 'Email',
-                  hintText: '...@....com',
-                  textEditingController: _controllerEmail),
+                labelText: 'Email',
+                hintText: '...@....com',
+                textEditingController: _controllerEmail,
+              ),
               const SizedBox(height: 10),
               _buildTextField(
-                  labelText: 'Password',
-                  textEditingController: _controllerPassword),
+                obscureText: true,
+                labelText: 'Password',
+                textEditingController: _controllerPassword,
+              ),
               const SizedBox(height: 20),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
