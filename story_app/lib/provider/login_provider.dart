@@ -6,10 +6,10 @@ import 'package:story_app/data/model/login_model.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/utils/string_helper.dart';
 
-class LoginLogoutProvider extends ChangeNotifier {
+class LoginProvider extends ChangeNotifier {
   final ApiService apiService;
 
-  LoginLogoutProvider({required this.apiService})
+  LoginProvider({required this.apiService})
       : _state = ResultState.notStarted;
 
   late LoginWrap _loginWrap;

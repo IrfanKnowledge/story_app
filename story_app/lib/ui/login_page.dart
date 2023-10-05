@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
-import 'package:story_app/provider/login_logout_provider.dart';
+import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
@@ -28,7 +28,7 @@ class _LoginPageState extends State<LoginPage> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => LoginLogoutProvider(
+          create: (_) => LoginProvider(
             apiService: ApiService(),
           ),
         ),
@@ -51,7 +51,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Widget _buildLoginProgress() {
-    return Consumer<LoginLogoutProvider>(
+    return Consumer<LoginProvider>(
       builder: (context, providerLogin, __) {
         if (providerLogin.state == ResultState.loading) {
           print('state loading');
@@ -122,7 +122,7 @@ class _LoginPageState extends State<LoginPage> {
     _controllerEmail.text = 'NPC001@gmail.com';
     _controllerPassword.text = 'npc00001';
 
-    return Consumer<LoginLogoutProvider>(
+    return Consumer<LoginProvider>(
       builder: (context, provider, _) {
         return Container(
           alignment: Alignment.topCenter,
