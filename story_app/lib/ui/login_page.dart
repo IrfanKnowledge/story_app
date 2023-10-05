@@ -20,23 +20,77 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: _buildChangeNotifierProvider(),
-        ),
-      ),
+      body: _buildChangeNotifierProvider(),
     );
   }
 
   Widget _buildChangeNotifierProvider() {
     return ChangeNotifierProvider(
-      create: (_) => LoginLogoutProvider(apiService: ApiService()),
-      child: _buildContainer(),
+      create: (_) => LoginLogoutProvider(
+        apiService: ApiService(),
+      ),
+      child: _buildLoginProgress(),
+    );
+  }
+
+  Widget _buildLoginProgress() {
+    return Consumer<LoginLogoutProvider>(
+      builder: (context, provider, _) {
+        if (provider.state == ResultState.loading) {
+          print('state loading');
+          return const Center(
+            child: CircularProgressIndicator(),
+          );
+        } else if (provider.state == ResultState.hasData) {
+          print('state has data');
+
+          /// using FutureBuilder.future to do automatic navigation,
+          /// because Navigator.push can't be used inside return Widget(),
+          /// Navigator.push not return a Widget(),
+          /// that is why Navigator.push almost always used inside Button.onPress: () {} (no need to return a Widget())
+          return FutureBuilder(
+            future: _autoNavigate(context),
+            builder: (_, __) {
+              return const Center(
+                child: CircularProgressIndicator(),
+              );
+            },
+          );
+        } else {
+          print('state else...');
+          return _buildSafeArea();
+        }
+      },
+    );
+  }
+
+  /// automatic navigate if [_buildLoginProgress] == ResultState.hasData
+  Future<String> _autoNavigate(BuildContext context) async {
+    await Future.delayed(
+      const Duration(seconds: 1),
+      () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ListStoryPage(),
+          ),
+        );
+      },
+    );
+
+    return 'loading...';
+  }
+
+  SafeArea _buildSafeArea() {
+    return SafeArea(
+      child: SingleChildScrollView(
+        child: _buildContainer(),
+      ),
     );
   }
 
   Widget _buildContainer() {
-    _controllerEmail.text = 'NPC001@gmail.com';
+    _controllerEmail.text = 'NPC002@gmail.com';
     _controllerPassword.text = 'npc00001';
 
     return Consumer<LoginLogoutProvider>(
@@ -96,32 +150,22 @@ class _LoginPageState extends State<LoginPage> {
                     password: _controllerPassword.text,
                   );
 
-                  // SnackBar? snackBar;
-                  // Duration duration = const Duration(seconds: 1);
-                  //
-                  // if (provider.state == ResultState.loading) {
-                  //   snackBar = const SnackBar(
-                  //     content: Text('Loading...'),
-                  //     duration: Duration(seconds: 2),
-                  //   );
-                  // }
+                  SnackBar? snackBar;
+                  Duration duration = const Duration(seconds: 1);
 
-                  // if (provider.state == ResultState.hasData) {
-                  //   Navigator.pushReplacement(
-                  //     context,
-                  //     MaterialPageRoute(
-                  //         builder: (context) => const ListStoryPage()),
-                  //   );
-                  // }
+                  if (provider.state == ResultState.noData || provider.state == ResultState.error) {
+                    snackBar = SnackBar(
+                      content: Text(provider.message),
+                      duration: duration,
+                    );
+                  }
 
-                  // if (snackBar != null) {
-                  //   ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  // }
+                  if (snackBar != null) {
+                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
+                  }
                 },
                 child: const Text('Sign In'),
               ),
-              const SizedBox(height: 20),
-              LoginProgress(),
             ],
           ),
         );
@@ -144,29 +188,6 @@ class _LoginPageState extends State<LoginPage> {
         filled: true,
         hintText: hintText,
       ),
-    );
-  }
-
-  Widget LoginProgress() {
-    return Consumer<LoginLogoutProvider>(
-      builder: (context, provider, child) {
-        if (provider.state == ResultState.loading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        } else if (provider.state == ResultState.hasData) {
-          await Future.delayed(Duration(seconds: 1)).then((value) => null)
-        } else {
-          return const SizedBox(height: 0);
-        }
-      },
-    );
-  }
-
-  Widget FailedToLogin({required String message}) {
-    return SnackBar(
-      content: Text(message),
-      duration: const Duration(seconds: 1),
     );
   }
 

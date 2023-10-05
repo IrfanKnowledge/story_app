@@ -38,14 +38,14 @@ class LoginLogoutProvider extends ChangeNotifier {
 
       /// if result is empty then...
       if (loginWrap.loginResult.token.isEmpty) {
-        print('token is empty');
+        print('token is empty, ResultState.noData');
         _state = ResultState.noData;
         notifyListeners();
         _message = StringHelper.emptyData;
 
         /// if not empty then...
       } else {
-        print('token not empty');
+        print('token not empty, ResultState.hasData');
         print(loginWrap.loginResult.name);
         print(loginWrap.loginResult.token);
         _state = ResultState.hasData;
@@ -55,12 +55,14 @@ class LoginLogoutProvider extends ChangeNotifier {
 
       /// if no internet connection then...
     } on SocketException {
+      print('ResultState.error: $_message');
       _state = ResultState.error;
       notifyListeners();
       _message = StringHelper.noInternetConnection;
 
       /// if other error show up then...
     } catch (e) {
+      print('ResultState.error: $e');
       _state = ResultState.error;
       notifyListeners();
       _message = StringHelper.failedToLoadData;
