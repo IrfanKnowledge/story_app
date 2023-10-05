@@ -25,14 +25,14 @@ class ApiService {
         'password': password,
       }),
     );
-    if (response.statusCode == 200) {
-      final loginWrap = LoginWrap.fromRawJson(response.body);
+
+    var statusCode = response.statusCode;
+    final loginWrap = LoginWrap.fromRawJson(response.body);
+
+    if (statusCode == 200 || statusCode == 401) {
       return loginWrap;
     } else {
-      throw _postException('postLogin');
+      throw Exception(loginWrap.message);
     }
   }
-
-  Exception _postException(String processName) =>
-      Exception('Failed to do $processName');
 }

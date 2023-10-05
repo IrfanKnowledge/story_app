@@ -22,13 +22,15 @@ class LoginLogoutProvider extends ChangeNotifier {
 
   String get message => _message;
 
-  Future<void> postLogin({
+  void postLogin({
     required String email,
     required String password,
   }) async {
     print('before try');
     try {
-      print('after try');
+      print('inside try');
+
+      /// initiate process, _state = ResultState.loading
       _state = ResultState.loading;
       notifyListeners();
       final loginWrap = await apiService.postLogin(
@@ -36,36 +38,47 @@ class LoginLogoutProvider extends ChangeNotifier {
         password: password,
       );
 
-      /// if result is empty then...
-      if (loginWrap.loginResult.token.isEmpty) {
-        print('token is empty, ResultState.noData');
-        _state = ResultState.noData;
+      /// if error == true, _state = ResultState.error
+      if (loginWrap.error == true) {
+        _state = ResultState.error;
         notifyListeners();
-        _message = StringHelper.emptyData;
+        _message = loginWrap.message;
+        print('loginWrap.error == true, $_message');
 
-        /// if not empty then...
-      } else {
-        print('token not empty, ResultState.hasData');
-        print(loginWrap.loginResult.name);
-        print(loginWrap.loginResult.token);
-        _state = ResultState.hasData;
-        notifyListeners();
-        _loginWrap = loginWrap;
+
+      } else if (loginWrap.loginResult != null) {
+
+        /// if token is empty, _state = ResultState.noData
+        if (loginWrap.loginResult!.token.isEmpty) {
+          _state = ResultState.noData;
+          notifyListeners();
+          _message = loginWrap.message;
+          print('token is empty, ResultState.noData, $_message');
+
+          /// if token is not empty, _state = ResultState.hasData
+        } else {
+          _state = ResultState.hasData;
+          notifyListeners();
+          _loginWrap = loginWrap;
+          print('token not empty, ResultState.hasData, $_message');
+          print(loginWrap.loginResult!.name);
+          print(loginWrap.loginResult!.token);
+        }
       }
 
-      /// if no internet connection then...
+      /// if no internet connection, _state = ResultState.error
     } on SocketException {
-      print('ResultState.error: $_message');
       _state = ResultState.error;
       notifyListeners();
       _message = StringHelper.noInternetConnection;
+      print('ResultState.error: $_message');
 
-      /// if other error show up then...
+      /// if other error show up, _state = ResultState.error
     } catch (e) {
-      print('ResultState.error: $e');
       _state = ResultState.error;
       notifyListeners();
-      _message = StringHelper.failedToLoadData;
+      _message = e.toString();
+      print('ResultState.error: $_message');
     }
   }
 }

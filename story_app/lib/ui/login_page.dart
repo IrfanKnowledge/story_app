@@ -149,22 +149,12 @@ class _LoginPageState extends State<LoginPage> {
                     email: _controllerEmail.text,
                     password: _controllerPassword.text,
                   );
-
-                  SnackBar? snackBar;
-                  Duration duration = const Duration(seconds: 1);
-
-                  if (provider.state == ResultState.noData || provider.state == ResultState.error) {
-                    snackBar = SnackBar(
-                      content: Text(provider.message),
-                      duration: duration,
-                    );
-                  }
-
-                  if (snackBar != null) {
-                    ScaffoldMessenger.of(context).showSnackBar(snackBar);
-                  }
                 },
                 child: const Text('Sign In'),
+              ),
+              FutureBuilder(
+                future: _snackBarLogin(provider.state, provider.message),
+                builder: (_, __) => const SizedBox(height: 0),
               ),
             ],
           ),
@@ -189,6 +179,29 @@ class _LoginPageState extends State<LoginPage> {
         hintText: hintText,
       ),
     );
+  }
+
+  /// show snackBar when [_buildLoginProgress] == ResultState.noData or ResultState.error
+  Future<String> _snackBarLogin(ResultState state, String message) async {
+    await Future.delayed(
+      const Duration(seconds: 1),
+      () {
+        SnackBar? snackBar;
+        Duration duration = const Duration(seconds: 1);
+
+        if (state == ResultState.noData || state == ResultState.error) {
+          snackBar = SnackBar(
+            content: Text(message),
+            duration: duration,
+          );
+        }
+
+        if (snackBar != null) {
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
+      },
+    );
+    return 'loading...';
   }
 
   /// hapus penggunaan memori yang sudah tidak digunakan ketika halaman ini tertutup
