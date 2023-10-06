@@ -1,17 +1,23 @@
 import 'package:flutter/material.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
+import 'package:story_app/utils/result_state_helper.dart';
 
 class PreferencesProvider extends ChangeNotifier {
   PreferencesHelper preferencesHelper;
 
   bool _isLogin = false;
+  String _token = '';
+  ResultState _state;
+
   bool get isLogin => _isLogin;
 
-  String _token = '';
   String get token => _token;
 
+  ResultState get state => _state;
+
   /// always check and get the current data from SharedPreferences when do instantiation
-  PreferencesProvider({required this.preferencesHelper}) {
+  PreferencesProvider({required this.preferencesHelper})
+      : _state = ResultState.notStarted {
     print('instance PrefProv');
     _getLoginStatus();
     _getToken();
@@ -34,7 +40,16 @@ class PreferencesProvider extends ChangeNotifier {
 
   /// get token from SharedPreferences
   void _getToken() async {
+    _state = ResultState.loading;
+    notifyListeners();
     _token = await preferencesHelper.getToken;
+
+    if (_token.isEmpty) {
+      _state = ResultState.noData;
+    } else {
+      _state = ResultState.hasData;
+    }
+
     notifyListeners();
     print('_getToken');
   }

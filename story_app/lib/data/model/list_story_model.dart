@@ -3,7 +3,7 @@ import 'dart:convert';
 class ListStoryWrap {
   final bool error;
   final String message;
-  final List<ListStory> listStory;
+  final List<ListStory>? listStory;
 
   ListStoryWrap({
     required this.error,
@@ -11,21 +11,41 @@ class ListStoryWrap {
     required this.listStory,
   });
 
-  factory ListStoryWrap.fromRawJson(String str) => ListStoryWrap.fromJson(json.decode(str));
+  factory ListStoryWrap.fromRawJson(String str) =>
+      ListStoryWrap.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
-  factory ListStoryWrap.fromJson(Map<String, dynamic> json) => ListStoryWrap(
-    error: json["error"],
-    message: json["message"],
-    listStory: List<ListStory>.from(json["listStory"].map((x) => ListStory.fromJson(x))),
-  );
+  factory ListStoryWrap.fromJson(Map<String, dynamic> json) {
+    List<ListStory>? listStory;
 
-  Map<String, dynamic> toJson() => {
-    "error": error,
-    "message": message,
-    "listStory": List<dynamic>.from(listStory.map((x) => x.toJson())),
-  };
+    if (json.containsKey("listStory")) {
+      listStory = List<ListStory>.from(json["listStory"].map((x) => ListStory.fromJson(x)));
+    } else {
+      listStory = null;
+    }
+
+    return ListStoryWrap(
+        error: json["error"],
+        message: json["message"],
+        listStory: listStory,
+      );
+  }
+
+  Map<String, dynamic> toJson() {
+    if (listStory == null) {
+      return {
+        "error": error,
+        "message": message,
+      };
+    } else {
+      return {
+        "error": error,
+        "message": message,
+        "listStory": List<dynamic>.from(listStory!.map((x) => x.toJson())),
+      };
+    }
+  }
 }
 
 class ListStory {
@@ -47,27 +67,28 @@ class ListStory {
     required this.lon,
   });
 
-  factory ListStory.fromRawJson(String str) => ListStory.fromJson(json.decode(str));
+  factory ListStory.fromRawJson(String str) =>
+      ListStory.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory ListStory.fromJson(Map<String, dynamic> json) => ListStory(
-    id: json["id"],
-    name: json["name"],
-    description: json["description"],
-    photoUrl: json["photoUrl"],
-    createdAt: DateTime.parse(json["createdAt"]),
-    lat: json["lat"]?.toDouble(),
-    lon: json["lon"]?.toDouble(),
-  );
+        id: json["id"],
+        name: json["name"],
+        description: json["description"],
+        photoUrl: json["photoUrl"],
+        createdAt: DateTime.parse(json["createdAt"]),
+        lat: json["lat"]?.toDouble(),
+        lon: json["lon"]?.toDouble(),
+      );
 
   Map<String, dynamic> toJson() => {
-    "id": id,
-    "name": name,
-    "description": description,
-    "photoUrl": photoUrl,
-    "createdAt": createdAt.toIso8601String(),
-    "lat": lat,
-    "lon": lon,
-  };
+        "id": id,
+        "name": name,
+        "description": description,
+        "photoUrl": photoUrl,
+        "createdAt": createdAt.toIso8601String(),
+        "lat": lat,
+        "lon": lon,
+      };
 }

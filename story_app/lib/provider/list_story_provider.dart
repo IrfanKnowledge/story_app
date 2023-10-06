@@ -1,56 +1,47 @@
 import 'dart:io';
 
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/data/model/login_model.dart';
+import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/utils/string_helper.dart';
 
-class LoginProvider extends ChangeNotifier {
+class ListStoryProvider extends ChangeNotifier {
   final ApiService apiService;
 
-  LoginProvider({required this.apiService}) : _state = ResultState.notStarted;
+  ListStoryProvider({required this.apiService})
+      : _state = ResultState.notStarted;
 
-  late LoginWrap _loginWrap;
+  late ListStoryWrap _listStoryWrap;
   ResultState _state;
   String _message = '';
 
-  LoginWrap get loginWrap => _loginWrap;
-
-  ResultState get state => _state;
+  ListStoryWrap get listStoryWrap => _listStoryWrap;
 
   String get message => _message;
 
-  void postLogin({
-    required String email,
-    required String password,
-  }) async {
+  ResultState get state => _state;
+
+  void fetchAllStories({required String token}) async {
     try {
-      print('inside try');
+      print('ResultState.loading');
 
       /// initiate process, _state = ResultState.loading
       _state = ResultState.loading;
       notifyListeners();
-      final loginWrap = await apiService.postLogin(
-        email: email,
-        password: password,
-      );
+      final listStoryWrap = await apiService.getAllStories(token: token);
 
-      /// if token is empty, _state = ResultState.noData
-      if (loginWrap.loginResult!.token.isEmpty) {
+      /// if listStory is empty, _state = ResultState.noData
+      if (listStoryWrap.listStory!.isEmpty) {
         _state = ResultState.noData;
         notifyListeners();
-        _message = loginWrap.message;
-        print('token is empty, ResultState.noData, $_message');
+        _message = listStoryWrap.message;
 
-        /// if token is not empty, _state = ResultState.hasData
+        /// if listStory is notEmpty, _state = ResultState.hasData
       } else {
         _state = ResultState.hasData;
         notifyListeners();
-        _loginWrap = loginWrap;
-        print('token not empty, ResultState.hasData, $_message');
-        print(loginWrap.loginResult!.name);
-        print(loginWrap.loginResult!.token);
+        _listStoryWrap = listStoryWrap;
       }
 
       /// if no internet connection, _state = ResultState.error
