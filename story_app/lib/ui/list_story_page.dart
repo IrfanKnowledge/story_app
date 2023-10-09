@@ -39,75 +39,9 @@ class ListStoryPage extends StatelessWidget {
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _getTokenFromPreferences(),
+      body: _getToken(),
     );
   }
-
-  Widget _getTokenFromPreferences() {
-    return Consumer<PreferencesProvider>(
-      builder: (context, providerPref, _) {
-
-        /// if state is loading (fetch isLogin from SharedPreference),
-        /// show loading
-        if (providerPref.stateIsLogin == ResultState.loading) {
-          return _buildLoading();
-
-          /// if isLogin is true
-        } else if (providerPref.isLogin) {
-
-          /// if state is loading (fetch token from SharedPreference),
-          /// show loading
-          if (providerPref.stateToken == ResultState.loading) {
-            return _buildLoading();
-
-            /// if token is not empty, show the data
-          } else if (providerPref.stateToken == ResultState.hasData) {
-            return _text(providerPref);
-
-            /// if token is empty, show error message
-          } else {
-            return _buildError(providerPref.messageToken);
-          }
-
-          /// if isLogin is not true, show error message
-        } else {
-          return _buildError(providerPref.messsageIsLogin);
-        }
-      },
-    );
-  }
-
-  Widget _getStories() {
-    return Consumer<ListStoryProvider>(
-      builder: (context, provListStory, _) {
-        if (provListStory.state == ResultState.loading) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        } else {
-          print('success');
-          return Center(
-            child: Text(provListStory.listStoryWrap.message),
-          );
-        }
-      },
-    );
-  }
-
-  Widget _buildLoading() {
-    return const Center(
-      child: CircularProgressIndicator(),
-    );
-  }
-
-  Widget _buildError(String description) {
-    return Center(
-      child: Text(description),
-    );
-  }
-
-  Text _text(PreferencesProvider providerPref) => Text(
-      'Login Status = ${providerPref.isLogin}, token = ${providerPref.token}');
 
   AppBar _buildAppBar(BuildContext context) {
     return AppBar(
@@ -131,7 +65,7 @@ class ListStoryPage extends StatelessWidget {
         IconButton(
           onPressed: () {
             var providerPref =
-                Provider.of<PreferencesProvider>(context, listen: false);
+            Provider.of<PreferencesProvider>(context, listen: false);
             providerPref.setLoginStatus(false);
             providerPref.removeToken();
 
@@ -148,6 +82,124 @@ class ListStoryPage extends StatelessWidget {
       ],
     );
   }
+
+  /// get token from SharedPreference
+  /// used by [_buildScaffold]
+  Widget _getToken() {
+    return Consumer<PreferencesProvider>(
+      builder: (context, provPref, _) {
+        print('consumer PreferencesProvider');
+
+        /// if state is loading (fetch isLogin from SharedPreference),
+        /// show loading
+        if (provPref.stateIsLogin == ResultState.loading) {
+          return _buildLoading();
+
+          /// if isLogin is true
+        } else if (provPref.isLogin) {
+          /// if state is loading (fetch token from SharedPreference),
+          /// show loading
+          if (provPref.stateToken == ResultState.loading) {
+            return _buildLoading();
+
+            /// if token is not empty, use the token to get stories from API
+          } else if (provPref.stateToken == ResultState.hasData) {
+            return _getStories(provPref.token);
+
+            /// if token is empty, show error message
+          } else {
+            return _buildError(provPref.messageToken);
+          }
+
+          /// if isLogin is not true, show error message
+        } else {
+          return _buildError(provPref.messsageIsLogin);
+        }
+      },
+    );
+  }
+
+  /// show loading
+  Widget _buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  /// show error message
+  Widget _buildError(String description) {
+    return Center(
+      child: Text(description),
+    );
+  }
+
+  /// get stories, required token.
+  /// used by [_getToken]
+  Widget _getStories(String token) {
+    return Consumer<ListStoryProvider>(
+      builder: (context, provListStory, _) {
+        print('consumer ListStoryProvider');
+
+        /// if state is not started,
+        /// then fetch all stories from API,
+        if (provListStory.state == ResultState.notStarted) {
+          /// fetch all stories from API, required token.
+          /// using FutureBuilder to delay fetching process,
+          /// it's for avoiding error caused by calling setState() (notifyListeners()) and building process at the same time
+          return FutureBuilder(
+            future: _fetchAllStories(
+              provListStory: provListStory,
+              token: token,
+            ),
+            builder: (_, __) => _buildLoading(),
+          );
+
+          /// if state is loading (fetch all stories from API),
+          /// show loading
+        } else if (provListStory.state == ResultState.loading) {
+          return _buildLoading();
+
+          /// if state is has data, show the data
+        } else if (provListStory.state == ResultState.hasData) {
+          return Center(
+            child: Text(
+                '${provListStory.listStoryWrap.message}, ${provListStory.listStoryWrap.listStory}'),
+          );
+
+          /// if state is no data, show error message
+        } else if (provListStory.state == ResultState.noData) {
+          return _buildError(provListStory.message);
+
+          /// if state is error, show error message
+        } else if (provListStory.state == ResultState.error) {
+          return _buildError(provListStory.message);
+
+          /// if state is other else, show error message
+        } else {
+          return _buildError(provListStory.message);
+        }
+      },
+    );
+  }
+
+  /// fetchAllStories from API, with delay process.
+  /// used by [_getStories]
+  Future<String> _fetchAllStories({
+    required ListStoryProvider provListStory,
+    required String token,
+  }) async {
+    await Future.delayed(
+      const Duration(seconds: 1),
+      () {
+        provListStory.fetchAllStories(token: token);
+      },
+    );
+
+    return 'loading...';
+  }
+
+  Text _text(PreferencesProvider providerPref) => Text(
+      'Login Status = ${providerPref.isLogin}, token = ${providerPref.token}');
 
   Container _buildContainer() {
     return Container(
