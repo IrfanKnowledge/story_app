@@ -39,14 +39,40 @@ class ListStoryPage extends StatelessWidget {
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _getToken(),
+      body: _getTokenFromPreferences(),
     );
   }
 
-  Widget _getToken() {
+  Widget _getTokenFromPreferences() {
     return Consumer<PreferencesProvider>(
       builder: (context, providerPref, _) {
-        return _text(providerPref);
+
+        /// if state is loading (fetch isLogin from SharedPreference),
+        /// show loading
+        if (providerPref.stateIsLogin == ResultState.loading) {
+          return _buildLoading();
+
+          /// if isLogin is true
+        } else if (providerPref.isLogin) {
+
+          /// if state is loading (fetch token from SharedPreference),
+          /// show loading
+          if (providerPref.stateToken == ResultState.loading) {
+            return _buildLoading();
+
+            /// if token is not empty, show the data
+          } else if (providerPref.stateToken == ResultState.hasData) {
+            return _text(providerPref);
+
+            /// if token is empty, show error message
+          } else {
+            return _buildError(providerPref.messageToken);
+          }
+
+          /// if isLogin is not true, show error message
+        } else {
+          return _buildError(providerPref.messsageIsLogin);
+        }
       },
     );
   }
@@ -65,6 +91,18 @@ class ListStoryPage extends StatelessWidget {
           );
         }
       },
+    );
+  }
+
+  Widget _buildLoading() {
+    return const Center(
+      child: CircularProgressIndicator(),
+    );
+  }
+
+  Widget _buildError(String description) {
+    return Center(
+      child: Text(description),
     );
   }
 

@@ -7,26 +7,49 @@ class PreferencesProvider extends ChangeNotifier {
 
   bool _isLogin = false;
   String _token = '';
-  ResultState _state;
+  String _messsageIsLogin = '';
+  String _messageToken = '';
+  ResultState _stateIsLogin;
+  ResultState _stateToken;
 
   bool get isLogin => _isLogin;
 
   String get token => _token;
 
-  ResultState get state => _state;
+  String get messageToken => _messageToken;
+
+  String get messsageIsLogin => _messsageIsLogin;
+
+  ResultState get stateIsLogin => _stateIsLogin;
+
+  ResultState get stateToken => _stateToken;
 
   /// always check and get the current data from SharedPreferences when do instantiation
   PreferencesProvider({required this.preferencesHelper})
-      : _state = ResultState.notStarted {
-    print('instance PrefProv');
+      : _stateToken = ResultState.notStarted,
+        _stateIsLogin = ResultState.notStarted {
+    print('instance PreferenceProvider');
     _getLoginStatus();
     _getToken();
   }
 
   /// get login status from SharedPreferences
   void _getLoginStatus() async {
-    _isLogin = await preferencesHelper.isLogin;
+
+    /// initiate process, _state = ResultState.loading
+    _stateIsLogin = ResultState.loading;
     notifyListeners();
+    _isLogin = await preferencesHelper.isLogin;
+
+    /// await the data using if () else,
+    /// that is why the result is always ResultState.hasData
+    if (_isLogin) {
+      _stateIsLogin = ResultState.hasData;
+    } else {
+      _stateIsLogin = ResultState.hasData;
+      _messsageIsLogin = 'Anda belum login, harap login terlebih dahulu';
+    }
+
     print('_getLoginStatus');
   }
 
@@ -40,14 +63,20 @@ class PreferencesProvider extends ChangeNotifier {
 
   /// get token from SharedPreferences
   void _getToken() async {
-    _state = ResultState.loading;
+
+    /// initiate process, _stateToken = ResultState.loading
+    _stateToken = ResultState.loading;
     notifyListeners();
     _token = await preferencesHelper.getToken;
 
+    /// if token is empty, _stateToken = ResultState.noData
     if (_token.isEmpty) {
-      _state = ResultState.noData;
+      _stateToken = ResultState.noData;
+      _messageToken = 'Sesi anda sudah habis atau tidak valid, silahkan untu login ulang terlebih dahulu';
+
+      /// if token is not empty, _stateToken = ResultState.hasData
     } else {
-      _state = ResultState.hasData;
+      _stateToken = ResultState.hasData;
     }
 
     notifyListeners();
