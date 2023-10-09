@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
+import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
@@ -65,7 +66,7 @@ class ListStoryPage extends StatelessWidget {
         IconButton(
           onPressed: () {
             var providerPref =
-            Provider.of<PreferencesProvider>(context, listen: false);
+                Provider.of<PreferencesProvider>(context, listen: false);
             providerPref.setLoginStatus(false);
             providerPref.removeToken();
 
@@ -161,10 +162,12 @@ class ListStoryPage extends StatelessWidget {
 
           /// if state is has data, show the data
         } else if (provListStory.state == ResultState.hasData) {
-          return Center(
-            child: Text(
-                '${provListStory.listStoryWrap.message}, ${provListStory.listStoryWrap.listStory}'),
-          );
+          // return Center(
+          //   child: Text(
+          //     '${provListStory.listStoryWrap.message}, ${provListStory.listStoryWrap.listStory}',
+          //   ),
+          // );
+          return _buildContainer(provListStory.listStoryWrap.listStory);
 
           /// if state is no data, show error message
         } else if (provListStory.state == ResultState.noData) {
@@ -198,14 +201,26 @@ class ListStoryPage extends StatelessWidget {
     return 'loading...';
   }
 
-  Text _text(PreferencesProvider providerPref) => Text(
-      'Login Status = ${providerPref.isLogin}, token = ${providerPref.token}');
-
-  Container _buildContainer() {
+  Container _buildContainer(List<ListStory>? listStory) {
     return Container(
       alignment: Alignment.topCenter,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: const CardStoryWidget(),
+      child: _buildListView(listStory),
+    );
+  }
+
+  Widget _buildListView(List<ListStory>? listStory) {
+    return ListView.builder(
+      itemCount: listStory!.length,
+      itemBuilder: (context, index) {
+        final item = listStory[index];
+
+        return CardStoryWidget(
+          photo: item.photoUrl,
+          name: item.name,
+          description: item.description,
+        );
+      },
     );
   }
 }

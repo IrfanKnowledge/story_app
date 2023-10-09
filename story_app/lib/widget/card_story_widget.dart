@@ -1,10 +1,21 @@
 import 'package:flutter/material.dart';
 
 class CardStoryWidget extends StatelessWidget {
-  const CardStoryWidget({super.key});
+  final String photo;
+  final String name;
+  final String description;
+
+  const CardStoryWidget(
+      {super.key,
+      required this.photo,
+      required this.name,
+      required this.description});
 
   @override
   Widget build(BuildContext context) {
+    var owlPhoto =
+        'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg';
+
     return Card(
       clipBehavior: Clip.hardEdge,
       child: InkWell(
@@ -17,22 +28,26 @@ class CardStoryWidget extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Image.network(
-              'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg',
+              photo,
               height: 150,
               cacheWidth: 512,
               cacheHeight: 512,
               fit: BoxFit.cover,
             ),
             const SizedBox(height: 10),
-            const Padding(
-              padding: EdgeInsets.all(8.0),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('This is your Name'),
-                  SizedBox(height: 10),
-                  Text('This is Your Description but limited'),
+                  Text(name),
+                  const SizedBox(height: 10),
+                  Text(
+                    description,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                 ],
               ),
             ),
