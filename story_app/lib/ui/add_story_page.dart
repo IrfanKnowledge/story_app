@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/provider/add_story_provider.dart';
@@ -49,8 +50,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           /// context.watch == provider.of<>(context)
-          /// using context.watch so we only listen to 1 state changes,
-          /// that is imagePath only,
+          /// to listen imagePath from AddStoryProvider
           context.watch<AddStoryProvider>().imagePath == null
 
               /// if null, show default image
@@ -122,8 +122,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
   }
 
   void _onCameraView(BuildContext context) async {
-    /// context.read == Provider.of<>(context, listen: false),
-    /// access AddStoryProvider();
     final provider = context.read<AddStoryProvider>();
 
     final isAndroid = defaultTargetPlatform == TargetPlatform.android;
@@ -144,8 +142,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
   }
 
   Widget _showImage(BuildContext context) {
-    /// context.read == Provider.of<>(context, listen: false),
-    /// access AddStoryProvider();
     final imagePath = context.read<AddStoryProvider>().imagePath;
 
     /// check is app running on Web Environment or not
@@ -158,5 +154,29 @@ class _AddStoryPageState extends State<AddStoryPage> {
             File(imagePath.toString()),
             fit: BoxFit.contain,
           );
+  }
+
+  void _onUpload() async {
+    final provider = context.read<AddStoryProvider>();
+    final imagePath = provider.imagePath;
+    final imageFile = provider.imageFile;
+    if (imagePath == null || imageFile == null) return;
+
+    final fileName = imageFile.name;
+    final bytes = await imageFile.readAsBytes();
+
+    Future<List<int>> compressImage(List<int> bytes) async {
+      int imageLength = bytes.length;
+
+      /// jika imageLength lebih kecil dari 1 ribu bytes (1 MB),
+      /// maka tidak perlu dilakukan compress
+      if (imageLength < 1000000) return bytes;
+
+      final img.Image image = img.decodeImage(bytes as Uint8List)!;
+
+      List<int> newByte = [];
+
+      return newByte;
+    }
   }
 }
