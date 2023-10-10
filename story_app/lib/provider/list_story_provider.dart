@@ -34,28 +34,28 @@ class ListStoryProvider extends ChangeNotifier {
       /// if listStory is empty, _state = ResultState.noData
       if (listStoryWrap.listStory!.isEmpty) {
         _state = ResultState.noData;
-        notifyListeners();
         _message = listStoryWrap.message;
+        notifyListeners();
 
         /// if listStory is notEmpty, _state = ResultState.hasData
       } else {
         _state = ResultState.hasData;
-        notifyListeners();
         _listStoryWrap = listStoryWrap;
+        notifyListeners();
       }
 
       /// if no internet connection, _state = ResultState.error
     } on SocketException {
       _state = ResultState.error;
-      notifyListeners();
       _message = StringHelper.noInternetConnection;
+      notifyListeners();
       print('ResultState.error: $_message');
 
       /// if other error show up, _state = ResultState.error
     } catch (e) {
       _state = ResultState.error;
-      notifyListeners();
       _message = e.toString();
+      notifyListeners();
       print('ResultState.error: $_message');
     }
   }

@@ -2,10 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img;
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/add_story_provider.dart';
+import 'package:story_app/provider/upload_image_story_provider.dart';
 
 class AddStoryPage extends StatefulWidget {
   const AddStoryPage({super.key});
@@ -24,7 +25,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
         title: const Text('New Story'),
       ),
       body: SingleChildScrollView(
-        child: _buildChangeNotifier(),
+        child: _buildMultiProvider(),
       ),
     );
   }
@@ -32,6 +33,20 @@ class _AddStoryPageState extends State<AddStoryPage> {
   Widget _buildChangeNotifier() {
     return ChangeNotifierProvider(
       create: (_) => AddStoryProvider(),
+      builder: (context, _) => _buildContainer(context),
+    );
+  }
+
+  Widget _buildMultiProvider() {
+    return MultiProvider(
+      providers: [
+        ChangeNotifierProvider(
+          create: (_) => AddStoryProvider(),
+        ),
+        ChangeNotifierProvider(
+          create: (_) => UploadImageStoryProvider(apiService: ApiService()),
+        ),
+      ],
       builder: (context, _) => _buildContainer(context),
     );
   }
@@ -96,7 +111,12 @@ class _AddStoryPageState extends State<AddStoryPage> {
                 40,
               ),
             ),
-            onPressed: () {},
+            onPressed: () {
+              _onUpload(
+                context: context,
+                description: _controllerDescription.text,
+              );
+            },
             child: const Text('Upload'),
           ),
         ],
@@ -156,27 +176,25 @@ class _AddStoryPageState extends State<AddStoryPage> {
           );
   }
 
-  void _onUpload() async {
+  void _onUpload({
+    required BuildContext context,
+    required String description,
+  }) async {
     final provider = context.read<AddStoryProvider>();
     final imagePath = provider.imagePath;
     final imageFile = provider.imageFile;
     if (imagePath == null || imageFile == null) return;
 
+    final uploadProvider = context.read<UploadImageStoryProvider>();
     final fileName = imageFile.name;
-    final bytes = await imageFile.readAsBytes();
+    final photoBytes = await imageFile.readAsBytes();
 
-    Future<List<int>> compressImage(List<int> bytes) async {
-      int imageLength = bytes.length;
+    final compressedPhotoBytes = await uploadProvider.compressImage(photoBytes);
 
-      /// jika imageLength lebih kecil dari 1 ribu bytes (1 MB),
-      /// maka tidak perlu dilakukan compress
-      if (imageLength < 1000000) return bytes;
-
-      final img.Image image = img.decodeImage(bytes as Uint8List)!;
-
-      List<int> newByte = [];
-
-      return newByte;
-    }
+    uploadProvider.upload(
+      photoBytes: compressedPhotoBytes,
+      fileName: fileName,
+      description: description,
+    );
   }
 }

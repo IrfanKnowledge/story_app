@@ -1,8 +1,10 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
 import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/data/model/login_model.dart';
+import 'package:story_app/data/model/upload_image_story_model.dart';
 
 class ApiService {
   static const String _baseUrl = 'https://story-api.dicoding.dev/v1/';
@@ -10,10 +12,10 @@ class ApiService {
   static const String _endPointPostLogin = 'login';
   static const String _endPointGetAllStories = 'stories';
   static const String _endPointGetStoryDetail = 'detail/';
-  static const String _endPointPostAddNewStory = 'stories';
+  static const String _endPointPostAddNewStory = 'stories/guest';
 
   /// login with email and password
-  Future<LoginWrap> postLogin({
+  Future<LoginWrap> login({
     required String email,
     required String password,
   }) async {
@@ -43,7 +45,7 @@ class ApiService {
     final getAllStoriesQueryParameters = {
       'page': '1',
       'size': '20',
-      'location': '1',
+      'location': '0',
     };
 
     final response = await http.get(
@@ -54,7 +56,7 @@ class ApiService {
       //       'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLTVSZDlJdVRyRWZDUWZRWUUiLCJpYXQiOjE2OTYxMjk4MjN9.-Kknom-JpAaHjl6e0pS5nrw3o0vAR7HCAY5SdfrZkdk'
       // },
       headers: {
-        'Authorization': 'Bearer $token'
+        'Authorization': 'Bearer $token',
       },
     );
 
@@ -66,6 +68,47 @@ class ApiService {
       return listStoryWrap;
     } else {
       throw listStoryWrap.message;
+    }
+  }
+
+  /// upload story
+  Future<UploadImageStoryResponse> uploadStory({
+    required List<int> photoBytes,
+    required String fileName,
+    required String description,
+  }) async {
+    final request = http.MultipartRequest(
+        'POST', Uri.parse('$_baseUrl$_endPointPostAddNewStory'));
+
+    final multiPartFile = http.MultipartFile.fromBytes(
+      'photo',
+      photoBytes,
+      filename: fileName,
+    );
+
+    final Map<String, String> fields = {
+      'description': description,
+    };
+
+    final Map<String, String> headers = {'Content-Type': 'multipart/form-data'};
+
+    request.files.add(multiPartFile);
+    request.fields.addAll(fields);
+    request.headers.addAll(headers);
+
+    final http.StreamedResponse streamedResponse = await request.send();
+    final int statusCode = streamedResponse.statusCode;
+
+    final Uint8List responseList = await streamedResponse.stream.toBytes();
+    final String responseData = String.fromCharCodes(responseList);
+
+    final UploadImageStoryResponse uploadImageStoryResponse =
+        UploadImageStoryResponse.fromRawJson(responseData);
+
+    if (statusCode == 201) {
+      return uploadImageStoryResponse;
+    } else {
+      throw uploadImageStoryResponse.message;
     }
   }
 }

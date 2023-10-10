@@ -31,7 +31,7 @@ class LoginProvider extends ChangeNotifier {
       /// initiate process, _state = ResultState.loading
       _state = ResultState.loading;
       notifyListeners();
-      final loginWrap = await apiService.postLogin(
+      final loginWrap = await apiService.login(
         email: email,
         password: password,
       );
