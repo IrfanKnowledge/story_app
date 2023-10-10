@@ -4,9 +4,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
+import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/add_story_provider.dart';
+import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
+import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/widget/center_error.dart';
+import 'package:story_app/widget/center_loading.dart';
 
 class AddStoryPage extends StatefulWidget {
   const AddStoryPage({super.key});
@@ -30,16 +36,16 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
-  Widget _buildChangeNotifier() {
-    return ChangeNotifierProvider(
-      create: (_) => AddStoryProvider(),
-      builder: (context, _) => _buildContainer(context),
-    );
-  }
-
   Widget _buildMultiProvider() {
     return MultiProvider(
       providers: [
+        ChangeNotifierProvider(
+          create: (_) => PreferencesProvider(
+            preferencesHelper: PreferencesHelper(
+              sharedPreferences: SharedPreferences.getInstance(),
+            ),
+          ),
+        ),
         ChangeNotifierProvider(
           create: (_) => AddStoryProvider(),
         ),
@@ -47,7 +53,39 @@ class _AddStoryPageState extends State<AddStoryPage> {
           create: (_) => UploadImageStoryProvider(apiService: ApiService()),
         ),
       ],
-      builder: (context, _) => _buildContainer(context),
+      child: _getTokenIfNotGuest(),
+    );
+  }
+
+  Widget _getTokenIfNotGuest() {
+    return Consumer<PreferencesProvider>(
+      builder: (context, provider, _) {
+        // if state is loading (fetch isLogin from SharedPreference),
+        // show loading
+        if (provider.stateIsLogin == ResultState.loading) {
+          return const CenterLoading();
+
+          // if login is true
+        } else if (provider.isLogin) {
+          // if state is loading (fetch token from SharedPreference),
+          // show loading
+          if (provider.stateToken == ResultState.loading) {
+            return const CenterLoading();
+
+            // if token is not empty, then [_buildContainer()]
+          } else if (provider.stateToken == ResultState.hasData) {
+            return _buildContainer(context);
+
+            // if token is empty, show error message
+          } else {
+            return CenterError(description: provider.messageToken,);
+          }
+
+          // if login is not true
+        } else {
+          return _buildContainer(context);
+        }
+      },
     );
   }
 
@@ -186,15 +224,26 @@ class _AddStoryPageState extends State<AddStoryPage> {
     if (imagePath == null || imageFile == null) return;
 
     final uploadProvider = context.read<UploadImageStoryProvider>();
+    final preferenceProvider = context.read<PreferencesProvider>();
+
     final fileName = imageFile.name;
     final photoBytes = await imageFile.readAsBytes();
 
     final compressedPhotoBytes = await uploadProvider.compressImage(photoBytes);
 
+    final isLogin = preferenceProvider.isLogin;
+    var token = preferenceProvider.token;
+
+    // if login is not true, token = string empty
+    if (!isLogin) {
+      token = '';
+    }
+
     uploadProvider.upload(
       photoBytes: compressedPhotoBytes,
       fileName: fileName,
       description: description,
+      token: token,
     );
   }
 }

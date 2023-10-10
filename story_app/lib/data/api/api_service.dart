@@ -12,7 +12,8 @@ class ApiService {
   static const String _endPointPostLogin = 'login';
   static const String _endPointGetAllStories = 'stories';
   static const String _endPointGetStoryDetail = 'detail/';
-  static const String _endPointPostAddNewStory = 'stories/guest';
+  static const String _endPointPostAddNewStoryGuest = 'stories/guest';
+  static const String _endPointPostAddNewStory = 'stories';
 
   /// login with email and password
   Future<LoginWrap> login({
@@ -76,9 +77,18 @@ class ApiService {
     required List<int> photoBytes,
     required String fileName,
     required String description,
+    String token = '',
   }) async {
+    // if token is empty then use guest end point,
+    // if token is not empty then use token end point
+    final endPoint = token.isEmpty
+        ? _endPointPostAddNewStoryGuest
+        : _endPointPostAddNewStory;
+
     final request = http.MultipartRequest(
-        'POST', Uri.parse('$_baseUrl$_endPointPostAddNewStory'));
+      'POST',
+      Uri.parse('$_baseUrl$endPoint'),
+    );
 
     final multiPartFile = http.MultipartFile.fromBytes(
       'photo',
@@ -90,7 +100,15 @@ class ApiService {
       'description': description,
     };
 
-    final Map<String, String> headers = {'Content-Type': 'multipart/form-data'};
+    Map<String, String> headers = {
+      'Content-Type': 'multipart/form-data',
+    };
+
+    if (token.isNotEmpty) {
+      headers.addAll(
+        {'Authorization': 'Bearer $token'},
+      );
+    }
 
     request.files.add(multiPartFile);
     request.fields.addAll(fields);

@@ -54,6 +54,7 @@ class UploadImageStoryProvider extends ChangeNotifier {
     required List<int> photoBytes,
     required String fileName,
     required String description,
+    String token = '',
   }) async {
     try {
       print('ResultState.loading, upload, upload_image_story_provider');
@@ -64,6 +65,7 @@ class UploadImageStoryProvider extends ChangeNotifier {
         photoBytes: photoBytes,
         fileName: fileName,
         description: description,
+        token: token,
       );
 
       if (!uploadResponse.error) {
