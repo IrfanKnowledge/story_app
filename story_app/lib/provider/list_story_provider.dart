@@ -34,7 +34,7 @@ class ListStoryProvider extends ChangeNotifier {
       /// if listStory is empty, _state = ResultState.noData
       if (listStoryWrap.listStory!.isEmpty) {
         _state = ResultState.noData;
-        _message = listStoryWrap.message;
+        _message = StringHelper.emptyData;
         notifyListeners();
 
         /// if listStory is notEmpty, _state = ResultState.hasData

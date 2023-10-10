@@ -2,6 +2,7 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:http/http.dart' as http;
+import 'package:story_app/data/model/detail_story_model.dart';
 import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/data/model/login_model.dart';
 import 'package:story_app/data/model/upload_image_story_model.dart';
@@ -11,7 +12,7 @@ class ApiService {
   static const String _endPointPostRegister = 'register';
   static const String _endPointPostLogin = 'login';
   static const String _endPointGetAllStories = 'stories';
-  static const String _endPointGetStoryDetail = 'detail/';
+  static const String _endPointGetStoryDetail = 'stories/';
   static const String _endPointPostAddNewStoryGuest = 'stories/guest';
   static const String _endPointPostAddNewStory = 'stories';
 
@@ -50,12 +51,11 @@ class ApiService {
     };
 
     final response = await http.get(
-      Uri.parse('$_baseUrl$_endPointGetAllStories' '?')
-          .replace(queryParameters: getAllStoriesQueryParameters),
-      // headers: {
-      //   'Authorization':
-      //       'Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiJ1c2VyLTVSZDlJdVRyRWZDUWZRWUUiLCJpYXQiOjE2OTYxMjk4MjN9.-Kknom-JpAaHjl6e0pS5nrw3o0vAR7HCAY5SdfrZkdk'
-      // },
+      Uri.parse(
+        '$_baseUrl$_endPointGetAllStories' '?',
+      ).replace(
+        queryParameters: getAllStoriesQueryParameters,
+      ),
       headers: {
         'Authorization': 'Bearer $token',
       },
@@ -127,6 +127,33 @@ class ApiService {
       return uploadImageStoryResponse;
     } else {
       throw uploadImageStoryResponse.message;
+    }
+  }
+
+  /// get story detail
+  Future<DetailStoryWrap> getDetailStory({
+    required String token,
+    required String id,
+  }) async {
+    print('getDetailStory, ApiService, token = $token');
+    print('getDetailStory, ApiService, id = $id');
+
+    final response = await http.get(
+      Uri.parse(
+        '$_baseUrl$_endPointGetStoryDetail/$id',
+      ),
+      headers: {
+        'Authorization': 'Bearer $token',
+      },
+    );
+
+    final statusCode = response.statusCode;
+    final detailStoryWrap = DetailStoryWrap.fromRawJson(response.body);
+
+    if (statusCode == 200) {
+      return detailStoryWrap;
+    } else {
+      throw detailStoryWrap.message;
     }
   }
 }

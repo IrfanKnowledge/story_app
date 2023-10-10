@@ -4,12 +4,15 @@ class CardStoryWidget extends StatelessWidget {
   final String photo;
   final String name;
   final String description;
+  final Function() onTap;
 
-  const CardStoryWidget(
-      {super.key,
-      required this.photo,
-      required this.name,
-      required this.description});
+  const CardStoryWidget({
+    super.key,
+    required this.photo,
+    required this.name,
+    required this.description,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -21,7 +24,7 @@ class CardStoryWidget extends StatelessWidget {
       child: InkWell(
         splashColor: const ColorScheme.light().primary.withAlpha(30),
         highlightColor: const ColorScheme.light().primary.withAlpha(30),
-        onTap: () {},
+        onTap: onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.start,

@@ -7,6 +7,7 @@ import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
+import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/card_story_widget.dart';
@@ -207,10 +208,22 @@ class ListStoryPage extends StatelessWidget {
       itemBuilder: (context, index) {
         final item = listStory[index];
 
+        void onTap() {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => DetailStoryPage(
+                id: item.id,
+              ),
+            ),
+          );
+        }
+
         return CardStoryWidget(
           photo: item.photoUrl,
           name: item.name,
           description: item.description,
+          onTap: onTap,
         );
       },
     );
