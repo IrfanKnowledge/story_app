@@ -52,11 +52,12 @@ class ListStoryProvider extends ChangeNotifier {
       print('ResultState.error: $_message');
 
       /// if other error show up, _state = ResultState.error
-    } catch (e) {
+    } catch (e, stacktrace) {
       _state = ResultState.error;
       _message = e.toString();
       notifyListeners();
       print('ResultState.error: $_message');
+      print(stacktrace);
     }
   }
 }

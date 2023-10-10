@@ -45,9 +45,11 @@ class PreferencesProvider extends ChangeNotifier {
     /// that is why the result is always ResultState.hasData
     if (_isLogin) {
       _stateIsLogin = ResultState.hasData;
+      notifyListeners();
     } else {
       _stateIsLogin = ResultState.hasData;
       _messsageIsLogin = 'Anda belum login, harap login terlebih dahulu';
+      notifyListeners();
     }
 
     print('_getLoginStatus');
@@ -73,14 +75,15 @@ class PreferencesProvider extends ChangeNotifier {
     if (_token.isEmpty) {
       _stateToken = ResultState.noData;
       _messageToken = 'Sesi anda sudah habis atau tidak valid, silahkan untu login ulang terlebih dahulu';
+      notifyListeners();
+      print('_getToken');
 
       /// if token is not empty, _stateToken = ResultState.hasData
     } else {
       _stateToken = ResultState.hasData;
+      notifyListeners();
+      print('_getToken');
     }
-
-    notifyListeners();
-    print('_getToken');
   }
 
   /// set token to SharedPreferences
