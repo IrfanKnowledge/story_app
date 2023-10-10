@@ -57,7 +57,11 @@ class ListStoryPage extends StatelessWidget {
               MaterialPageRoute(
                 builder: (context) => const AddStoryPage(),
               ),
-            );
+            ).then((_) {
+              final listStoryProv = context.read<ListStoryProvider>();
+              final token = context.read<PreferencesProvider>().token;
+              listStoryProv.fetchAllStories(token: token);
+            });
           },
           icon: const Icon(Icons.add),
         ),
