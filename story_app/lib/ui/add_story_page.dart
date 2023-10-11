@@ -67,6 +67,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
           // if login is true
         } else if (provider.isLogin) {
+          print('isLogin = ${provider.isLogin}');
           // if state is loading (fetch token from SharedPreference),
           // show loading
           if (provider.stateToken == ResultState.loading) {
@@ -144,7 +145,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
             ),
           ),
           const SizedBox(height: 10),
-          _buildUploadButtonOrProgress(),
+          // _buildElevatedButtonUpload(context),
+          _buildCompressedImageProcess(),
         ],
       ),
     );
@@ -159,6 +161,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
+      maxHeight: 500,
+      imageQuality: 90,
     );
 
     if (pickedFile != null) {
@@ -179,6 +183,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.camera,
+      maxHeight: 500,
+      imageQuality: 90,
     );
 
     if (pickedFile != null) {
@@ -211,39 +217,43 @@ class _AddStoryPageState extends State<AddStoryPage> {
     final imageFile = addStoryProvider.imageFile;
 
     if (imagePath == null || imageFile == null) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(snackBar('Foto/Gambar belum dipilih'));
+      ScaffoldMessenger.of(context).showSnackBar(
+        snackBar('Foto/Gambar belum dipilih'),
+      );
       return;
     }
 
     if (description.isEmpty) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(snackBar('deskripsi tidak boleh kosong'));
+      ScaffoldMessenger.of(context).showSnackBar(
+        snackBar('deskripsi tidak boleh kosong'),
+      );
+      return;
     }
+
+    addStoryProvider.description = description;
+
+    // final preferenceProvider = context.read<PreferencesProvider>();
+    // final isLogin = preferenceProvider.isLogin;
+    // var token = preferenceProvider.token;
+    //
+    // // if login is not true, token = string empty
+    // if (!isLogin) {
+    //   token = '';
+    // }
+
+    // final fileName = imageFile.name;
 
     final readUploadProvider = context.read<UploadImageStoryProvider>();
-    final preferenceProvider = context.read<PreferencesProvider>();
-
-    final fileName = imageFile.name;
     final photoBytes = await imageFile.readAsBytes();
 
-    final compressedPhotoBytes =
-        await readUploadProvider.compressImage(photoBytes);
+    readUploadProvider.compressImage(photoBytes);
 
-    final isLogin = preferenceProvider.isLogin;
-    var token = preferenceProvider.token;
-
-    // if login is not true, token = string empty
-    if (!isLogin) {
-      token = '';
-    }
-
-    readUploadProvider.upload(
-      photoBytes: compressedPhotoBytes,
-      fileName: fileName,
-      description: description,
-      token: token,
-    );
+    // readUploadProvider.upload(
+    //   photoBytes: compressedPhotoBytes,
+    //   fileName: fileName,
+    //   description: description,
+    //   token: token,
+    // );
   }
 
   SnackBar snackBar(String text) {
@@ -255,51 +265,129 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
-  Widget _buildUploadButtonOrProgress() {
+  Widget _buildCompressedImageProcess() {
     return Consumer<UploadImageStoryProvider>(
       builder: (context, provider, _) {
-        if (provider.resultState == ResultState.loading) {
-          return IconButton(
-            onPressed: () {},
-            icon: const CircularProgressIndicator(),
-          );
-        } else if (provider.resultState == ResultState.hasData) {
-          return FutureBuilder(
-            future: _autoNavigateBack(context),
-            builder: (_, __) {
-              return IconButton(
-                onPressed: () {},
-                icon: const CircularProgressIndicator(),
-              );
-            },
-          );
-        } else if (provider.resultState == ResultState.error) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            snackBar(
-              provider.message,
-            ),
-          );
+        if (provider.stateCompressImage == ResultState.notStarted) {
+          print('stateCompressImage: notStarted');
+          return _buildElevatedButtonUpload(context);
+        } else if (provider.stateCompressImage == ResultState.loading) {
+          print('stateCompressImage: loading');
+          return _buildIconButtonLoading();
+        } else {
+          print('stateCompressImage: hasData');
+          return _buildUploadImageProcess(context);
         }
-
-        return ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            minimumSize: const Size(
-              double.infinity,
-              40,
-            ),
-          ),
-          onPressed: () {
-            _onUpload(
-              context: context,
-              description: _controllerDescription.text,
-            );
-          },
-          child: const Text('Upload'),
-        );
       },
     );
   }
 
+  Widget _buildUploadImageProcess(BuildContext context) {
+    final addStoryProvider = context.read<AddStoryProvider>();
+
+    final imagePath = addStoryProvider.imagePath;
+    final imageFile = addStoryProvider.imageFile;
+    final fileName = imageFile!.name;
+    final description = addStoryProvider.description;
+
+    final preferenceProvider = context.read<PreferencesProvider>();
+    final isLogin = preferenceProvider.isLogin;
+    var token = preferenceProvider.token;
+
+    // if login is not true, token = string empty
+    if (!isLogin) {
+      token = '';
+    }
+
+    final uploadImageStoryProvider = context.read<UploadImageStoryProvider>();
+    final photoBytes = uploadImageStoryProvider.bytesImage;
+
+    return Consumer<UploadImageStoryProvider>(
+      builder: (context, provider, _) {
+        if (provider.stateUpload == ResultState.notStarted) {
+          return FutureBuilder(
+            future: _uploadImage(
+              context: context,
+              photoBytes: photoBytes,
+              fileName: fileName,
+              description: description,
+              token: token,
+            ),
+            builder: (_, __) => _buildIconButtonLoading(),
+          );
+
+        } else if (provider.stateUpload == ResultState.loading) {
+          return _buildIconButtonLoading();
+
+        } else if (provider.stateUpload == ResultState.hasData) {
+          return FutureBuilder(
+            future: _autoNavigateBack(context),
+            builder: (_, __) => _buildIconButtonLoading(),
+          );
+        } else if (provider.stateUpload == ResultState.error) {
+          // ScaffoldMessenger.of(context)
+          //     .showSnackBar(snackBar(provider.messageUpload));
+          return _buildElevatedButtonUpload(context);
+        } else {
+          // ScaffoldMessenger.of(context)
+          //     .showSnackBar(snackBar(provider.messageUpload));
+          return _buildElevatedButtonUpload(context);
+        }
+      },
+    );
+  }
+
+  /// upload image to server
+  Future<String> _uploadImage({
+    required BuildContext context,
+    required List<int> photoBytes,
+    required String fileName,
+    required String description,
+    String token = '',
+  }) async {
+    await Future.delayed(
+      const Duration(seconds: 1),
+      () {
+        final uploadProvider = context.read<UploadImageStoryProvider>();
+        uploadProvider.upload(
+          photoBytes: photoBytes,
+          fileName: fileName,
+          description: description,
+          token: token,
+        );
+      },
+    );
+    return 'loading...';
+  }
+
+  /// button for upload image
+  ElevatedButton _buildElevatedButtonUpload(BuildContext context) {
+    return ElevatedButton(
+      style: ElevatedButton.styleFrom(
+        minimumSize: const Size(
+          double.infinity,
+          40,
+        ),
+      ),
+      onPressed: () {
+        _onUpload(
+          context: context,
+          description: _controllerDescription.text,
+        );
+      },
+      child: const Text('Upload'),
+    );
+  }
+
+  /// loading button for upload image process
+  IconButton _buildIconButtonLoading() {
+    return IconButton(
+      onPressed: () {},
+      icon: const CircularProgressIndicator(),
+    );
+  }
+
+  /// auto navigate back to previous page if upload image is success
   Future<String> _autoNavigateBack(BuildContext context) async {
     Future.delayed(
       const Duration(seconds: 1),

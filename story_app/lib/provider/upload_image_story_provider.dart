@@ -11,43 +11,74 @@ class UploadImageStoryProvider extends ChangeNotifier {
   final ApiService apiService;
 
   UploadImageStoryProvider({required this.apiService})
-      : _state = ResultState.notStarted;
+      : _stateUpload = ResultState.notStarted,
+        _stateCompressImage = ResultState.notStarted;
 
-  String _message = '';
-  ResultState _state;
+  late List<int> _bytesImage;
 
+  String _messageCompressImage = '';
+  String _messageUpload = '';
 
-  ResultState get resultState => _state;
+  ResultState _stateCompressImage;
+  ResultState _stateUpload;
 
-  String get message => _message;
+  List<int> get bytesImage => _bytesImage;
 
-  Future<List<int>> compressImage(List<int> bytes) async {
+  ResultState get stateCompressImage => _stateCompressImage;
+
+  ResultState get stateUpload => _stateUpload;
+
+  String get messageCompressImage => _messageCompressImage;
+
+  String get messageUpload => _messageUpload;
+
+  void compressImage(List<int> bytes) async {
+    _stateCompressImage = ResultState.loading;
+    notifyListeners();
+
+    print('_stateCompressImage, $_stateCompressImage');
+
     int maxBytes = 1000000;
     int imageLength = bytes.length;
 
     print('$imageLength, $maxBytes');
     print(imageLength < maxBytes);
+
     /// jika imageLength lebih kecil dari 1 ribu bytes (1 MB),
     /// maka tidak perlu dilakukan compress
-    if (imageLength < maxBytes) return bytes;
+    if (imageLength < maxBytes) {
+      _stateCompressImage = ResultState.hasData;
+      _bytesImage = bytes;
+      notifyListeners();
+    } else {
+      print('before img.decodeImage');
 
-    final img.Image image = img.decodeImage(Uint8List.fromList(bytes))!;
-    int compressQuality = 100;
-    int length = imageLength;
-    List<int> newByte = [];
+      final img.Image image = img.decodeImage(bytes as Uint8List)!;
+      int compressQuality = 90;
+      int length = imageLength;
+      List<int> newByte = [];
 
-    do {
-      compressQuality -= 10;
+      print('after img.decodeImage');
 
-      newByte = img.encodeJpg(
-        image,
-        quality: compressQuality,
-      );
+      do {
+        compressQuality -= 10;
+        print('compressQuality: $compressQuality');
 
-      length = newByte.length;
-    } while (length > maxBytes);
+        newByte = img.encodeJpg(
+          image,
+          quality: compressQuality,
+        );
 
-    return newByte;
+        length = newByte.length;
+      } while (length > maxBytes);
+
+      _stateCompressImage = ResultState.hasData;
+      _bytesImage = newByte;
+
+      // reset _satateUpload
+      _stateUpload = ResultState.notStarted;
+      notifyListeners();
+    }
   }
 
   void upload({
@@ -59,7 +90,7 @@ class UploadImageStoryProvider extends ChangeNotifier {
     try {
       print('ResultState.loading, upload, upload_image_story_provider');
 
-      _state = ResultState.loading;
+      _stateUpload = ResultState.loading;
       notifyListeners();
       final uploadResponse = await apiService.uploadStory(
         photoBytes: photoBytes,
@@ -69,25 +100,25 @@ class UploadImageStoryProvider extends ChangeNotifier {
       );
 
       if (!uploadResponse.error) {
-        _state = ResultState.hasData;
-        _message = uploadResponse.message;
+        _stateUpload = ResultState.hasData;
+        _messageUpload = uploadResponse.message;
         notifyListeners();
         print('ResultState.hasdata, upload, upload_image_story_provider');
       }
 
       /// if no internet connection, _state = ResultState.error
     } on SocketException {
-      _state = ResultState.error;
-      _message = StringHelper.noInternetConnection;
+      _stateUpload = ResultState.error;
+      _messageUpload = StringHelper.noInternetConnection;
       notifyListeners();
-      print('ResultState.error: $_message');
+      print('ResultState.error: $_messageUpload');
 
       /// if other error show up, _state = ResultState.error
     } catch (e, stacktrace) {
-      _state = ResultState.error;
-      _message = e.toString();
+      _stateUpload = ResultState.error;
+      _messageUpload = e.toString();
       notifyListeners();
-      print('ResultState.error: $_message');
+      print('ResultState.error: $_messageUpload');
       print(stacktrace);
     }
   }

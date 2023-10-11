@@ -6,6 +6,8 @@ class AddStoryProvider extends ChangeNotifier {
 
   XFile? _imageFile;
 
+  String description = '';
+
   String? get imagePath => _imagePath;
 
   XFile? get imageFile => _imageFile;
