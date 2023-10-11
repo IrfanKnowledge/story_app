@@ -7,6 +7,7 @@ import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/widget/center_loading.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -46,10 +47,58 @@ class _LoginPageState extends State<LoginPage> {
 
   Widget _buildScaffold() {
     return Scaffold(
-      body: _buildLoginProgress(),
+      body: _buildIsLogin(),
     );
   }
 
+  /// if login is true, navigate to ListStoryPage,
+  /// if login is not true, stay on this page,
+  Widget _buildIsLogin() {
+    return Consumer<PreferencesProvider>(
+      builder: (context, provider, _) {
+        // if state is still not started
+        if (provider.stateIsLogin == ResultState.notStarted) {
+          return const CenterLoading();
+
+          // if state is loading (fetch isLogin from SharedPreference),
+          // show loading
+        } else if (provider.stateIsLogin == ResultState.loading) {
+          return const CenterLoading();
+
+          // if isLogin is true
+        } else if (provider.isLogin) {
+          //auto navigate to ListStoryPage
+          return FutureBuilder(
+            future: _autoNavigate(context),
+            builder: (_, __) => const CenterLoading(),
+          );
+        }
+
+        // if isLogin is not true
+        return _buildLoginProgress();
+      },
+    );
+  }
+
+  /// delayed because we need to wait until UI building process is done,
+  /// to avoiding an error.
+  Future<String> _autoNavigate(BuildContext context) async {
+    await Future.delayed(
+      const Duration(seconds: 1),
+      () {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder: (_) => const ListStoryPage(),
+          ),
+        );
+      },
+    );
+    return 'loading...';
+  }
+
+  /// if login process is begin,
+  /// then do login progress,
   Widget _buildLoginProgress() {
     return Consumer<LoginProvider>(
       builder: (context, providerLogin, __) {
@@ -61,12 +110,12 @@ class _LoginPageState extends State<LoginPage> {
         } else if (providerLogin.state == ResultState.hasData) {
           print('state has data');
 
-          /// using FutureBuilder.future to do automatic navigation,
-          /// because Navigator.push can't be used inside return Widget(),
-          /// Navigator.push not return a Widget(),
-          /// that is why Navigator.push almost always used inside Button.onPress: () {} (no need to return a Widget())
+          // using FutureBuilder.future to do automatic navigation,
+          // because Navigator.push can't be used inside return Widget(),
+          // Navigator.push not return a Widget(),
+          // that is why Navigator.push almost always used inside Button.onPress: () {} (no need to return a Widget())
           return FutureBuilder(
-            future: _autoNavigate(
+            future: _autoNavigateSetLoginAndToken(
               context,
               providerLogin.loginWrap.loginResult!
                   .token, // use '!' because it's 100% not null
@@ -86,7 +135,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   /// automatic navigate if [_buildLoginProgress] == ResultState.hasData
-  Future<String> _autoNavigate(
+  Future<String> _autoNavigateSetLoginAndToken(
     BuildContext context,
     String token,
   ) async {
@@ -122,6 +171,10 @@ class _LoginPageState extends State<LoginPage> {
     _controllerEmail.text = 'NPC001@gmail.com';
     _controllerPassword.text = 'npc00001';
 
+    const textStyle16 = TextStyle(
+      fontSize: 16,
+    );
+
     return Consumer<LoginProvider>(
       builder: (context, provider, _) {
         return Container(
@@ -139,15 +192,28 @@ class _LoginPageState extends State<LoginPage> {
               CircleAvatar(
                 backgroundColor: const ColorScheme.light().secondary,
                 radius: 75,
+                child: const Icon(Icons.person, size: 125,),
               ),
               const SizedBox(height: 20),
-              const Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
+              const Row(
+                mainAxisSize: MainAxisSize.max,
+                mainAxisAlignment: MainAxisAlignment.start,
                 children: [
-                  Text('This is your First Text'),
-                  SizedBox(height: 10),
-                  Text('This is your Second Text'),
+                  Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Selamat datang di Story App',
+                        style: textStyle16,
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Bagikan kisah-kisah menarikmu melalui Story App!',
+                        style: textStyle16,
+                      ),
+                    ],
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
@@ -180,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
               ),
               FutureBuilder(
                 future: _snackBarLogin(provider.state, provider.message),
-                builder: (_, __) => const SizedBox(height: 0),
+                builder: (_, __) => const SizedBox.shrink(),
               ),
             ],
           ),
@@ -208,6 +274,8 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   /// show snackBar when [_buildLoginProgress] == ResultState.noData or ResultState.error
+  /// delayed because we need to wait until UI building process is done,
+  /// to avoiding an error.
   Future<String> _snackBarLogin(ResultState state, String message) async {
     await Future.delayed(
       const Duration(seconds: 1),
