@@ -36,6 +36,16 @@ class CardStoryWidget extends StatelessWidget {
               cacheWidth: 512,
               cacheHeight: 512,
               fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) {
+                print(
+                  'build, CardStoryWidget, Image.network, error: $error',
+                );
+                print('stackTrace: $stackTrace');
+                return const Icon(
+                  Icons.image,
+                  size: 100,
+                );
+              },
             ),
             const SizedBox(height: 10),
             Padding(

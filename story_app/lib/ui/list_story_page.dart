@@ -59,9 +59,7 @@ class ListStoryPage extends StatelessWidget {
                 builder: (context) => const AddStoryPage(),
               ),
             ).then((_) {
-              final listStoryProv = context.read<ListStoryProvider>();
-              final token = context.read<PreferencesProvider>().token;
-              listStoryProv.fetchAllStories(token: token);
+              _refreshPage(context);
             });
           },
           icon: const Icon(Icons.add),
@@ -89,6 +87,13 @@ class ListStoryPage extends StatelessWidget {
         const SizedBox(width: 10),
       ],
     );
+  }
+
+  /// refresh page
+  void _refreshPage(BuildContext context) {
+    final listStoryProv = context.read<ListStoryProvider>();
+    final token = context.read<PreferencesProvider>().token;
+    listStoryProv.fetchAllStories(token: token);
   }
 
   /// get token from SharedPreference
@@ -216,7 +221,9 @@ class ListStoryPage extends StatelessWidget {
                 id: item.id,
               ),
             ),
-          );
+          ).then((_) {
+            _refreshPage(context);
+          });
         }
 
         return CardStoryWidget(

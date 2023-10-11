@@ -141,19 +141,13 @@ class _LoginPageState extends State<LoginPage> {
                 radius: 75,
               ),
               const SizedBox(height: 20),
-              const Row(
-                mainAxisSize: MainAxisSize.max,
-                mainAxisAlignment: MainAxisAlignment.start,
+              const Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('This is your First Text'),
-                      SizedBox(height: 10),
-                      Text('This is your Second Text'),
-                    ],
-                  ),
+                  Text('This is your First Text'),
+                  SizedBox(height: 10),
+                  Text('This is your Second Text'),
                 ],
               ),
               const SizedBox(height: 20),
