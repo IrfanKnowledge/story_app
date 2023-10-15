@@ -6,8 +6,11 @@ import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
+import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/widget/ElevatedButtonInfinityWidget.dart';
 import 'package:story_app/widget/center_loading.dart';
+import 'package:story_app/widget/text_field_login_widget.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -192,7 +195,10 @@ class _LoginPageState extends State<LoginPage> {
               CircleAvatar(
                 backgroundColor: const ColorScheme.light().secondary,
                 radius: 75,
-                child: const Icon(Icons.person, size: 125,),
+                child: const Icon(
+                  Icons.person,
+                  size: 125,
+                ),
               ),
               const SizedBox(height: 20),
               const Row(
@@ -217,32 +223,28 @@ class _LoginPageState extends State<LoginPage> {
                 ],
               ),
               const SizedBox(height: 20),
-              _buildTextField(
+              TextFieldLoginWidget(
                 labelText: 'Email',
                 hintText: '...@....com',
                 textEditingController: _controllerEmail,
               ),
               const SizedBox(height: 10),
-              _buildTextField(
+              TextFieldLoginWidget(
                 obscureText: true,
                 labelText: 'Password',
                 textEditingController: _controllerPassword,
               ),
               const SizedBox(height: 20),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  minimumSize: const Size(
-                    double.infinity,
-                    40,
-                  ),
-                ),
-                onPressed: () {
-                  provider.postLogin(
-                    email: _controllerEmail.text,
-                    password: _controllerPassword.text,
-                  );
-                },
-                child: const Text('Sign In'),
+              ElevatedButtonInfinityWidget(
+                text: 'Sign In',
+                onTap: () => _postLogin(context),
+              ),
+              const SizedBox(
+                height: 20,
+              ),
+              ElevatedButtonInfinityWidget(
+                text: 'Sign Up',
+                onTap: () => _navigateToSignupPage(context),
               ),
               FutureBuilder(
                 future: _snackBarLogin(provider.state, provider.message),
@@ -255,20 +257,19 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  TextField _buildTextField({
-    bool obscureText = false,
-    required String labelText,
-    String hintText = '',
-    required TextEditingController textEditingController,
-  }) {
-    return TextField(
-      controller: textEditingController,
-      obscureText: obscureText,
-      decoration: InputDecoration(
-        labelText: labelText,
-        border: const OutlineInputBorder(),
-        filled: true,
-        hintText: hintText,
+  void _postLogin(BuildContext context) {
+    final provider = context.read<LoginProvider>();
+    provider.postLogin(
+      email: _controllerEmail.text,
+      password: _controllerPassword.text,
+    );
+  }
+
+  void _navigateToSignupPage(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const SignupPage(),
       ),
     );
   }
