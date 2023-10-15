@@ -105,17 +105,17 @@ class _AddStoryPageState extends State<AddStoryPage> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          /// context.watch == provider.of<>(context)
-          /// to listen imagePath from AddStoryProvider
+          // context.watch == provider.of<>(context)
+          // to listen imagePath from AddStoryProvider
           context.watch<AddStoryProvider>().imagePath == null
 
-              /// if null, show default image
+              // if null, show default image
               ? const Icon(
                   Icons.image,
                   size: 100,
                 )
 
-              /// if not null, show image
+              // if not null, show image
               : _showImage(context),
           const SizedBox(height: 20),
           Row(
@@ -145,16 +145,15 @@ class _AddStoryPageState extends State<AddStoryPage> {
             ),
           ),
           const SizedBox(height: 10),
-          // _buildElevatedButtonUpload(context),
-          _buildCompressedImageProcess(),
+          _buildUploadButtonOrLoadingButton(),
         ],
       ),
     );
   }
 
   void _onGalleryView(BuildContext context) async {
-    /// context.read == Provider.of<>(context, listen: false),
-    /// access AddStoryProvider();
+    // context.read == Provider.of<>(context, listen: false),
+    // access AddStoryProvider();
     final provider = context.read<AddStoryProvider>();
 
     final ImagePicker picker = ImagePicker();
@@ -230,30 +229,29 @@ class _AddStoryPageState extends State<AddStoryPage> {
       return;
     }
 
-    addStoryProvider.description = description;
+    final preferenceProvider = context.read<PreferencesProvider>();
+    final isLogin = preferenceProvider.isLogin;
+    var token = preferenceProvider.token;
 
-    // final preferenceProvider = context.read<PreferencesProvider>();
-    // final isLogin = preferenceProvider.isLogin;
-    // var token = preferenceProvider.token;
-    //
-    // // if login is not true, token = string empty
-    // if (!isLogin) {
-    //   token = '';
-    // }
+    // if login is not true, token = string empty
+    if (!isLogin) {
+      token = '';
+    }
 
-    // final fileName = imageFile.name;
+    final fileName = imageFile.name;
 
     final readUploadProvider = context.read<UploadImageStoryProvider>();
     final photoBytes = await imageFile.readAsBytes();
 
-    readUploadProvider.compressImage(photoBytes);
+    final compressedPhotoBytes =
+        await readUploadProvider.compressImage(photoBytes);
 
-    // readUploadProvider.upload(
-    //   photoBytes: compressedPhotoBytes,
-    //   fileName: fileName,
-    //   description: description,
-    //   token: token,
-    // );
+    readUploadProvider.upload(
+      photoBytes: compressedPhotoBytes,
+      fileName: fileName,
+      description: description,
+      token: token,
+    );
   }
 
   SnackBar snackBar(String text) {
@@ -265,6 +263,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
+  /*
   Widget _buildCompressedImageProcess() {
     return Consumer<UploadImageStoryProvider>(
       builder: (context, provider, _) {
@@ -315,10 +314,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
             ),
             builder: (_, __) => _buildIconButtonLoading(),
           );
-
         } else if (provider.stateUpload == ResultState.loading) {
           return _buildIconButtonLoading();
-
         } else if (provider.stateUpload == ResultState.hasData) {
           return FutureBuilder(
             future: _autoNavigateBack(context),
@@ -358,6 +355,23 @@ class _AddStoryPageState extends State<AddStoryPage> {
       },
     );
     return 'loading...';
+  }
+  */
+
+  Widget _buildUploadButtonOrLoadingButton() {
+    return Consumer<UploadImageStoryProvider>(
+      builder: (context, provider, _) {
+        if (provider.stateUpload == ResultState.loading) {
+          return _buildIconButtonLoading();
+        } else if (provider.stateUpload == ResultState.hasData) {
+          return FutureBuilder(
+            future: _autoNavigateBack(context),
+            builder: (_, __) => _buildIconButtonLoading(),
+          );
+        }
+        return _buildElevatedButtonUpload(context);
+      },
+    );
   }
 
   /// button for upload image
