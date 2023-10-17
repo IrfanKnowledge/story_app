@@ -71,7 +71,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
           // if login is true
         } else if (provider.isLogin) {
-          print('isLogin = ${provider.isLogin}');
           // if state is loading (fetch token from SharedPreference),
           // show loading
           if (provider.stateToken == ResultState.loading) {

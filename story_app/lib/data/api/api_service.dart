@@ -93,7 +93,6 @@ class ApiService {
     var statusCode = response.statusCode;
     final listStoryWrap = ListStoryWrap.fromRawJson(response.body);
 
-    print('statusCode = $statusCode');
     if (statusCode == 200) {
       return listStoryWrap;
     } else {
@@ -164,8 +163,6 @@ class ApiService {
     required String token,
     required String id,
   }) async {
-    print('getDetailStory, ApiService, token = $token');
-    print('getDetailStory, ApiService, id = $id');
 
     final response = await http.get(
       Uri.parse(

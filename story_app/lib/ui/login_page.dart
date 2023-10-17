@@ -115,14 +115,12 @@ class _LoginPageState extends State<LoginPage> {
       builder: (context, providerLogin, __) {
         // if state is loading (fetching login response from API Service)
         if (providerLogin.state == ResultState.loading) {
-          print('state loading');
           // show loading
           return const Center(
             child: CircularProgressIndicator(),
           );
           // if state is has data
         } else if (providerLogin.state == ResultState.hasData) {
-          print('state has data');
 
           // auto navigate to ListStoryPage,
           // set login status and set token to SharedPreferences.
@@ -140,7 +138,6 @@ class _LoginPageState extends State<LoginPage> {
             },
           );
         }
-        print('state else...');
         // if other condition is true then stay on this page
         return _buildSafeArea();
       },

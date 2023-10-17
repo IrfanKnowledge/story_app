@@ -25,14 +25,11 @@ class UploadImageStoryProvider extends ChangeNotifier {
     const int maxBytes = 1000000;
     final int imageLength = bytes.length;
 
-    print('imageLength = $imageLength, $maxBytes');
-    print(imageLength < maxBytes);
 
     // jika imageLength lebih kecil dari 1 ribu bytes (1 MB),
     // maka tidak perlu dilakukan compress
     if (imageLength < maxBytes) return bytes;
 
-    print('before img.decodeImage');
 
     // img.decodeImage will using UI thread,
     // so highly recommend don't use this
@@ -41,11 +38,9 @@ class UploadImageStoryProvider extends ChangeNotifier {
     int length = imageLength;
     List<int> newByte = [];
 
-    print('after img.decodeImage');
 
     do {
       compressQuality -= 10;
-      print('compressQuality: $compressQuality');
 
       // img.encodeJpg will using UI thread,
       // so highly recommend don't use this
@@ -67,7 +62,6 @@ class UploadImageStoryProvider extends ChangeNotifier {
     String token = '',
   }) async {
     try {
-      print('ResultState.loading, upload, upload_image_story_provider');
       _stateUpload = ResultState.loading;
       notifyListeners();
 
@@ -82,7 +76,6 @@ class UploadImageStoryProvider extends ChangeNotifier {
         _stateUpload = ResultState.hasData;
         _messageUpload = uploadResponse.message;
         notifyListeners();
-        print('ResultState.hasdata, upload, upload_image_story_provider');
       }
 
       // if no internet connection, _state = ResultState.error
@@ -90,17 +83,12 @@ class UploadImageStoryProvider extends ChangeNotifier {
       _stateUpload = ResultState.error;
       _messageUpload = StringHelper.noInternetConnection;
       notifyListeners();
-      print('ResultState.error, upload, upload_image_story_provider');
-      print('ResultState.error: $_messageUpload');
 
       // if other error show up, _state = ResultState.error
     } catch (e, stacktrace) {
       _stateUpload = ResultState.error;
       _messageUpload = e.toString();
       notifyListeners();
-      print('ResultState.error, upload, upload_image_story_provider');
-      print('ResultState.error: $_messageUpload');
-      print(stacktrace);
     }
   }
 }

@@ -100,7 +100,6 @@ class ListStoryPage extends StatelessWidget {
   Widget _getToken() {
     return Consumer<PreferencesProvider>(
       builder: (context, provPref, _) {
-        print('consumer PreferencesProvider');
 
         // if state is loading (fetch isLogin from SharedPreference),
         // show loading
@@ -136,7 +135,6 @@ class ListStoryPage extends StatelessWidget {
   Widget _getStories(String token) {
     return Consumer<ListStoryProvider>(
       builder: (context, provListStory, _) {
-        print('consumer ListStoryProvider');
 
         // if state is not started,
         // then fetch all stories from API,

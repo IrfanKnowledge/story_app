@@ -71,7 +71,6 @@ class DetailStoryPage extends StatelessWidget {
   Widget _getToken() {
     return Consumer<PreferencesProvider>(
       builder: (context, provPref, _) {
-        print('consumer PreferencesProvider');
 
         // if state is loading (fetch isLogin from SharedPreference),
         // show loading
@@ -113,7 +112,6 @@ class DetailStoryPage extends StatelessWidget {
   }) {
     return Consumer<DetailStoryProvider>(
       builder: (context, provider, _) {
-        print('consumer DetailStoryProvider');
 
         // if state is not started,
         // then fetch story detail from API,
@@ -216,10 +214,6 @@ class DetailStoryPage extends StatelessWidget {
                   height: 500,
                   fit: BoxFit.contain,
                   errorBuilder: (_, error, stackTrace) {
-                    print(
-                      '_buildContainer, DetailStoryPage, Image.network, error: $error',
-                    );
-                    print('stackTrace: $stackTrace');
                     return const Icon(
                       Icons.image,
                       size: 100,

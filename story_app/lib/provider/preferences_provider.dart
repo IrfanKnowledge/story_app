@@ -28,7 +28,6 @@ class PreferencesProvider extends ChangeNotifier {
   PreferencesProvider({required this.preferencesHelper})
       : _stateToken = ResultState.notStarted,
         _stateIsLogin = ResultState.notStarted {
-    print('instance PreferenceProvider');
     _getLoginStatus();
     _getToken();
   }
@@ -52,7 +51,6 @@ class PreferencesProvider extends ChangeNotifier {
       notifyListeners();
     }
 
-    print('_getLoginStatus');
   }
 
   /// set login status to SharedPreferences
@@ -60,7 +58,6 @@ class PreferencesProvider extends ChangeNotifier {
     preferencesHelper.setLoginStatus(value);
     _isLogin = value;
     notifyListeners();
-    print('setLoginStatus, _isLogin = $_isLogin');
   }
 
   /// get token from SharedPreferences
@@ -76,13 +73,11 @@ class PreferencesProvider extends ChangeNotifier {
       _stateToken = ResultState.noData;
       _messageToken = 'Sesi anda sudah habis atau tidak valid, silahkan untu login ulang terlebih dahulu';
       notifyListeners();
-      print('_getToken');
 
       /// if token is not empty, _stateToken = ResultState.hasData
     } else {
       _stateToken = ResultState.hasData;
       notifyListeners();
-      print('_getToken');
     }
   }
 
@@ -91,7 +86,6 @@ class PreferencesProvider extends ChangeNotifier {
     preferencesHelper.setToken(value);
     _token = value;
     notifyListeners();
-    print('setToken, _token = $_token');
   }
 
   /// remove token from SharedPreferences
@@ -99,6 +93,5 @@ class PreferencesProvider extends ChangeNotifier {
     preferencesHelper.removeToken();
     _token = '';
     notifyListeners();
-    print('removeToken, _token = $_token');
   }
 }

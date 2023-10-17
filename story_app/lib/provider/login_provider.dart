@@ -26,7 +26,6 @@ class LoginProvider extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      print('inside try');
 
       /// initiate process, _state = ResultState.loading
       _state = ResultState.loading;
@@ -41,16 +40,12 @@ class LoginProvider extends ChangeNotifier {
         _state = ResultState.noData;
         _message = loginWrap.message;
         notifyListeners();
-        print('token is empty, ResultState.noData, $_message');
 
         /// if token is not empty, _state = ResultState.hasData
       } else {
         _state = ResultState.hasData;
         _loginWrap = loginWrap;
         notifyListeners();
-        print('token not empty, ResultState.hasData, $_message');
-        print(loginWrap.loginResult!.name);
-        print(loginWrap.loginResult!.token);
       }
 
       /// if no internet connection, _state = ResultState.error
@@ -58,15 +53,12 @@ class LoginProvider extends ChangeNotifier {
       _state = ResultState.error;
       _message = StringHelper.noInternetConnection;
       notifyListeners();
-      print('ResultState.error: $_message');
 
       /// if other error show up, _state = ResultState.error
     } catch (e, stacktrace) {
       _state = ResultState.error;
       _message = e.toString();
       notifyListeners();
-      print('ResultState.error: $_message');
-      print(stacktrace);
     }
   }
 }
