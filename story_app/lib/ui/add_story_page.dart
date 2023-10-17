@@ -199,7 +199,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
   Widget _showImage(BuildContext context) {
     final imagePath = context.read<AddStoryProvider>().imagePath;
 
-    /// check is app running on Web Environment or not
+    // check is app running on Web Environment or not
     return kIsWeb
         ? Image.network(
             imagePath.toString(),
@@ -266,101 +266,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
       ),
     );
   }
-
-  /*
-  Widget _buildCompressedImageProcess() {
-    return Consumer<UploadImageStoryProvider>(
-      builder: (context, provider, _) {
-        if (provider.stateCompressImage == ResultState.notStarted) {
-          print('stateCompressImage: notStarted');
-          return _buildElevatedButtonUpload(context);
-        } else if (provider.stateCompressImage == ResultState.loading) {
-          print('stateCompressImage: loading');
-          return _buildIconButtonLoading();
-        } else {
-          print('stateCompressImage: hasData');
-          return _buildUploadImageProcess(context);
-        }
-      },
-    );
-  }
-
-  Widget _buildUploadImageProcess(BuildContext context) {
-    final addStoryProvider = context.read<AddStoryProvider>();
-
-    final imagePath = addStoryProvider.imagePath;
-    final imageFile = addStoryProvider.imageFile;
-    final fileName = imageFile!.name;
-    final description = addStoryProvider.description;
-
-    final preferenceProvider = context.read<PreferencesProvider>();
-    final isLogin = preferenceProvider.isLogin;
-    var token = preferenceProvider.token;
-
-    // if login is not true, token = string empty
-    if (!isLogin) {
-      token = '';
-    }
-
-    final uploadImageStoryProvider = context.read<UploadImageStoryProvider>();
-    final photoBytes = uploadImageStoryProvider.bytesImage;
-
-    return Consumer<UploadImageStoryProvider>(
-      builder: (context, provider, _) {
-        if (provider.stateUpload == ResultState.notStarted) {
-          return FutureBuilder(
-            future: _uploadImage(
-              context: context,
-              photoBytes: photoBytes,
-              fileName: fileName,
-              description: description,
-              token: token,
-            ),
-            builder: (_, __) => _buildIconButtonLoading(),
-          );
-        } else if (provider.stateUpload == ResultState.loading) {
-          return _buildIconButtonLoading();
-        } else if (provider.stateUpload == ResultState.hasData) {
-          return FutureBuilder(
-            future: _autoNavigateBack(context),
-            builder: (_, __) => _buildIconButtonLoading(),
-          );
-        } else if (provider.stateUpload == ResultState.error) {
-          // ScaffoldMessenger.of(context)
-          //     .showSnackBar(snackBar(provider.messageUpload));
-          return _buildElevatedButtonUpload(context);
-        } else {
-          // ScaffoldMessenger.of(context)
-          //     .showSnackBar(snackBar(provider.messageUpload));
-          return _buildElevatedButtonUpload(context);
-        }
-      },
-    );
-  }
-
-  /// upload image to server
-  Future<String> _uploadImage({
-    required BuildContext context,
-    required List<int> photoBytes,
-    required String fileName,
-    required String description,
-    String token = '',
-  }) async {
-    await Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        final uploadProvider = context.read<UploadImageStoryProvider>();
-        uploadProvider.upload(
-          photoBytes: photoBytes,
-          fileName: fileName,
-          description: description,
-          token: token,
-        );
-      },
-    );
-    return 'loading...';
-  }
-  */
 
   Widget _buildUploadButtonOrLoadingButton() {
     return Consumer<UploadImageStoryProvider>(

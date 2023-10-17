@@ -5,10 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/signup_provider.dart';
 import 'package:story_app/ui/login_page.dart';
+import 'package:story_app/utils/button_style_helper.dart';
+import 'package:story_app/utils/form_validate_helper.dart';
 import 'package:story_app/utils/result_state_helper.dart';
-import 'package:story_app/widget/ElevatedButtonInfinityWidget.dart';
 import 'package:story_app/widget/center_loading.dart';
-import 'package:story_app/widget/text_field_login_widget.dart';
 
 class SignupPage extends StatefulWidget {
   static const path = '/signup';
@@ -20,6 +20,8 @@ class SignupPage extends StatefulWidget {
 }
 
 class _SignupPageState extends State<SignupPage> {
+  final _formKey = GlobalKey<FormState>();
+
   final TextEditingController _controllerName = TextEditingController();
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
@@ -50,11 +52,16 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildSignupProgress() {
     return Consumer<SignupProvider>(
       builder: (context, provider, _) {
+        // if state is loading (fetching signup response from API Service)
         if (provider.state == ResultState.loading) {
+          // show loading
           return const CenterLoading();
+          // if state is has data
         } else if (provider.state == ResultState.hasData) {
+          // auto navigate back to previous page
           return FutureBuilder(
             future: _autoNavigateBack(context: context),
+            // show loading while await auto navigate back process
             builder: (_, __) => const CenterLoading(),
           );
         }
@@ -64,10 +71,14 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
+  /// Auto navigate back to previous page,
+  /// show 'success' message.
+  /// Delayed because we need to wait until UI building process is done,
+  /// to avoiding an error.
   Future<String> _autoNavigateBack({required BuildContext context}) async {
     Future.delayed(
       const Duration(
-        seconds: 2,
+        seconds: 1,
       ),
       () {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -113,63 +124,70 @@ class _SignupPageState extends State<SignupPage> {
     return Container(
       alignment: Alignment.topCenter,
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          TextFieldLoginWidget(
-            labelText: 'Name',
-            textEditingController: _controllerName,
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          TextFieldLoginWidget(
-            labelText: 'Email',
-            hintText: '...@..com',
-            textEditingController: _controllerEmail,
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          TextFieldLoginWidget(
-            obscureText: true,
-            labelText: 'Password',
-            textEditingController: _controllerPassword,
-          ),
-          const SizedBox(
-            height: 10,
-          ),
-          ElevatedButtonInfinityWidget(
-            text: 'Sign Up',
-            onTap: () => _signup(context),
-          ),
-          FutureBuilder(
-            future: _snackBarLogin(context),
-            builder: (_, __) => const SizedBox.shrink(),
-          ),
-        ],
+      child: Form(
+        key: _formKey,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            TextFormField(
+              controller: _controllerName,
+              decoration: const InputDecoration(
+                labelText: 'Name',
+                border: OutlineInputBorder(),
+                filled: true,
+              ),
+              validator: (value) => FormValidateHelper.validateDoNotEmpty(value),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            TextFormField(
+              controller: _controllerEmail,
+              decoration: const InputDecoration(
+                labelText: 'Email',
+                border: OutlineInputBorder(),
+                filled: true,
+                hintText: '...@....com',
+              ),
+              validator: (value) => FormValidateHelper.validateEmailAndDoNotEmpty(value),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            TextFormField(
+              controller: _controllerPassword,
+              obscureText: true,
+              decoration: const InputDecoration(
+                labelText: 'Password',
+                border: OutlineInputBorder(),
+                filled: true,
+              ),
+              validator: (value) => FormValidateHelper.validatePasswordAndDoNotEmpty(value),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            ElevatedButton(
+              style: ButtonStyleHelper.elevatedButtonStyle,
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _signup(context);
+                }
+              },
+              child: const Text('Sign Up'),
+            ),
+            FutureBuilder(
+              future: _snackBarSignup(context),
+              builder: (_, __) => const SizedBox.shrink(),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   void _signup(BuildContext context) {
-    if (_controllerName.text.isEmpty ||
-        _controllerEmail.text.isEmpty ||
-        _controllerPassword.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        snackBar('Data tidak boleh kosong'),
-      );
-      return;
-    }
-
-    if (_controllerPassword.text.length < 8) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        snackBar('Password tidak boleh kurang dari 8'),
-      );
-      return;
-    }
-
     final provider = context.read<SignupProvider>();
     provider.signup(
       name: _controllerName.text,
@@ -178,9 +196,10 @@ class _SignupPageState extends State<SignupPage> {
     );
   }
 
+  /// show message if signup response is error
   /// delayed because we need to wait until UI building process is done,
   /// to avoiding an error.
-  Future<String> _snackBarLogin(BuildContext context) async {
+  Future<String> _snackBarSignup(BuildContext context) async {
     await Future.delayed(
       const Duration(seconds: 1),
       () {
@@ -198,6 +217,7 @@ class _SignupPageState extends State<SignupPage> {
     return 'loading...';
   }
 
+  /// hapus penggunaan memori yang sudah tidak digunakan ketika halaman ini tertutup
   @override
   void dispose() {
     _controllerName.dispose();

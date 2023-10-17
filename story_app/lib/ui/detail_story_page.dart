@@ -119,8 +119,6 @@ class DetailStoryPage extends StatelessWidget {
         // then fetch story detail from API,
         if (provider.state == ResultState.notStarted) {
           // fetch story detail from API, required token and id.
-          // using FutureBuilder to delay fetching process,
-          // it's for avoiding error caused by calling setState() (notifyListeners()) and building process at the same time
           return FutureBuilder(
             future: _fetchStoryDetail(
               context: context,
@@ -334,15 +332,6 @@ class DetailStoryPage extends StatelessWidget {
             color: const ColorScheme.light().onSecondary,
             fontSize: 16,
             fontWeight: FontWeight.bold),
-      ),
-    );
-  }
-
-  /// for testing
-  Widget _buildCenterCheckData(String message) {
-    return Center(
-      child: Text(
-        message,
       ),
     );
   }

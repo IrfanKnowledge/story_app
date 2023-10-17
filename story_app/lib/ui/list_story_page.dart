@@ -102,28 +102,28 @@ class ListStoryPage extends StatelessWidget {
       builder: (context, provPref, _) {
         print('consumer PreferencesProvider');
 
-        /// if state is loading (fetch isLogin from SharedPreference),
-        /// show loading
+        // if state is loading (fetch isLogin from SharedPreference),
+        // show loading
         if (provPref.stateIsLogin == ResultState.loading) {
           return const CenterLoading();
 
-          /// if isLogin is true
+          // if isLogin is true
         } else if (provPref.isLogin) {
-          /// if state is loading (fetch token from SharedPreference),
-          /// show loading
+          // if state is loading (fetch token from SharedPreference),
+          // show loading
           if (provPref.stateToken == ResultState.loading) {
             return const CenterLoading();
 
-            /// if token is not empty, use the token to get stories from API
+            // if token is not empty, use the token to get stories from API
           } else if (provPref.stateToken == ResultState.hasData) {
             return _getStories(provPref.token);
 
-            /// if token is empty, show error message
+            // if token is empty, show error message
           } else {
             return CenterError(description: provPref.messageToken);
           }
 
-          /// if isLogin is not true, show error message
+          // if isLogin is not true, show error message
         } else {
           return CenterError(description: provPref.messsageIsLogin);
         }
@@ -138,12 +138,10 @@ class ListStoryPage extends StatelessWidget {
       builder: (context, provListStory, _) {
         print('consumer ListStoryProvider');
 
-        /// if state is not started,
-        /// then fetch all stories from API,
+        // if state is not started,
+        // then fetch all stories from API,
         if (provListStory.state == ResultState.notStarted) {
-          /// fetch all stories from API, required token.
-          /// using FutureBuilder to delay fetching process,
-          /// it's for avoiding error caused by calling setState() (notifyListeners()) and building process at the same time
+          // fetch all stories from API, required token.
           return FutureBuilder(
             future: _fetchAllStories(
               provListStory: provListStory,
@@ -152,29 +150,24 @@ class ListStoryPage extends StatelessWidget {
             builder: (_, __) => const CenterLoading(),
           );
 
-          /// if state is loading (fetch all stories from API),
-          /// show loading
+          // if state is loading (fetch all stories from API),
+          // show loading
         } else if (provListStory.state == ResultState.loading) {
           return const CenterLoading();
 
-          /// if state is has data, show the data
+          // if state is has data, show the data
         } else if (provListStory.state == ResultState.hasData) {
-          // return Center(
-          //   child: Text(
-          //     '${provListStory.listStoryWrap.message}, ${provListStory.listStoryWrap.listStory}',
-          //   ),
-          // );
           return _buildContainer(provListStory.listStoryWrap.listStory);
 
-          /// if state is no data, show error message
+          // if state is no data, show error message
         } else if (provListStory.state == ResultState.noData) {
           return CenterError(description: provListStory.message);
 
-          /// if state is error, show error message
+          // if state is error, show error message
         } else if (provListStory.state == ResultState.error) {
           return CenterError(description: provListStory.message);
 
-          /// if state is other else, show error message
+          // if state is other else, show error message
         } else {
           return CenterError(description: provListStory.message);
         }

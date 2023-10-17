@@ -8,7 +8,10 @@ import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/common/url_strategy.dart';
 
 void main() {
+  // (use path url for web (remove hash '#' from url) or if isn't web then do nothing)
+  // this method, it is from url_strategy.dart
   usePathUrlStrategy();
+
   runApp(const MyApp());
 }
 
