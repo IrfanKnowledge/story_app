@@ -106,12 +106,10 @@ class _LoginPageState extends State<LoginPage> {
     return Consumer<LoginProvider>(
       builder: (context, providerLogin, __) {
         if (providerLogin.state == ResultState.loading) {
-          print('state loading');
           return const Center(
             child: CircularProgressIndicator(),
           );
         } else if (providerLogin.state == ResultState.hasData) {
-          print('state has data');
 
           // using FutureBuilder.future to do automatic navigation,
           // because Navigator.push can't be used inside return Widget(),
@@ -130,7 +128,6 @@ class _LoginPageState extends State<LoginPage> {
             },
           );
         } else {
-          print('state else...');
           return _buildSafeArea();
         }
       },

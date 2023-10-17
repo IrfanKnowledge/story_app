@@ -24,7 +24,6 @@ class ListStoryProvider extends ChangeNotifier {
 
   void fetchAllStories({required String token}) async {
     try {
-      print('ResultState.loading');
 
       /// initiate process, _state = ResultState.loading
       _state = ResultState.loading;
@@ -49,15 +48,12 @@ class ListStoryProvider extends ChangeNotifier {
       _state = ResultState.error;
       _message = StringHelper.noInternetConnection;
       notifyListeners();
-      print('ResultState.error: $_message');
 
       /// if other error show up, _state = ResultState.error
     } catch (e, stacktrace) {
       _state = ResultState.error;
       _message = e.toString();
       notifyListeners();
-      print('ResultState.error: $_message');
-      print(stacktrace);
     }
   }
 }

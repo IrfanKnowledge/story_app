@@ -16,8 +16,6 @@ class CardStoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    var owlPhoto =
-        'https://flutter.github.io/assets-for-api-docs/assets/widgets/owl.jpg';
 
     return Card(
       clipBehavior: Clip.hardEdge,
@@ -37,10 +35,6 @@ class CardStoryWidget extends StatelessWidget {
               cacheHeight: 512,
               fit: BoxFit.cover,
               errorBuilder: (context, error, stackTrace) {
-                print(
-                  'build, CardStoryWidget, Image.network, error: $error',
-                );
-                print('stackTrace: $stackTrace');
                 return const Icon(
                   Icons.image,
                   size: 100,

@@ -31,7 +31,6 @@ class DetailStoryProvider extends ChangeNotifier {
       _state = ResultState.loading;
       notifyListeners();
 
-      print('ResultState.loading, fetchStoryDetail, FetchStoryDetailProvider');
 
       final detailStoryWrap = await apiService.getDetailStory(
         token: token,
@@ -43,8 +42,6 @@ class DetailStoryProvider extends ChangeNotifier {
         _detailStoryWrap = detailStoryWrap;
         notifyListeners();
 
-        print(
-            'ResultState.hasData, fetchStoryDetail, FetchStoryDetailProvider');
       }
 
       // if no internet connection, _state = ResultState.error
@@ -53,7 +50,6 @@ class DetailStoryProvider extends ChangeNotifier {
       _message = StringHelper.noInternetConnection;
       notifyListeners();
 
-      print('ResultState.error: $_message');
 
       // if other error show up, _state = ResultState.error
     } catch (e, stacktrace) {
@@ -61,8 +57,6 @@ class DetailStoryProvider extends ChangeNotifier {
       _message = e.toString();
       notifyListeners();
 
-      print('ResultState.error: $_message');
-      print(stacktrace);
     }
   }
 }
