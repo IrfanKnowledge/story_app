@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
@@ -13,6 +14,8 @@ import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/text_field_login_widget.dart';
 
 class LoginPage extends StatefulWidget {
+  static const String path = '/';
+
   const LoginPage({super.key});
 
   @override
@@ -266,12 +269,13 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _navigateToSignupPage(BuildContext context) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const SignupPage(),
-      ),
-    );
+    // Navigator.push(
+    //   context,
+    //   MaterialPageRoute(
+    //     builder: (context) => const SignupPage(),
+    //   ),
+    // );
+    context.push(SignupPage.path);
   }
 
   /// show snackBar when [_buildLoginProgress] == ResultState.noData or ResultState.error

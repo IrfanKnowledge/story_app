@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/signup_provider.dart';
@@ -8,6 +9,8 @@ import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/text_field_login_widget.dart';
 
 class SignupPage extends StatefulWidget {
+  static const path = '/signup';
+
   const SignupPage({super.key});
 
   @override
@@ -75,7 +78,8 @@ class _SignupPageState extends State<SignupPage> {
         seconds: 3,
       ),
       () {
-        Navigator.pop(context);
+        // Navigator.pop(context);
+        context.pop();
       },
     );
     return 'loading...';
