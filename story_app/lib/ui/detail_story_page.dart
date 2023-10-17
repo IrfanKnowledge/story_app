@@ -13,6 +13,8 @@ import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class DetailStoryPage extends StatelessWidget {
+  static const String path = '/stories/';
+
   final String id;
 
   const DetailStoryPage({super.key, required this.id});

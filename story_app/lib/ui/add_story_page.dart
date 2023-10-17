@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -10,11 +11,14 @@ import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/add_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
+import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class AddStoryPage extends StatefulWidget {
+  static const String path = '/add_story';
+
   const AddStoryPage({super.key});
 
   @override
@@ -406,9 +410,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     Future.delayed(
       const Duration(seconds: 1),
       () {
-        Navigator.pop(
-          context,
-        );
+        kIsWeb ? context.go(ListStoryPage.path) : context.pop();
       },
     );
     return 'Loading...';

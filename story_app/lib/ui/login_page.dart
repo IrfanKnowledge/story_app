@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -92,12 +93,13 @@ class _LoginPageState extends State<LoginPage> {
     await Future.delayed(
       const Duration(seconds: 1),
       () {
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (_) => const ListStoryPage(),
-          ),
-        );
+        // Navigator.pushReplacement(
+        //   context,
+        //   MaterialPageRoute(
+        //     builder: (_) => const ListStoryPage(),
+        //   ),
+        // );
+        context.go(ListStoryPage.path);
       },
     );
     return 'loading...';
@@ -148,17 +150,11 @@ class _LoginPageState extends State<LoginPage> {
     await Future.delayed(
       const Duration(seconds: 1),
       () {
-        var providerPrefs =
-            Provider.of<PreferencesProvider>(context, listen: false);
-        providerPrefs.setLoginStatus(true);
-        providerPrefs.setToken(token);
+        var provider = context.read<PreferencesProvider>();
+        provider.setLoginStatus(true);
+        provider.setToken(token);
 
-        Navigator.pushReplacement(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ListStoryPage(),
-          ),
-        );
+        context.go(ListStoryPage.path);
       },
     );
 
@@ -269,13 +265,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _navigateToSignupPage(BuildContext context) {
-    // Navigator.push(
-    //   context,
-    //   MaterialPageRoute(
-    //     builder: (context) => const SignupPage(),
-    //   ),
-    // );
-    context.push(SignupPage.path);
+    kIsWeb ? context.go(SignupPage.path) : context.push(SignupPage.path);
   }
 
   /// show snackBar when [_buildLoginProgress] == ResultState.noData or ResultState.error

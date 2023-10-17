@@ -1,8 +1,10 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/signup_provider.dart';
+import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/ElevatedButtonInfinityWidget.dart';
 import 'package:story_app/widget/center_loading.dart';
@@ -78,8 +80,7 @@ class _SignupPageState extends State<SignupPage> {
         seconds: 3,
       ),
       () {
-        // Navigator.pop(context);
-        context.pop();
+        kIsWeb ? context.go(LoginPage.path) : context.pop();
       },
     );
     return 'loading...';

@@ -1,4 +1,6 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
@@ -15,6 +17,8 @@ import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class ListStoryPage extends StatelessWidget {
+  static const path = '/stories';
+
   const ListStoryPage({super.key});
 
   @override
@@ -53,14 +57,15 @@ class ListStoryPage extends StatelessWidget {
       actions: [
         IconButton(
           onPressed: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const AddStoryPage(),
-              ),
-            ).then((_) {
-              _refreshPage(context);
-            });
+            kIsWeb
+                ? context.go(AddStoryPage.path)
+                : context
+                    .push(
+                      AddStoryPage.path,
+                    )
+                    .then(
+                      (_) => _refreshPage(context),
+                    );
           },
           icon: const Icon(Icons.add),
         ),
@@ -70,17 +75,11 @@ class ListStoryPage extends StatelessWidget {
         ),
         IconButton(
           onPressed: () {
-            var providerPref =
-                Provider.of<PreferencesProvider>(context, listen: false);
-            providerPref.setLoginStatus(false);
-            providerPref.removeToken();
+            var provider = context.read<PreferencesProvider>();
+            provider.setLoginStatus(false);
+            provider.removeToken();
 
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const LoginPage(),
-              ),
-            );
+            context.go(LoginPage.path);
           },
           icon: const Icon(Icons.logout),
         ),
@@ -214,16 +213,15 @@ class ListStoryPage extends StatelessWidget {
         final item = listStory[index];
 
         void onTap() {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => DetailStoryPage(
-                id: item.id,
-              ),
-            ),
-          ).then((_) {
-            _refreshPage(context);
-          });
+          kIsWeb
+              ? context.go('${DetailStoryPage.path}${item.id}')
+              : context
+                  .push(
+                    '${DetailStoryPage.path}${item.id}',
+                  )
+                  .then(
+                    (_) => _refreshPage(context),
+                  );
         }
 
         return CardStoryWidget(
