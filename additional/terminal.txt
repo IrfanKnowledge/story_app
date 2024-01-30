@@ -1,0 +1,9 @@
+[merapihkan susunan kode pada seluruh file]
+command: dart format lib
+
+[menerapkan semua sugesti compiler kecuali hapus print]
+command: dart fix --apply
+
+[hapus semua print]
+library: print_remover: ^1.0.1
+command: flutter pub run print_remover:main

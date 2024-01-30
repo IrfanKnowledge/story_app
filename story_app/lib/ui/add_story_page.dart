@@ -164,7 +164,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
       maxHeight: 500,
-      imageQuality: 90,
+      imageQuality: 100,
     );
 
     if (pickedFile != null) {
@@ -186,7 +186,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.camera,
       maxHeight: 500,
-      imageQuality: 90,
+      imageQuality: 100,
     );
 
     if (pickedFile != null) {
@@ -246,8 +246,10 @@ class _AddStoryPageState extends State<AddStoryPage> {
     final readUploadProvider = context.read<UploadImageStoryProvider>();
     final photoBytes = await imageFile.readAsBytes();
 
+
     final compressedPhotoBytes =
         await readUploadProvider.compressImage(photoBytes);
+
 
     readUploadProvider.upload(
       photoBytes: compressedPhotoBytes,

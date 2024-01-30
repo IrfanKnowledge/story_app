@@ -9,17 +9,18 @@ class SignupWrap {
     required this.message,
   });
 
-  factory SignupWrap.fromRawJson(String str) => SignupWrap.fromJson(json.decode(str));
+  factory SignupWrap.fromRawJson(String str) =>
+      SignupWrap.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 
   factory SignupWrap.fromJson(Map<String, dynamic> json) => SignupWrap(
-    error: json["error"],
-    message: json["message"],
-  );
+        error: json["error"],
+        message: json["message"],
+      );
 
   Map<String, dynamic> toJson() => {
-    "error": error,
-    "message": message,
-  };
+        "error": error,
+        "message": message,
+      };
 }

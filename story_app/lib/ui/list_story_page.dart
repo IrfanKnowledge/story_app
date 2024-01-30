@@ -2,10 +2,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/data/model/list_story_model.dart';
-import 'package:story_app/data/preferences/preferences_helper.dart';
+import 'package:story_app/main.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
@@ -16,38 +14,48 @@ import 'package:story_app/widget/card_story_widget.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
-class ListStoryPage extends StatelessWidget {
+class ListStoryPage extends StatefulWidget {
   static const path = '/stories';
 
   const ListStoryPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    return _buildMultiProvider();
+  State<ListStoryPage> createState() => _ListStoryPageState();
+}
+
+class _ListStoryPageState extends State<ListStoryPage> {
+  late final String _token;
+
+  @override
+  void initState() {
+    final providerPref = context.read<PreferencesProvider>();
+    print(' initState(), token: ${ providerPref.token}');
+    _token = providerPref.token;
+    super.initState();
   }
 
-  Widget _buildMultiProvider() {
+  Widget _buildMultiProvider({
+    required Widget Function(BuildContext context, Widget? child) builder,
+  }) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => PreferencesProvider(
-            preferencesHelper: PreferencesHelper(
-              sharedPreferences: SharedPreferences.getInstance(),
-            ),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => ListStoryProvider(apiService: ApiService()),
+          create: (context) {
+            return ListStoryProvider(
+              apiService: ApiService(),
+              token: _token,
+            );
+          },
         ),
       ],
-      builder: (context, _) => _buildScaffold(context),
+      builder: builder,
     );
   }
 
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _getToken(),
+      body: _buildGetStories(context),
     );
   }
 
@@ -80,6 +88,7 @@ class ListStoryPage extends StatelessWidget {
             provider.removeToken();
 
             context.go(LoginPage.path);
+            // myRoutingConfig.value = routingConfigBeforeLogin;
           },
           icon: const Icon(Icons.logout),
         ),
@@ -88,84 +97,23 @@ class ListStoryPage extends StatelessWidget {
     );
   }
 
-  /// refresh page
   void _refreshPage(BuildContext context) {
     final listStoryProv = context.read<ListStoryProvider>();
-    final token = context.read<PreferencesProvider>().token;
-    listStoryProv.fetchAllStories(token: token);
+    listStoryProv.fetchAllStories(token: _token);
   }
 
-  /// get token from SharedPreference
-  /// used by [_buildScaffold]
-  Widget _getToken() {
-    return Consumer<PreferencesProvider>(
-      builder: (context, provPref, _) {
-
-        // if state is loading (fetch isLogin from SharedPreference),
-        // show loading
-        if (provPref.stateIsLogin == ResultState.loading) {
-          return const CenterLoading();
-
-          // if isLogin is true
-        } else if (provPref.isLogin) {
-          // if state is loading (fetch token from SharedPreference),
-          // show loading
-          if (provPref.stateToken == ResultState.loading) {
-            return const CenterLoading();
-
-            // if token is not empty, use the token to get stories from API
-          } else if (provPref.stateToken == ResultState.hasData) {
-            return _getStories(provPref.token);
-
-            // if token is empty, show error message
-          } else {
-            return CenterError(description: provPref.messageToken);
-          }
-
-          // if isLogin is not true, show error message
-        } else {
-          return CenterError(description: provPref.messsageIsLogin);
-        }
-      },
-    );
-  }
-
-  /// get stories, required token.
-  /// used by [_getToken]
-  Widget _getStories(String token) {
+  Widget _buildGetStories(BuildContext context) {
     return Consumer<ListStoryProvider>(
       builder: (context, provListStory, _) {
-
-        // if state is not started,
-        // then fetch all stories from API,
-        if (provListStory.state == ResultState.notStarted) {
-          // fetch all stories from API, required token.
-          return FutureBuilder(
-            future: _fetchAllStories(
-              provListStory: provListStory,
-              token: token,
-            ),
-            builder: (_, __) => const CenterLoading(),
-          );
-
-          // if state is loading (fetch all stories from API),
-          // show loading
-        } else if (provListStory.state == ResultState.loading) {
+        print('provListStory.state: ${provListStory.state}');
+        if (provListStory.state == ResultState.loading) {
           return const CenterLoading();
-
-          // if state is has data, show the data
         } else if (provListStory.state == ResultState.hasData) {
-          return _buildContainer(provListStory.listStoryWrap.listStory);
-
-          // if state is no data, show error message
+          return _buildContainer(context);
         } else if (provListStory.state == ResultState.noData) {
           return CenterError(description: provListStory.message);
-
-          // if state is error, show error message
         } else if (provListStory.state == ResultState.error) {
           return CenterError(description: provListStory.message);
-
-          // if state is other else, show error message
         } else {
           return CenterError(description: provListStory.message);
         }
@@ -173,36 +121,25 @@ class ListStoryPage extends StatelessWidget {
     );
   }
 
-  /// fetchAllStories from API, with delay process.
-  /// used by [_getStories]
-  Future<String> _fetchAllStories({
-    required ListStoryProvider provListStory,
-    required String token,
-  }) async {
-    await Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        provListStory.fetchAllStories(token: token);
-      },
-    );
-
-    return 'loading...';
-  }
-
-  Container _buildContainer(List<ListStory>? listStory) {
+  Container _buildContainer(BuildContext context) {
     return Container(
       alignment: Alignment.topCenter,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: _buildListView(listStory),
+      padding: const EdgeInsets.symmetric(
+        vertical: 8,
+        horizontal: 16,
+      ),
+      child: _buildListView(context),
     );
   }
 
-  Widget _buildListView(List<ListStory>? listStory) {
+  Widget _buildListView(BuildContext context) {
+    final providerListStory = context.read<ListStoryProvider>();
+    final listStory = providerListStory.listStoryWrap.listStory;
+
     return ListView.builder(
       itemCount: listStory!.length,
       itemBuilder: (context, index) {
         final item = listStory[index];
-
         void onTap() {
           kIsWeb
               ? context.go('${DetailStoryPage.path}${item.id}')
@@ -222,6 +159,13 @@ class ListStoryPage extends StatelessWidget {
           onTap: onTap,
         );
       },
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildMultiProvider(
+      builder: (context, _) => _buildScaffold(context),
     );
   }
 }

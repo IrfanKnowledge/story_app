@@ -20,16 +20,17 @@ class ListStoryWrap {
     List<ListStory>? listStory;
 
     if (json.containsKey("listStory")) {
-      listStory = List<ListStory>.from(json["listStory"].map((x) => ListStory.fromJson(x)));
+      listStory = List<ListStory>.from(
+          json["listStory"].map((x) => ListStory.fromJson(x)));
     } else {
       listStory = null;
     }
 
     return ListStoryWrap(
-        error: json["error"],
-        message: json["message"],
-        listStory: listStory,
-      );
+      error: json["error"],
+      message: json["message"],
+      listStory: listStory,
+    );
   }
 
   Map<String, dynamic> toJson() {

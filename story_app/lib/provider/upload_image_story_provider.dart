@@ -25,11 +25,9 @@ class UploadImageStoryProvider extends ChangeNotifier {
     const int maxBytes = 1000000;
     final int imageLength = bytes.length;
 
-
     // jika imageLength lebih kecil dari 1 ribu bytes (1 MB),
     // maka tidak perlu dilakukan compress
     if (imageLength < maxBytes) return bytes;
-
 
     // img.decodeImage will using UI thread,
     // so highly recommend don't use this
@@ -37,7 +35,6 @@ class UploadImageStoryProvider extends ChangeNotifier {
     int compressQuality = 90;
     int length = imageLength;
     List<int> newByte = [];
-
 
     do {
       compressQuality -= 10;
@@ -85,7 +82,7 @@ class UploadImageStoryProvider extends ChangeNotifier {
       notifyListeners();
 
       // if other error show up, _state = ResultState.error
-    } catch (e, stacktrace) {
+    } catch (e) {
       _stateUpload = ResultState.error;
       _messageUpload = e.toString();
       notifyListeners();

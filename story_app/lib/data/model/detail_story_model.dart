@@ -11,7 +11,8 @@ class DetailStoryWrap {
     required this.story,
   });
 
-  factory DetailStoryWrap.fromRawJson(String str) => DetailStoryWrap.fromJson(json.decode(str));
+  factory DetailStoryWrap.fromRawJson(String str) =>
+      DetailStoryWrap.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 

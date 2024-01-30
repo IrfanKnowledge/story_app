@@ -1,10 +1,10 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/data/preferences/preferences_helper.dart';
+import 'package:story_app/main.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
@@ -30,29 +30,18 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _controllerPassword = TextEditingController();
 
   @override
-  Widget build(BuildContext context) {
-    return _buildMultiProvider();
+  void dispose() {
+    _controllerEmail.dispose();
+    _controllerPassword.dispose();
+    super.dispose();
   }
 
-  /// build provider more than 1
-  /// (provider used for state management)
   Widget _buildMultiProvider() {
     return MultiProvider(
       providers: [
-        // provider to use API Service
         ChangeNotifierProvider(
-          create: (_) => LoginProvider(
-            apiService: ApiService(),
-          ),
-        ),
-        // provider to use SharedPreferences
-        ChangeNotifierProvider(
-          create: (_) => PreferencesProvider(
-            preferencesHelper: PreferencesHelper(
-              sharedPreferences: SharedPreferences.getInstance(),
-            ),
-          ),
-        ),
+          create: (_) => LoginProvider(apiService: ApiService()),
+        )
       ],
       child: _buildScaffold(),
     );
@@ -69,24 +58,13 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildIsLogin() {
     return Consumer<PreferencesProvider>(
       builder: (context, provider, _) {
-        // if state is still not started
         if (provider.stateIsLogin == ResultState.notStarted) {
-          // show loading
           return const CenterLoading();
-
-          // if state is loading (fetch isLogin from SharedPreference),
         } else if (provider.stateIsLogin == ResultState.loading) {
-          // show loading
           return const CenterLoading();
-
-          // if isLogin is true
         } else if (provider.isLogin) {
-          // auto navigate to ListStoryPage
-          return FutureBuilder(
-            future: _autoNavigate(context),
-            // show loading while await auto navigate process
-            builder: (_, __) => const CenterLoading(),
-          );
+          _navigateIfLoginIsTrue();
+          return const CenterLoading();
         }
 
         // if isLogin is not true
@@ -95,17 +73,11 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Auto navigate to ListStoryPage.
-  /// Delayed because we need to wait until UI building process is done,
-  /// to avoiding an error.
-  Future<String> _autoNavigate(BuildContext context) async {
-    await Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        context.go(ListStoryPage.path);
-      },
-    );
-    return 'loading...';
+  void _navigateIfLoginIsTrue() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.go(ListStoryPage.path);
+      // myRoutingConfig.value = routingConfigAfterLogin;
+    });
   }
 
   /// if login process is begin, then do login progress.
@@ -113,33 +85,18 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildLoginProgress() {
     return Consumer<LoginProvider>(
       builder: (context, providerLogin, __) {
-        // if state is loading (fetching login response from API Service)
         if (providerLogin.state == ResultState.loading) {
-          // show loading
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-          // if state is has data
+          return const CenterLoading();
         } else if (providerLogin.state == ResultState.hasData) {
-
-          // auto navigate to ListStoryPage,
-          // set login status and set token to SharedPreferences.
-          return FutureBuilder(
-            future: _autoNavigateSetLoginAndToken(
-              context,
-              // use '!' because it's 100% not null
-              providerLogin.loginWrap.loginResult!.token,
-            ),
-            builder: (_, __) {
-              // show loading while await auto navigate process
-              return const Center(
-                child: CircularProgressIndicator(),
-              );
-            },
+          _autoNavigateSetLoginAndToken(
+            context,
+            providerLogin.loginWrap.loginResult!.token,
           );
+
+          return const CenterLoading();
         }
-        // if other condition is true then stay on this page
-        return _buildSafeArea();
+
+        return _buildSafeAreaAndScroll(context);
       },
     );
   }
@@ -148,147 +105,133 @@ class _LoginPageState extends State<LoginPage> {
   /// set login status and set token to SharedPreferences.
   /// Delayed because we need to wait until UI building process is done,
   /// to avoiding an error.
-  Future<String> _autoNavigateSetLoginAndToken(
+  void _autoNavigateSetLoginAndToken(
     BuildContext context,
     String token,
-  ) async {
-    await Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        var provider = context.read<PreferencesProvider>();
-        provider.setLoginStatus(true);
-        provider.setToken(token);
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<PreferencesProvider>();
+      provider.setToken(token);
 
-        context.go(ListStoryPage.path);
-      },
-    );
-
-    return 'loading...';
+      // letakkan ini di akhir blok kode ini karena akan memicu build ulang
+      provider.setLoginStatus(true);
+    });
   }
 
-  SafeArea _buildSafeArea() {
+  SafeArea _buildSafeAreaAndScroll(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
-        child: _buildContainer(),
+        child: _buildContainer(context),
       ),
     );
   }
 
-  Widget _buildContainer() {
+  Widget _buildContainer(BuildContext context) {
+    _autoFill();
+    _checkAndShowError(context);
+
+    return Form(
+      key: _formKey,
+      child: Container(
+        alignment: Alignment.topCenter,
+        padding: const EdgeInsets.only(
+          top: 32,
+          bottom: 8,
+          right: 16.0,
+          left: 16.0,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            const CircleAvatar(
+              radius: 75,
+              child: Icon(
+                Icons.person,
+                size: 125,
+              ),
+            ),
+            const Gap(20),
+            ..._buildTextHeadLine(),
+            const Gap(20),
+            ..._buildFormEmailAndPassword(),
+            const Gap(20),
+            ElevatedButton(
+              style: ButtonStyleHelper.elevatedButtonStyle,
+              onPressed: () {
+                if (_formKey.currentState!.validate()) {
+                  _onLogin(context);
+                }
+              },
+              child: const Text('Sign In'),
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            ElevatedButton(
+              style: ButtonStyleHelper.elevatedButtonStyle,
+              onPressed: () => _navigateToSignupPage(context),
+              child: const Text('Sign Up'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _autoFill() {
     _controllerEmail.text = 'NPC001@gmail.com';
     _controllerPassword.text = 'npc00001';
+  }
 
-    const textStyle16 = TextStyle(
-      fontSize: 16,
-    );
+  List<Widget> _buildTextHeadLine() {
+    const textStyle16 = TextStyle(fontSize: 16);
 
-    return Consumer<LoginProvider>(
-      builder: (context, provider, _) {
-        return Container(
-          alignment: Alignment.topCenter,
-          padding: const EdgeInsets.only(
-            top: 32,
-            bottom: 8,
-            right: 16.0,
-            left: 16.0,
-          ),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                CircleAvatar(
-                  backgroundColor: const ColorScheme.light().secondary,
-                  radius: 75,
-                  child: const Icon(
-                    Icons.person,
-                    size: 125,
-                  ),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                const Row(
-                  mainAxisSize: MainAxisSize.max,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  children: [
-                    Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Selamat datang di Story App',
-                          style: textStyle16,
-                        ),
-                        SizedBox(
-                          height: 10,
-                        ),
-                        Text(
-                          'Bagikan kisah-kisah menarikmu melalui Story App!',
-                          style: textStyle16,
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                TextFormField(
-                  controller: _controllerEmail,
-                  decoration: const InputDecoration(
-                    labelText: 'Email',
-                    border: OutlineInputBorder(),
-                    filled: true,
-                    hintText: '...@....com',
-                  ),
-                  validator: (value) => FormValidateHelper.validateEmailAndDoNotEmpty(value),
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                TextFormField(
-                  controller: _controllerPassword,
-                  obscureText: true,
-                  decoration: const InputDecoration(
-                    labelText: 'Password',
-                    border: OutlineInputBorder(),
-                    filled: true,
-                  ),
-                  validator: (value) => FormValidateHelper.validatePasswordAndDoNotEmpty(value),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                ElevatedButton(
-                  style: ButtonStyleHelper.elevatedButtonStyle,
-                  onPressed: () {
-                    if (_formKey.currentState!.validate()) {
-                      _onLogin(context);
-                    }
-                  },
-                  child: const Text('Sign In'),
-                ),
-                const SizedBox(
-                  height: 20,
-                ),
-                ElevatedButton(
-                  style: ButtonStyleHelper.elevatedButtonStyle,
-                  onPressed: () => _navigateToSignupPage(context),
-                  child: const Text('Sign Up'),
-                ),
-                FutureBuilder(
-                  future: _snackBarLogin(context),
-                  // show nothing while await showing error process (if error is true)
-                  builder: (_, __) => const SizedBox.shrink(),
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+    return [
+      const Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Selamat datang di Story App',
+          style: textStyle16,
+        ),
+      ),
+      const Gap(10),
+      const Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          'Bagikan kisah-kisah menarikmu melalui Story App!',
+          style: textStyle16,
+        ),
+      ),
+    ];
+  }
+
+  List<Widget> _buildFormEmailAndPassword() {
+    return [
+      TextFormField(
+        controller: _controllerEmail,
+        decoration: const InputDecoration(
+          labelText: 'Email',
+          border: OutlineInputBorder(),
+          filled: true,
+          hintText: '...@....com',
+        ),
+        validator: (value) =>
+            FormValidateHelper.validateEmailAndDoNotEmpty(value),
+      ),
+      const Gap(10),
+      TextFormField(
+        controller: _controllerPassword,
+        obscureText: true,
+        decoration: const InputDecoration(
+          labelText: 'Password',
+          border: OutlineInputBorder(),
+          filled: true,
+        ),
+        validator: (value) =>
+            FormValidateHelper.validatePasswordAndDoNotEmpty(value),
+      ),
+    ];
   }
 
   /// send (post) login data to API Service
@@ -304,40 +247,25 @@ class _LoginPageState extends State<LoginPage> {
     kIsWeb ? context.go(SignupPage.path) : context.push(SignupPage.path);
   }
 
-  /// show snackBar when [_buildLoginProgress] == ResultState.noData or ResultState.error
-  /// delayed because we need to wait until UI building process is done,
-  /// to avoiding an error.
-  Future<String> _snackBarLogin(BuildContext context) async {
-    await Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        final provider = context.read<LoginProvider>();
-        final state = provider.state;
-        final message = provider.message;
+  void _checkAndShowError(BuildContext context) {
+    final provider = context.read<LoginProvider>();
+    final state = provider.state;
+    final message = provider.message;
 
-        SnackBar? snackBar;
-        Duration duration = const Duration(seconds: 1);
-
-        if (state == ResultState.noData || state == ResultState.error) {
-          snackBar = SnackBar(
-            content: Text(message),
-            duration: duration,
-          );
-        }
-
-        if (snackBar != null) {
-          ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        }
-      },
-    );
-    return 'loading...';
+    if (state == ResultState.noData || state == ResultState.error) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final snackBar = SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 1),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        provider.setStateToNotStartedWithoutNotify();
+      });
+    }
   }
 
-  /// hapus penggunaan memori yang sudah tidak digunakan ketika halaman ini tertutup
   @override
-  void dispose() {
-    _controllerEmail.dispose();
-    _controllerPassword.dispose();
-    super.dispose();
+  Widget build(BuildContext context) {
+    return _buildMultiProvider();
   }
 }

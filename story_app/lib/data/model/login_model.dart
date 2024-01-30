@@ -11,7 +11,8 @@ class LoginWrap {
     required this.loginResult,
   });
 
-  factory LoginWrap.fromRawJson(String str) => LoginWrap.fromJson(json.decode(str));
+  factory LoginWrap.fromRawJson(String str) =>
+      LoginWrap.fromJson(json.decode(str));
 
   String toRawJson() => json.encode(toJson());
 

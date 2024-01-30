@@ -17,7 +17,10 @@ class DetailStoryPage extends StatelessWidget {
 
   final String id;
 
-  const DetailStoryPage({super.key, required this.id});
+  const DetailStoryPage({
+    super.key,
+    required this.id,
+  });
 
   final textStyle16 = const TextStyle(
     fontSize: 16,
@@ -71,7 +74,6 @@ class DetailStoryPage extends StatelessWidget {
   Widget _getToken() {
     return Consumer<PreferencesProvider>(
       builder: (context, provPref, _) {
-
         // if state is loading (fetch isLogin from SharedPreference),
         // show loading
         if (provPref.stateIsLogin == ResultState.loading) {
@@ -112,7 +114,6 @@ class DetailStoryPage extends StatelessWidget {
   }) {
     return Consumer<DetailStoryProvider>(
       builder: (context, provider, _) {
-
         // if state is not started,
         // then fetch story detail from API,
         if (provider.state == ResultState.notStarted) {

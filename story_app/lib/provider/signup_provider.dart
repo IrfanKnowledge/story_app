@@ -41,7 +41,7 @@ class SignupProvider extends ChangeNotifier {
       _state = ResultState.error;
       _message = StringHelper.noInternetConnection;
       notifyListeners();
-    } catch (e, stacktrace) {
+    } catch (e) {
       _state = ResultState.error;
       _message = e.toString();
       notifyListeners();

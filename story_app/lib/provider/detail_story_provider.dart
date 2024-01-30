@@ -31,7 +31,6 @@ class DetailStoryProvider extends ChangeNotifier {
       _state = ResultState.loading;
       notifyListeners();
 
-
       final detailStoryWrap = await apiService.getDetailStory(
         token: token,
         id: id,
@@ -41,7 +40,6 @@ class DetailStoryProvider extends ChangeNotifier {
         _state = ResultState.hasData;
         _detailStoryWrap = detailStoryWrap;
         notifyListeners();
-
       }
 
       // if no internet connection, _state = ResultState.error
@@ -50,13 +48,11 @@ class DetailStoryProvider extends ChangeNotifier {
       _message = StringHelper.noInternetConnection;
       notifyListeners();
 
-
       // if other error show up, _state = ResultState.error
-    } catch (e, stacktrace) {
+    } catch (e) {
       _state = ResultState.error;
       _message = e.toString();
       notifyListeners();
-
     }
   }
 }

@@ -137,7 +137,8 @@ class _SignupPageState extends State<SignupPage> {
                 border: OutlineInputBorder(),
                 filled: true,
               ),
-              validator: (value) => FormValidateHelper.validateDoNotEmpty(value),
+              validator: (value) =>
+                  FormValidateHelper.validateDoNotEmpty(value),
             ),
             const SizedBox(
               height: 10,
@@ -150,7 +151,8 @@ class _SignupPageState extends State<SignupPage> {
                 filled: true,
                 hintText: '...@....com',
               ),
-              validator: (value) => FormValidateHelper.validateEmailAndDoNotEmpty(value),
+              validator: (value) =>
+                  FormValidateHelper.validateEmailAndDoNotEmpty(value),
             ),
             const SizedBox(
               height: 10,
@@ -163,7 +165,8 @@ class _SignupPageState extends State<SignupPage> {
                 border: OutlineInputBorder(),
                 filled: true,
               ),
-              validator: (value) => FormValidateHelper.validatePasswordAndDoNotEmpty(value),
+              validator: (value) =>
+                  FormValidateHelper.validatePasswordAndDoNotEmpty(value),
             ),
             const SizedBox(
               height: 10,

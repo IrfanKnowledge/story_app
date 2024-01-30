@@ -9,8 +9,8 @@ class PreferencesProvider extends ChangeNotifier {
   String _token = '';
   String _messsageIsLogin = '';
   String _messageToken = '';
-  ResultState _stateIsLogin;
-  ResultState _stateToken;
+  ResultState _stateIsLogin = ResultState.notStarted;
+  ResultState _stateToken = ResultState.notStarted;
 
   bool get isLogin => _isLogin;
 
@@ -25,44 +25,13 @@ class PreferencesProvider extends ChangeNotifier {
   ResultState get stateToken => _stateToken;
 
   /// always check and get the current data from SharedPreferences when do instantiation
-  PreferencesProvider({required this.preferencesHelper})
-      : _stateToken = ResultState.notStarted,
-        _stateIsLogin = ResultState.notStarted {
-    _getLoginStatus();
+  PreferencesProvider({required this.preferencesHelper}) {
     _getToken();
-  }
-
-  /// get login status from SharedPreferences
-  void _getLoginStatus() async {
-
-    /// initiate process, _state = ResultState.loading
-    _stateIsLogin = ResultState.loading;
-    notifyListeners();
-    _isLogin = await preferencesHelper.isLogin;
-
-    /// await the data using if () else,
-    /// that is why the result is always ResultState.hasData
-    if (_isLogin) {
-      _stateIsLogin = ResultState.hasData;
-      notifyListeners();
-    } else {
-      _stateIsLogin = ResultState.hasData;
-      _messsageIsLogin = 'Anda belum login, harap login terlebih dahulu';
-      notifyListeners();
-    }
-
-  }
-
-  /// set login status to SharedPreferences
-  void setLoginStatus(bool value) {
-    preferencesHelper.setLoginStatus(value);
-    _isLogin = value;
-    notifyListeners();
+    _getLoginStatus();
   }
 
   /// get token from SharedPreferences
   void _getToken() async {
-
     /// initiate process, _stateToken = ResultState.loading
     _stateToken = ResultState.loading;
     notifyListeners();
@@ -71,7 +40,8 @@ class PreferencesProvider extends ChangeNotifier {
     /// if token is empty, _stateToken = ResultState.noData
     if (_token.isEmpty) {
       _stateToken = ResultState.noData;
-      _messageToken = 'Sesi anda sudah habis atau tidak valid, silahkan untu login ulang terlebih dahulu';
+      _messageToken =
+          'Sesi anda sudah habis atau tidak valid, silahkan untu login ulang terlebih dahulu';
       notifyListeners();
 
       /// if token is not empty, _stateToken = ResultState.hasData
@@ -92,6 +62,32 @@ class PreferencesProvider extends ChangeNotifier {
   void removeToken() {
     preferencesHelper.removeToken();
     _token = '';
+    notifyListeners();
+  }
+
+  /// get login status from SharedPreferences
+  void _getLoginStatus() async {
+    /// initiate process, _state = ResultState.loading
+    _stateIsLogin = ResultState.loading;
+    notifyListeners();
+    _isLogin = await preferencesHelper.isLogin;
+
+    /// await the data using if () else,
+    /// that is why the result is always ResultState.hasData
+    if (_isLogin) {
+      _stateIsLogin = ResultState.hasData;
+      notifyListeners();
+    } else {
+      _stateIsLogin = ResultState.hasData;
+      _messsageIsLogin = 'Anda belum login, harap login terlebih dahulu';
+      notifyListeners();
+    }
+  }
+
+  /// set login status to SharedPreferences
+  void setLoginStatus(bool value) {
+    preferencesHelper.setLoginStatus(value);
+    _isLogin = value;
     notifyListeners();
   }
 }
