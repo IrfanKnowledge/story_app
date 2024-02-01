@@ -22,33 +22,60 @@ void main() {
   runApp(const MyApp());
 }
 
-/// daftar lengkap RouteBase kecuali path: '/'
-final listRouteComplete = <RouteBase>[
-  GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-  GoRoute(path: '/signup', builder: (_, __) => const SignupPage()),
-  GoRoute(path: '/stories', builder: (_, __) => const ListStoryPage()),
-  GoRoute(
-    path: '/stories/:id',
-    builder: (_, state) {
-      return DetailStoryPage(
-        id: state.pathParameters['id'] ?? '',
-      );
-    },
-  ),
-  GoRoute(path: '/add_story', builder: (_, __) => const AddStoryPage()),
-];
-
 final routingConfigAfterLogin = RoutingConfig(
   routes: [
+    // GoRoute(
+    //   path: '/',
+    //   builder: (_, __) => const ListStoryPage(),
+    //   redirect: (context, state) {
+    //     print('after login, route-level, /');
+    //     return '/stories';
+    //   },
+    // ),
     GoRoute(path: '/', builder: (_, __) => const ListStoryPage()),
-    ...listRouteComplete,
+    // GoRoute(
+    //   path: '/login',
+    //   builder: (_, __) => const ListStoryPage(),
+    //   redirect: (context, state) {
+    //     print('after login, route-level, /login');
+    //     return '/stories';
+    //   },
+    // ),
+    GoRoute(path: '/stories', builder: (_, __) => const ListStoryPage()),
+    GoRoute(
+      path: '/stories/:id',
+      builder: (_, state) {
+        return DetailStoryPage(
+          id: state.pathParameters['id'] ?? '',
+        );
+      },
+    ),
+    GoRoute(path: '/add_story', builder: (_, __) => const AddStoryPage()),
   ],
 );
 
 final routingConfigBeforeLogin = RoutingConfig(
   routes: [
+    // GoRoute(
+    //   path: '/',
+    //   builder: (_, __) => const LoginPage(),
+    //   redirect: (context, state) {
+    //     print('route-level /');
+    //     return '/login';
+    //   },
+    // ),
+    // GoRoute(
+    //   path: '/stories',
+    //   builder: (_, __) => const LoginPage(),
+    //   redirect: (context, state) {
+    //     print('route-level /stories');
+    //     return '/login';
+    //   },
+    // ),
     GoRoute(path: '/', builder: (_, __) => const LoginPage()),
-    ...listRouteComplete,
+    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
+    GoRoute(path: '/signup', builder: (_, __) => const SignupPage()),
+    GoRoute(path: '/stories', builder: (_, __) => const ListStoryPage()),
   ],
 );
 

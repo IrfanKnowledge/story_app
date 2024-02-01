@@ -56,7 +56,6 @@ class ListStoryProvider extends ChangeNotifier {
     } catch (e, stacktrace) {
       _state = ResultState.error;
       _message = e.toString();
-      print(stacktrace);
       notifyListeners();
     }
   }

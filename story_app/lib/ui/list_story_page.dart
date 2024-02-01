@@ -8,7 +8,6 @@ import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/detail_story_page.dart';
-import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/card_story_widget.dart';
 import 'package:story_app/widget/center_error.dart';
@@ -24,12 +23,12 @@ class ListStoryPage extends StatefulWidget {
 }
 
 class _ListStoryPageState extends State<ListStoryPage> {
-  late final String _token;
+  String _token = '';
 
   @override
   void initState() {
     final providerPref = context.read<PreferencesProvider>();
-    print(' initState(), token: ${ providerPref.token}');
+    print(' initState(), token: ${providerPref.token}');
     _token = providerPref.token;
     super.initState();
   }
@@ -55,7 +54,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _buildGetStories(context),
+      body: _buildGetToken(context),
     );
   }
 
@@ -87,8 +86,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
             provider.setLoginStatus(false);
             provider.removeToken();
 
-            context.go(LoginPage.path);
-            // myRoutingConfig.value = routingConfigBeforeLogin;
+            // context.go(LoginPage.path);
+            myRoutingConfig.value = routingConfigBeforeLogin;
           },
           icon: const Icon(Icons.logout),
         ),
@@ -100,6 +99,21 @@ class _ListStoryPageState extends State<ListStoryPage> {
   void _refreshPage(BuildContext context) {
     final listStoryProv = context.read<ListStoryProvider>();
     listStoryProv.fetchAllStories(token: _token);
+  }
+
+  Widget _buildGetToken(BuildContext context) {
+    return Consumer<PreferencesProvider>(
+      builder: (context, provider, child) {
+        print('list_story_page, _buildGetToken(), provider.stateToken: ${provider.stateToken}');
+        print('list_story_page, _buildGetToken(), provider.token: ${provider.token}');
+        if (provider.stateToken == ResultState.loading) {
+          return const CenterLoading();
+        } else if (provider.stateToken == ResultState.hasData) {
+          _token = provider.token;
+        }
+        return _buildGetStories(context);
+      },
+    );
   }
 
   Widget _buildGetStories(BuildContext context) {

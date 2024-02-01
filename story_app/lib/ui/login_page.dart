@@ -58,6 +58,7 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildIsLogin() {
     return Consumer<PreferencesProvider>(
       builder: (context, provider, _) {
+        print('login_page, _buildIsLogin(), provider.stateIsLogin: ${provider.stateIsLogin}');
         if (provider.stateIsLogin == ResultState.notStarted) {
           return const CenterLoading();
         } else if (provider.stateIsLogin == ResultState.loading) {
@@ -75,8 +76,9 @@ class _LoginPageState extends State<LoginPage> {
 
   void _navigateIfLoginIsTrue() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(ListStoryPage.path);
-      // myRoutingConfig.value = routingConfigAfterLogin;
+      // context.go(ListStoryPage.path);
+      myRoutingConfig.value = routingConfigAfterLogin;
+      print('myRoutingConfig.value: ${myRoutingConfig.value.routes}');
     });
   }
 
