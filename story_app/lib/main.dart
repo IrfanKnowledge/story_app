@@ -5,14 +5,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/assets/color_scheme/theme.dart';
 import 'package:story_app/common/assets/font/roboto_flex.dart';
 import 'package:story_app/common/url_strategy.dart';
+import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
+import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/login_page.dart';
-import 'package:story_app/ui/signup_page.dart';
 
 void main() {
   // (use path url for web (remove hash '#' from url) or if isn't web then do nothing)
@@ -22,69 +23,80 @@ void main() {
   runApp(const MyApp());
 }
 
-final routingConfigAfterLogin = RoutingConfig(
-  routes: [
-    // GoRoute(
-    //   path: '/',
-    //   builder: (_, __) => const ListStoryPage(),
-    //   redirect: (context, state) {
-    //     print('after login, route-level, /');
-    //     return '/stories';
-    //   },
-    // ),
-    GoRoute(path: '/', builder: (_, __) => const ListStoryPage()),
-    // GoRoute(
-    //   path: '/login',
-    //   builder: (_, __) => const ListStoryPage(),
-    //   redirect: (context, state) {
-    //     print('after login, route-level, /login');
-    //     return '/stories';
-    //   },
-    // ),
-    GoRoute(path: '/stories', builder: (_, __) => const ListStoryPage()),
-    GoRoute(
-      path: '/stories/:id',
-      builder: (_, state) {
-        return DetailStoryPage(
-          id: state.pathParameters['id'] ?? '',
-        );
-      },
-    ),
-    GoRoute(path: '/add_story', builder: (_, __) => const AddStoryPage()),
-  ],
-);
+String? _redirectIfIsLogin() {
+  if (isLogin) {
+    return '/';
+  } else {
+    return null;
+  }
+}
 
-final routingConfigBeforeLogin = RoutingConfig(
+String? _redirectIfIsNotLogin() {
+  if (!isLogin) {
+    return '/login';
+  } else {
+    return null;
+  }
+}
+
+bool _listStoryPageRefresh(BuildContext context) {
+  final listStoryProv = context.read<ListStoryProvider>();
+  final token = context.read<PreferencesProvider>().token;
+  listStoryProv.fetchAllStories(token: token);
+  return true;
+}
+
+bool isLogin = false;
+
+final routingConfig1 = RoutingConfig(
   routes: [
-    // GoRoute(
-    //   path: '/',
-    //   builder: (_, __) => const LoginPage(),
-    //   redirect: (context, state) {
-    //     print('route-level /');
-    //     return '/login';
-    //   },
-    // ),
-    // GoRoute(
-    //   path: '/stories',
-    //   builder: (_, __) => const LoginPage(),
-    //   redirect: (context, state) {
-    //     print('route-level /stories');
-    //     return '/login';
-    //   },
-    // ),
-    GoRoute(path: '/', builder: (_, __) => const LoginPage()),
-    GoRoute(path: '/login', builder: (_, __) => const LoginPage()),
-    GoRoute(path: '/signup', builder: (_, __) => const SignupPage()),
-    GoRoute(path: '/stories', builder: (_, __) => const ListStoryPage()),
+    GoRoute(
+      path: '/',
+      builder: (_, state) => const ListStoryPage(),
+      redirect: (_, __) => _redirectIfIsNotLogin(),
+      routes: [
+        GoRoute(
+          path: 'add_story',
+          builder: (_, __) => const AddStoryPage(),
+          redirect: (_, __) => _redirectIfIsNotLogin(),
+          onExit: (context) => _listStoryPageRefresh(context),
+        ),
+        GoRoute(
+          path: 'stories/:id',
+          builder: (_, state) {
+            return DetailStoryPage(
+              id: state.pathParameters['id'] ?? '',
+            );
+          },
+          redirect: (_, __) => _redirectIfIsNotLogin(),
+          onExit: (context) => _listStoryPageRefresh(context),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (_, __) => const LoginPage(),
+      redirect: (_, __) => _redirectIfIsLogin(),
+    ),
+    GoRoute(
+      path: '/signup',
+      builder: (_, __) => const LoginPage(),
+      redirect: (_, __) => _redirectIfIsLogin(),
+    ),
   ],
 );
 
 final myRoutingConfig = ValueNotifier<RoutingConfig>(
   RoutingConfig(
-    routes: routingConfigBeforeLogin.routes,
+    routes: routingConfig1.routes,
   ),
 );
-final _router = GoRouter.routingConfig(routingConfig: myRoutingConfig);
+
+final _router = GoRouter.routingConfig(
+  initialLocation: '/',
+  routingConfig: myRoutingConfig,
+  debugLogDiagnostics: true,
+);
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -135,6 +147,13 @@ class _MyAppState extends State<MyApp> {
               sharedPreferences: SharedPreferences.getInstance(),
             ),
           ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) {
+            return ListStoryProvider(
+              apiService: ApiService(),
+            );
+          },
         ),
       ],
       builder: (context, _) => builder(context),

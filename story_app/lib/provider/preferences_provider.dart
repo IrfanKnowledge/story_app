@@ -26,12 +26,12 @@ class PreferencesProvider extends ChangeNotifier {
 
   /// always check and get the current data from SharedPreferences when do instantiation
   PreferencesProvider({required this.preferencesHelper}) {
-    _getToken();
-    _getLoginStatus();
+    fetchToken();
+    fetchLoginStatus();
   }
 
   /// get token from SharedPreferences
-  void _getToken() async {
+  void fetchToken() async {
     /// initiate process, _stateToken = ResultState.loading
     _stateToken = ResultState.loading;
     notifyListeners();
@@ -52,21 +52,21 @@ class PreferencesProvider extends ChangeNotifier {
   }
 
   /// set token to SharedPreferences
-  void setToken(String value) {
+  void setAndFetchToken(String value) {
     preferencesHelper.setToken(value);
     _token = value;
-    notifyListeners();
+    fetchToken();
   }
 
   /// remove token from SharedPreferences
-  void removeToken() {
+  void removeAndFetchToken() {
     preferencesHelper.removeToken();
     _token = '';
-    notifyListeners();
+    fetchToken();
   }
 
   /// get login status from SharedPreferences
-  void _getLoginStatus() async {
+  void fetchLoginStatus() async {
     /// initiate process, _state = ResultState.loading
     _stateIsLogin = ResultState.loading;
     notifyListeners();
@@ -85,9 +85,9 @@ class PreferencesProvider extends ChangeNotifier {
   }
 
   /// set login status to SharedPreferences
-  void setLoginStatus(bool value) {
+  void setAndFetchLoginStatus(bool value) {
     preferencesHelper.setLoginStatus(value);
     _isLogin = value;
-    notifyListeners();
+    fetchLoginStatus();
   }
 }

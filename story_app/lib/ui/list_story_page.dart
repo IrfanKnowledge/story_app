@@ -2,19 +2,19 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/main.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/detail_story_page.dart';
+import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/card_story_widget.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class ListStoryPage extends StatefulWidget {
-  static const path = '/stories';
+  static const path = '/';
 
   const ListStoryPage({super.key});
 
@@ -23,38 +23,23 @@ class ListStoryPage extends StatefulWidget {
 }
 
 class _ListStoryPageState extends State<ListStoryPage> {
-  String _token = '';
-
   @override
   void initState() {
-    final providerPref = context.read<PreferencesProvider>();
-    print(' initState(), token: ${providerPref.token}');
-    _token = providerPref.token;
-    super.initState();
-  }
+    final token = context.read<PreferencesProvider>().token;
+    final providerListStory = context.read<ListStoryProvider>();
 
-  Widget _buildMultiProvider({
-    required Widget Function(BuildContext context, Widget? child) builder,
-  }) {
-    return MultiProvider(
-      providers: [
-        ChangeNotifierProvider(
-          create: (context) {
-            return ListStoryProvider(
-              apiService: ApiService(),
-              token: _token,
-            );
-          },
-        ),
-      ],
-      builder: builder,
-    );
+    print('list_story_page, initState()');
+
+    Future.microtask(() async {
+      providerListStory.fetchAllStories(token: token);
+    });
+    super.initState();
   }
 
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _buildGetToken(context),
+      body: _buildGetStories(context),
     );
   }
 
@@ -66,13 +51,9 @@ class _ListStoryPageState extends State<ListStoryPage> {
           onPressed: () {
             kIsWeb
                 ? context.go(AddStoryPage.path)
-                : context
-                    .push(
-                      AddStoryPage.path,
-                    )
-                    .then(
-                      (_) => _refreshPage(context),
-                    );
+                : context.push(
+                    AddStoryPage.path,
+                  );
           },
           icon: const Icon(Icons.add),
         ),
@@ -83,11 +64,11 @@ class _ListStoryPageState extends State<ListStoryPage> {
         IconButton(
           onPressed: () {
             var provider = context.read<PreferencesProvider>();
-            provider.setLoginStatus(false);
-            provider.removeToken();
+            isLogin = false;
+            provider.setAndFetchLoginStatus(false);
+            provider.removeAndFetchToken();
 
-            // context.go(LoginPage.path);
-            myRoutingConfig.value = routingConfigBeforeLogin;
+            context.go(LoginPage.path);
           },
           icon: const Icon(Icons.logout),
         ),
@@ -98,22 +79,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   void _refreshPage(BuildContext context) {
     final listStoryProv = context.read<ListStoryProvider>();
-    listStoryProv.fetchAllStories(token: _token);
-  }
-
-  Widget _buildGetToken(BuildContext context) {
-    return Consumer<PreferencesProvider>(
-      builder: (context, provider, child) {
-        print('list_story_page, _buildGetToken(), provider.stateToken: ${provider.stateToken}');
-        print('list_story_page, _buildGetToken(), provider.token: ${provider.token}');
-        if (provider.stateToken == ResultState.loading) {
-          return const CenterLoading();
-        } else if (provider.stateToken == ResultState.hasData) {
-          _token = provider.token;
-        }
-        return _buildGetStories(context);
-      },
-    );
+    final token = context.read<PreferencesProvider>().token;
+    listStoryProv.fetchAllStories(token: token);
   }
 
   Widget _buildGetStories(BuildContext context) {
@@ -160,9 +127,6 @@ class _ListStoryPageState extends State<ListStoryPage> {
               : context
                   .push(
                     '${DetailStoryPage.path}${item.id}',
-                  )
-                  .then(
-                    (_) => _refreshPage(context),
                   );
         }
 
@@ -178,8 +142,9 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildMultiProvider(
-      builder: (context, _) => _buildScaffold(context),
-    );
+    /*return _buildMultiProvider(
+      builder: (context) => _buildScaffold(context),
+    );*/
+    return _buildScaffold(context);
   }
 }

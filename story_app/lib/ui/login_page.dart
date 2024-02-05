@@ -15,7 +15,7 @@ import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class LoginPage extends StatefulWidget {
-  static const String path = '/';
+  static const String path = '/login';
 
   const LoginPage({super.key});
 
@@ -36,14 +36,16 @@ class _LoginPageState extends State<LoginPage> {
     super.dispose();
   }
 
-  Widget _buildMultiProvider() {
+  Widget _buildMultiProvider({
+    required Widget Function(BuildContext context) builder,
+  }) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) => LoginProvider(apiService: ApiService()),
         )
       ],
-      child: _buildScaffold(),
+      builder: (context, _) => builder(context),
     );
   }
 
@@ -53,22 +55,38 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// if login is true, navigate to ListStoryPage,
-  /// if login is not true, stay on this page,
   Widget _buildIsLogin() {
     return Consumer<PreferencesProvider>(
       builder: (context, provider, _) {
-        print('login_page, _buildIsLogin(), provider.stateIsLogin: ${provider.stateIsLogin}');
-        if (provider.stateIsLogin == ResultState.notStarted) {
+        final stateIsLogin = provider.stateIsLogin;
+        final stateToken = provider.stateToken;
+        final vIsLogin = provider.isLogin;
+        final token = provider.token;
+
+        print(
+          'login_page, _buildIsLogin(), stateIsLogin: $stateIsLogin',
+        );
+        print(
+          'login_page, _buildIsLogin(), stateIsLogin: $stateIsLogin',
+        );
+
+        print(
+          'login_page, _buildIsLogin(), vIsLogin: $vIsLogin',
+        );
+
+        print(
+          'login_page, _buildIsLogin(), token: $token',
+        );
+
+        if (stateIsLogin == ResultState.loading ||
+            stateToken == ResultState.loading) {
           return const CenterLoading();
-        } else if (provider.stateIsLogin == ResultState.loading) {
-          return const CenterLoading();
-        } else if (provider.isLogin) {
+        } else if (vIsLogin && token.isNotEmpty) {
+          isLogin = true;
           _navigateIfLoginIsTrue();
           return const CenterLoading();
         }
 
-        // if isLogin is not true
         return _buildLoginProgress();
       },
     );
@@ -76,14 +94,10 @@ class _LoginPageState extends State<LoginPage> {
 
   void _navigateIfLoginIsTrue() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      // context.go(ListStoryPage.path);
-      myRoutingConfig.value = routingConfigAfterLogin;
-      print('myRoutingConfig.value: ${myRoutingConfig.value.routes}');
+      context.go(ListStoryPage.path);
     });
   }
 
-  /// if login process is begin, then do login progress.
-  /// if login process is finish or not started, stay on this page.
   Widget _buildLoginProgress() {
     return Consumer<LoginProvider>(
       builder: (context, providerLogin, __) {
@@ -103,20 +117,15 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  /// Auto navigate to ListStoryPage,
-  /// set login status and set token to SharedPreferences.
-  /// Delayed because we need to wait until UI building process is done,
-  /// to avoiding an error.
   void _autoNavigateSetLoginAndToken(
     BuildContext context,
     String token,
   ) {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       final provider = context.read<PreferencesProvider>();
-      provider.setToken(token);
 
-      // letakkan ini di akhir blok kode ini karena akan memicu build ulang
-      provider.setLoginStatus(true);
+      provider.setAndFetchToken(token);
+      provider.setAndFetchLoginStatus(true);
     });
   }
 
@@ -268,6 +277,8 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildMultiProvider();
+    return _buildMultiProvider(
+      builder: (context) => _buildScaffold(),
+    );
   }
 }
