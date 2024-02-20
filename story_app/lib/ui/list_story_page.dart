@@ -2,12 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:story_app/main.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/detail_story_page.dart';
-import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/card_story_widget.dart';
 import 'package:story_app/widget/center_error.dart';
@@ -51,9 +49,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
           onPressed: () {
             kIsWeb
                 ? context.go(AddStoryPage.path)
-                : context.push(
-                    AddStoryPage.path,
-                  );
+                : context.push(AddStoryPage.path);
           },
           icon: const Icon(Icons.add),
         ),
@@ -64,11 +60,10 @@ class _ListStoryPageState extends State<ListStoryPage> {
         IconButton(
           onPressed: () {
             var provider = context.read<PreferencesProvider>();
-            isLogin = false;
             provider.setAndFetchLoginStatus(false);
             provider.removeAndFetchToken();
 
-            context.go(LoginPage.path);
+            context.go('/login');
           },
           icon: const Icon(Icons.logout),
         ),
@@ -83,11 +78,32 @@ class _ListStoryPageState extends State<ListStoryPage> {
     listStoryProv.fetchAllStories(token: token);
   }
 
+  Widget _buildIsLogin() {
+    return Consumer<PreferencesProvider>(
+      builder: (context, provider, _) {
+        final stateIsLogin = provider.stateIsLogin;
+        final stateToken = provider.stateToken;
+        if (stateIsLogin == ResultState.loading ||
+            stateToken == ResultState.loading) {
+          return const CenterLoading();
+        }
+
+        return _buildGetStories(context);
+      },
+    );
+  }
+
   Widget _buildGetStories(BuildContext context) {
     return Consumer<ListStoryProvider>(
       builder: (context, provListStory, _) {
         print('provListStory.state: ${provListStory.state}');
-        if (provListStory.state == ResultState.loading) {
+        if (provListStory.state == ResultState.notStarted) {
+          // WidgetsBinding.instance.addPostFrameCallback((_) {
+          //   final providerPref = context.read<PreferencesProvider>();
+          //   provListStory.fetchAllStories(token: providerPref.token);
+          // });
+          return const CenterLoading();
+        } else if (provListStory.state == ResultState.loading) {
           return const CenterLoading();
         } else if (provListStory.state == ResultState.hasData) {
           return _buildContainer(context);
@@ -124,10 +140,9 @@ class _ListStoryPageState extends State<ListStoryPage> {
         void onTap() {
           kIsWeb
               ? context.go('${DetailStoryPage.path}${item.id}')
-              : context
-                  .push(
-                    '${DetailStoryPage.path}${item.id}',
-                  );
+              : context.push(
+                  '${DetailStoryPage.path}${item.id}',
+                );
         }
 
         return CardStoryWidget(
@@ -142,9 +157,6 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    /*return _buildMultiProvider(
-      builder: (context) => _buildScaffold(context),
-    );*/
     return _buildScaffold(context);
   }
 }

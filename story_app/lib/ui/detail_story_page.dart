@@ -100,7 +100,7 @@ class DetailStoryPage extends StatelessWidget {
 
           // if isLogin is not true, show error message
         } else {
-          return CenterError(description: provPref.messsageIsLogin);
+          return CenterError(description: provPref.messageIsLogin);
         }
       },
     );

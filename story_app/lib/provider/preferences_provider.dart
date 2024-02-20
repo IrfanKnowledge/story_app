@@ -7,7 +7,7 @@ class PreferencesProvider extends ChangeNotifier {
 
   bool _isLogin = false;
   String _token = '';
-  String _messsageIsLogin = '';
+  String _messageIsLogin = '';
   String _messageToken = '';
   ResultState _stateIsLogin = ResultState.notStarted;
   ResultState _stateToken = ResultState.notStarted;
@@ -18,7 +18,7 @@ class PreferencesProvider extends ChangeNotifier {
 
   String get messageToken => _messageToken;
 
-  String get messsageIsLogin => _messsageIsLogin;
+  String get messageIsLogin => _messageIsLogin;
 
   ResultState get stateIsLogin => _stateIsLogin;
 
@@ -79,7 +79,7 @@ class PreferencesProvider extends ChangeNotifier {
       notifyListeners();
     } else {
       _stateIsLogin = ResultState.hasData;
-      _messsageIsLogin = 'Anda belum login, harap login terlebih dahulu';
+      _messageIsLogin = 'Anda belum login, harap login terlebih dahulu';
       notifyListeners();
     }
   }

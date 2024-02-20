@@ -13,90 +13,19 @@ import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/ui/list_story_page.dart';
+import 'package:story_app/ui/loading_page.dart';
 import 'package:story_app/ui/login_page.dart';
+import 'package:story_app/ui/signup_page.dart';
+import 'package:story_app/ui/test1_page.dart';
+import 'package:story_app/ui/test2_page.dart';
+import 'package:story_app/ui/test3_page.dart';
+import 'package:story_app/utils/result_state_helper.dart';
 
 void main() {
-  // (use path url for web (remove hash '#' from url) or if isn't web then do nothing)
-  // this method, it is from url_strategy.dart
   usePathUrlStrategy();
 
   runApp(const MyApp());
 }
-
-String? _redirectIfIsLogin() {
-  if (isLogin) {
-    return '/';
-  } else {
-    return null;
-  }
-}
-
-String? _redirectIfIsNotLogin() {
-  if (!isLogin) {
-    return '/login';
-  } else {
-    return null;
-  }
-}
-
-bool _listStoryPageRefresh(BuildContext context) {
-  final listStoryProv = context.read<ListStoryProvider>();
-  final token = context.read<PreferencesProvider>().token;
-  listStoryProv.fetchAllStories(token: token);
-  return true;
-}
-
-bool isLogin = false;
-
-final routingConfig1 = RoutingConfig(
-  routes: [
-    GoRoute(
-      path: '/',
-      builder: (_, state) => const ListStoryPage(),
-      redirect: (_, __) => _redirectIfIsNotLogin(),
-      routes: [
-        GoRoute(
-          path: 'add_story',
-          builder: (_, __) => const AddStoryPage(),
-          redirect: (_, __) => _redirectIfIsNotLogin(),
-          onExit: (context) => _listStoryPageRefresh(context),
-        ),
-        GoRoute(
-          path: 'stories/:id',
-          builder: (_, state) {
-            return DetailStoryPage(
-              id: state.pathParameters['id'] ?? '',
-            );
-          },
-          redirect: (_, __) => _redirectIfIsNotLogin(),
-          onExit: (context) => _listStoryPageRefresh(context),
-        ),
-      ],
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (_, __) => const LoginPage(),
-      redirect: (_, __) => _redirectIfIsLogin(),
-    ),
-    GoRoute(
-      path: '/signup',
-      builder: (_, __) => const LoginPage(),
-      redirect: (_, __) => _redirectIfIsLogin(),
-    ),
-  ],
-);
-
-final myRoutingConfig = ValueNotifier<RoutingConfig>(
-  RoutingConfig(
-    routes: routingConfig1.routes,
-  ),
-);
-
-final _router = GoRouter.routingConfig(
-  initialLocation: '/',
-  routingConfig: myRoutingConfig,
-  debugLogDiagnostics: true,
-);
 
 class MyApp extends StatefulWidget {
   const MyApp({super.key});
@@ -104,6 +33,9 @@ class MyApp extends StatefulWidget {
   @override
   State<MyApp> createState() => _MyAppState();
 }
+
+String outerMatchedLocation = '/';
+bool outerRedirectExecuted = false;
 
 class _MyAppState extends State<MyApp> {
   late final MaterialTheme _materialTheme;
@@ -113,6 +45,126 @@ class _MyAppState extends State<MyApp> {
   late final ThemeData _darkTheme;
   late final MaterialScheme _materialSchemeLight;
   late final MaterialScheme _materialSchemeDark;
+
+  String? _redirectIfIsLogin(BuildContext context) {
+    final isLogin = context.read<PreferencesProvider>().isLogin;
+    if (isLogin) {
+      return '/';
+    } else {
+      return null;
+    }
+  }
+
+  String? _redirectIfIsNotLogin(BuildContext context) {
+    final isLogin = context.read<PreferencesProvider>().isLogin;
+    if (!isLogin) {
+      return '/login';
+    } else {
+      return null;
+    }
+  }
+
+  bool _listStoryPageRefresh(BuildContext context) {
+    final listStoryProv = context.read<ListStoryProvider>();
+    final token = context.read<PreferencesProvider>().token;
+    listStoryProv.fetchAllStories(token: token);
+    return true;
+  }
+
+  late final _routes = <RouteBase>[
+    GoRoute(
+      path: '/',
+      builder: (_, state) => const ListStoryPage(),
+      routes: [
+        GoRoute(
+          path: 'add_story',
+          builder: (_, __) => const AddStoryPage(),
+          redirect: (context, __) => _redirectIfIsNotLogin(context),
+          onExit: (context) => _listStoryPageRefresh(context),
+        ),
+        GoRoute(
+          path: 'stories/:id',
+          builder: (_, state) {
+            return DetailStoryPage(
+              id: state.pathParameters['id'] ?? '',
+            );
+          },
+          redirect: (context, __) => _redirectIfIsNotLogin(context),
+          onExit: (context) => _listStoryPageRefresh(context),
+        ),
+        GoRoute(
+          path: 'test1',
+          builder: (_, __) => const Test1Page(),
+          routes: [
+            GoRoute(
+              name: 'test2-1',
+              path: 'test2',
+              builder: (_, __) => const Test2Page(),
+            ),
+          ],
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/test3',
+      builder: (_, __) => const Test3Page(),
+      routes: [
+        GoRoute(
+          name: 'test2-2',
+          path: 'test2',
+          builder: (_, __) => const Test2Page(),
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (_, __) => const LoginPage(),
+      redirect: (context, __) => _redirectIfIsLogin(context),
+      routes: [
+        GoRoute(
+          path: 'signup',
+          builder: (_, __) => const SignupPage(),
+          redirect: (context, __) => _redirectIfIsLogin(context),
+          onExit: (context) {
+            print('signup, onExit');
+            return true;
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/loading',
+      builder: (context, state) {
+        print(
+          'main, _routes, /loading, outerMatchedLocation: $outerMatchedLocation',
+        );
+        return const LoadingPage();
+      },
+    ),
+  ];
+
+  late final _router = GoRouter(
+    routes: _routes,
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    redirect: (context, state) {
+      final stateToken = context.read<PreferencesProvider>().stateToken;
+
+      if (stateToken == ResultState.loading) {
+        if (!outerRedirectExecuted) {
+          outerMatchedLocation = state.matchedLocation;
+          outerRedirectExecuted = true;
+          print('outerMatchedLocation: $outerMatchedLocation');
+        }
+        return '/loading';
+      }
+
+      if (state.matchedLocation == '/') {
+        return _redirectIfIsNotLogin(context);
+      }
+      return null;
+    },
+  );
 
   @override
   void initState() {
@@ -162,16 +214,18 @@ class _MyAppState extends State<MyApp> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildMultiProvider(builder: (context) {
-      final providerMaterialTheme = context.watch<MaterialThemeProvider>();
+    return _buildMultiProvider(
+      builder: (context) {
+        final providerMaterialTheme = context.watch<MaterialThemeProvider>();
 
-      return MaterialApp.router(
-        title: 'Story App',
-        themeMode: providerMaterialTheme.themeMode,
-        theme: _theme,
-        darkTheme: _darkTheme,
-        routerConfig: _router,
-      );
-    });
+        return MaterialApp.router(
+          routerConfig: _router,
+          title: 'Story App',
+          themeMode: providerMaterialTheme.themeMode,
+          theme: _theme,
+          darkTheme: _darkTheme,
+        );
+      },
+    );
   }
 }

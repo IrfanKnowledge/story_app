@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/main.dart';
+import 'package:story_app/provider/login2_provider.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
@@ -64,25 +65,13 @@ class _LoginPageState extends State<LoginPage> {
         final token = provider.token;
 
         print(
-          'login_page, _buildIsLogin(), stateIsLogin: $stateIsLogin',
-        );
-        print(
-          'login_page, _buildIsLogin(), stateIsLogin: $stateIsLogin',
-        );
-
-        print(
-          'login_page, _buildIsLogin(), vIsLogin: $vIsLogin',
-        );
-
-        print(
-          'login_page, _buildIsLogin(), token: $token',
+          'login_page, _buildIsLogin(), stateIsLogin: $stateIsLogin | stateToken: $stateToken | vIsLogin: $vIsLogin | token: $token',
         );
 
         if (stateIsLogin == ResultState.loading ||
             stateToken == ResultState.loading) {
           return const CenterLoading();
         } else if (vIsLogin && token.isNotEmpty) {
-          isLogin = true;
           _navigateIfLoginIsTrue();
           return const CenterLoading();
         }
@@ -94,7 +83,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _navigateIfLoginIsTrue() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(ListStoryPage.path);
+      context.go('/');
     });
   }
 
@@ -245,7 +234,9 @@ class _LoginPageState extends State<LoginPage> {
     ];
   }
 
-  /// send (post) login data to API Service
+  ///
+  /// Mengirim data ke server
+  ///
   void _onLogin(BuildContext context) {
     final provider = context.read<LoginProvider>();
     provider.postLogin(
@@ -255,7 +246,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _navigateToSignupPage(BuildContext context) {
-    kIsWeb ? context.go(SignupPage.path) : context.push(SignupPage.path);
+    context.go('/login/signup');
   }
 
   void _checkAndShowError(BuildContext context) {
@@ -277,8 +268,6 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildMultiProvider(
-      builder: (context) => _buildScaffold(),
-    );
+    return _buildMultiProvider(builder: (_) => _buildScaffold());
   }
 }
