@@ -12,7 +12,7 @@ import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class ListStoryPage extends StatefulWidget {
-  static const path = '/';
+  static const String goRoutePath = '/';
 
   const ListStoryPage({super.key});
 

@@ -10,6 +10,8 @@ import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class SignupPage extends StatefulWidget {
+  static const String goRouteName = 'signup';
+
   const SignupPage({super.key});
 
   @override
@@ -25,6 +27,7 @@ class _SignupPageState extends State<SignupPage> {
 
   bool _isButtonSignUpExecuted = false;
   bool _isPasswordHide = true;
+  bool _isCanPop = false;
 
   @override
   void dispose() {
@@ -84,7 +87,7 @@ class _SignupPageState extends State<SignupPage> {
 
   Widget _buildContainer(BuildContext context) {
     _snackBarSignup(context);
-    _test1();
+    // _test1();
 
     return Container(
       alignment: Alignment.topCenter,
@@ -185,8 +188,8 @@ class _SignupPageState extends State<SignupPage> {
       ),
       onPressed: () {
         if (_formKey.currentState!.validate()) {
-          // _signup(context);
-          _autoNavigateBack(context: context);
+          _signup(context);
+          // _autoNavigateBack(context: context);
         }
       },
       child: const Row(
@@ -243,16 +246,19 @@ class _SignupPageState extends State<SignupPage> {
       Future.delayed(
         const Duration(seconds: 2),
         () {
-          _goToOtherPage();
+          _goToOtherPage(context);
         },
       );
     });
   }
 
   ///
-  /// Pergi ke halaman tertentu
+  /// Pergi ke halaman tertentu.
+  /// Sebelum pergi, status [_isCanPop] diubah menjadi true
+  /// untuk menghindari pemanggilan showDialog pada PopScope di bagian [build]
   ///
-  void _goToOtherPage() {
+  void _goToOtherPage(BuildContext context) {
+    _isCanPop = true;
     context.go('/login');
   }
 
@@ -287,43 +293,40 @@ class _SignupPageState extends State<SignupPage> {
         const textOnFalse = 'Tidak';
         const textOnTrue = 'Ya, keluar dari halaman ini';
 
-        showDialog(
-          context: context,
-          builder: (context) {
-            return AlertDialog(
-              title: const Text(
-                title,
-                textAlign: TextAlign.center,
-              ),
-              content: const Text(content, textAlign: TextAlign.center),
-              actionsAlignment: MainAxisAlignment.center,
-              actions: [
-                TextButton(
-                  onPressed: () => context.pop(),
-                  child: const Text(textOnFalse),
+        if (!didPop) {
+          showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text(
+                  title,
+                  textAlign: TextAlign.center,
                 ),
-                TextButton(
-                  onPressed: () {
-                    _goToOtherPage();
-                  },
-                  child: const Text(textOnTrue),
-                ),
-              ],
-            );
-          },
-        );
+                content: const Text(content, textAlign: TextAlign.center),
+                actionsAlignment: MainAxisAlignment.center,
+                actions: [
+                  TextButton(
+                    onPressed: () => context.pop(),
+                    child: const Text(textOnFalse),
+                  ),
+                  TextButton(
+                    onPressed: () {
+                      _goToOtherPage(context);
+                    },
+                    child: const Text(textOnTrue),
+                  ),
+                ],
+              );
+            },
+          );
+        }
       },
-      canPop: false,
+      canPop: _isCanPop,
       child: _buildMultiProvider(
         builder: (context) {
           return _buildScaffold(context);
         },
       ),
-    );
-    return _buildMultiProvider(
-      builder: (context) {
-        return _buildScaffold(context);
-      },
     );
   }
 

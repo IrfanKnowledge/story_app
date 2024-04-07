@@ -4,7 +4,7 @@ import 'package:story_app/utils/result_state_helper.dart';
 
 /// Dikarenakan sebagian variable dari Theme.of(context).colorScheme
 /// tidak sepenuhnya mendukung konsep Material Design 3 terkini,
-/// saya (developer) inisiatif membuat provider khusus untuk
+/// maka inisiatif membuat provider khusus untuk
 /// menanganinya.
 class MaterialThemeProvider extends ChangeNotifier {
   MaterialScheme _currentSelected;

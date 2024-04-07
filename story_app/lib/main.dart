@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -16,9 +17,6 @@ import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/loading_page.dart';
 import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/ui/signup_page.dart';
-import 'package:story_app/ui/test1_page.dart';
-import 'package:story_app/ui/test2_page.dart';
-import 'package:story_app/ui/test3_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 
 void main() {
@@ -27,15 +25,20 @@ void main() {
   runApp(const MyApp());
 }
 
+///
+/// Penggunaan [MyApp.outerMatchedLocation] dan [MyApp.outerRedirectExecuted]
+/// menjadi bagian dari penggunaan [LoadingPage]. Lebih jelasnya terdapat
+/// penjelesan pada [LoadingPage].
+///
 class MyApp extends StatefulWidget {
+  static String outerMatchedLocation = '/';
+  static bool outerRedirectExecuted = false;
+
   const MyApp({super.key});
 
   @override
   State<MyApp> createState() => _MyAppState();
 }
-
-String outerMatchedLocation = '/';
-bool outerRedirectExecuted = false;
 
 class _MyAppState extends State<MyApp> {
   late final MaterialTheme _materialTheme;
@@ -48,8 +51,9 @@ class _MyAppState extends State<MyApp> {
 
   String? _redirectIfIsLogin(BuildContext context) {
     final isLogin = context.read<PreferencesProvider>().isLogin;
+
     if (isLogin) {
-      return '/';
+      return ListStoryPage.goRoutePath;
     } else {
       return null;
     }
@@ -58,7 +62,7 @@ class _MyAppState extends State<MyApp> {
   String? _redirectIfIsNotLogin(BuildContext context) {
     final isLogin = context.read<PreferencesProvider>().isLogin;
     if (!isLogin) {
-      return '/login';
+      return '/${LoginPage.goRoutePath}';
     } else {
       return null;
     }
@@ -71,9 +75,44 @@ class _MyAppState extends State<MyApp> {
     return true;
   }
 
+  /// Posisikan penggunaan [_routesLoginAndLoading] di bagian terluar
+  /// list RouteBase, sebab perlu mengakses status login terlebih dahulu
+  /// sebelum masuk ke path '/'. Jika diposisikan di bawah '/', ketika
+  /// terjadi redirect atau go('/') maka yang terjadi adalah aksi pop,
+  /// bukan push ataupun pushReplacement.
+  late final _routesLoginAndLoading = <RouteBase> [
+    GoRoute(
+      path: '/${LoginPage.goRoutePath}',
+      builder: (_, __) {
+        return const LoginPage();
+      },
+      redirect: (context, __) => _redirectIfIsLogin(context),
+      routes: [
+        GoRoute(
+          path: SignupPage.goRouteName,
+          builder: (_, __) => const SignupPage(),
+          redirect: (context, __) => _redirectIfIsLogin(context),
+          onExit: (context) {
+            print('signup, onExit');
+            return true;
+          },
+        ),
+      ],
+    ),
+    GoRoute(
+      path: '/${LoadingPage.goRoutePath}',
+      builder: (context, state) {
+        print(
+          'main, _routes, /loading, outerMatchedLocation: ${MyApp.outerMatchedLocation}',
+        );
+        return const LoadingPage();
+      },
+    ),
+  ];
+
   late final _routes = <RouteBase>[
     GoRoute(
-      path: '/',
+      path: ListStoryPage.goRoutePath,
       builder: (_, state) => const ListStoryPage(),
       routes: [
         GoRoute(
@@ -92,78 +131,33 @@ class _MyAppState extends State<MyApp> {
           redirect: (context, __) => _redirectIfIsNotLogin(context),
           onExit: (context) => _listStoryPageRefresh(context),
         ),
-        GoRoute(
-          path: 'test1',
-          builder: (_, __) => const Test1Page(),
-          routes: [
-            GoRoute(
-              name: 'test2-1',
-              path: 'test2',
-              builder: (_, __) => const Test2Page(),
-            ),
-          ],
-        ),
       ],
     ),
-    GoRoute(
-      path: '/test3',
-      builder: (_, __) => const Test3Page(),
-      routes: [
-        GoRoute(
-          name: 'test2-2',
-          path: 'test2',
-          builder: (_, __) => const Test2Page(),
-        ),
-      ],
-    ),
-    GoRoute(
-      path: '/login',
-      builder: (_, __) => const LoginPage(),
-      redirect: (context, __) => _redirectIfIsLogin(context),
-      routes: [
-        GoRoute(
-          path: 'signup',
-          builder: (_, __) => const SignupPage(),
-          redirect: (context, __) => _redirectIfIsLogin(context),
-          onExit: (context) {
-            print('signup, onExit');
-            return true;
-          },
-        ),
-      ],
-    ),
-    GoRoute(
-      path: '/loading',
-      builder: (context, state) {
-        print(
-          'main, _routes, /loading, outerMatchedLocation: $outerMatchedLocation',
-        );
-        return const LoadingPage();
-      },
-    ),
+   ..._routesLoginAndLoading,
   ];
+
+  FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
+    final stateToken = context.read<PreferencesProvider>().stateToken;
+
+    if (stateToken == ResultState.loading) {
+      if (!MyApp.outerRedirectExecuted) {
+        MyApp.outerMatchedLocation = state.matchedLocation;
+        MyApp.outerRedirectExecuted = true;
+      }
+      return '/${LoadingPage.goRoutePath}';
+    }
+
+    if (state.matchedLocation == ListStoryPage.goRoutePath) {
+      return _redirectIfIsNotLogin(context);
+    }
+    return null;
+  }
 
   late final _router = GoRouter(
     routes: _routes,
-    initialLocation: '/',
+    initialLocation: ListStoryPage.goRoutePath,
     debugLogDiagnostics: true,
-    redirect: (context, state) {
-      final stateToken = context.read<PreferencesProvider>().stateToken;
-
-      if (stateToken == ResultState.loading) {
-        if (!outerRedirectExecuted) {
-          outerMatchedLocation = state.matchedLocation;
-          outerRedirectExecuted = true;
-          print('outerMatchedLocation: $outerMatchedLocation');
-        }
-        return '/loading';
-      }
-
-      if (state.matchedLocation == '/') {
-        return _redirectIfIsNotLogin(context);
-      }
-      return null;
-    },
+    redirect: redirect,
   );
 
   @override

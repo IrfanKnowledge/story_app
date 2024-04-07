@@ -316,7 +316,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     Future.delayed(
       const Duration(seconds: 1),
       () {
-        kIsWeb ? context.go(ListStoryPage.path) : context.pop();
+        kIsWeb ? context.go(ListStoryPage.goRoutePath) : context.pop();
       },
     );
     return 'Loading...';

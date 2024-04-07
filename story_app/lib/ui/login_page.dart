@@ -1,22 +1,17 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/main.dart';
-import 'package:story_app/provider/login2_provider.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
-import 'package:story_app/ui/list_story_page.dart';
-import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/button_style_helper.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class LoginPage extends StatefulWidget {
-  static const String path = '/login';
+  static const String goRoutePath = 'login';
 
   const LoginPage({super.key});
 
