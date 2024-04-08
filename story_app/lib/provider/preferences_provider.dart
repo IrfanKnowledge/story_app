@@ -1,93 +1,65 @@
 import 'package:flutter/material.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
-import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/utils/loading_state.dart';
 
 class PreferencesProvider extends ChangeNotifier {
-  PreferencesHelper preferencesHelper;
+  final PreferencesHelper _preferencesHelper;
 
-  bool _isLogin = false;
-  String _token = '';
-  String _messageIsLogin = '';
-  String _messageToken = '';
-  ResultState _stateIsLogin = ResultState.notStarted;
-  ResultState _stateToken = ResultState.notStarted;
+  LoadingState<String> _stateToken = const LoadingState.initial();
 
-  bool get isLogin => _isLogin;
+  LoadingState<bool> _stateIsLogin = const LoadingState.initial();
 
-  String get token => _token;
+  LoadingState<String> get stateToken => _stateToken;
 
-  String get messageToken => _messageToken;
+  LoadingState<bool> get stateIsLogin => _stateIsLogin;
 
-  String get messageIsLogin => _messageIsLogin;
-
-  ResultState get stateIsLogin => _stateIsLogin;
-
-  ResultState get stateToken => _stateToken;
-
-  /// always check and get the current data from SharedPreferences when do instantiation
-  PreferencesProvider({required this.preferencesHelper}) {
+  PreferencesProvider({required PreferencesHelper preferencesHelper})
+      : _preferencesHelper = preferencesHelper {
     fetchToken();
     fetchLoginStatus();
   }
 
-  /// get token from SharedPreferences
   void fetchToken() async {
-    /// initiate process, _stateToken = ResultState.loading
-    _stateToken = ResultState.loading;
+    _stateToken = const LoadingState.loading();
     notifyListeners();
-    _token = await preferencesHelper.getToken;
 
-    /// if token is empty, _stateToken = ResultState.noData
-    if (_token.isEmpty) {
-      _stateToken = ResultState.noData;
-      _messageToken =
-          'Sesi anda sudah habis atau tidak valid, silahkan untu login ulang terlebih dahulu';
-      notifyListeners();
+    final token = await _preferencesHelper.getToken;
 
-      /// if token is not empty, _stateToken = ResultState.hasData
-    } else {
-      _stateToken = ResultState.hasData;
-      notifyListeners();
-    }
+    _stateToken = LoadingState.loaded(token);
+    notifyListeners();
   }
 
-  /// set token to SharedPreferences
   void setAndFetchToken(String value) {
-    preferencesHelper.setToken(value);
-    _token = value;
+    _preferencesHelper.setToken(value);
+    _stateToken = LoadingState.loaded(value);
     fetchToken();
   }
 
-  /// remove token from SharedPreferences
   void removeAndFetchToken() {
-    preferencesHelper.removeToken();
-    _token = '';
+    _preferencesHelper.removeToken();
+    _stateToken = const LoadingState.loaded('');
     fetchToken();
   }
 
-  /// get login status from SharedPreferences
   void fetchLoginStatus() async {
-    /// initiate process, _state = ResultState.loading
-    _stateIsLogin = ResultState.loading;
+    _stateIsLogin = const LoadingState.loading();
     notifyListeners();
-    _isLogin = await preferencesHelper.isLogin;
 
-    /// await the data using if () else,
-    /// that is why the result is always ResultState.hasData
-    if (_isLogin) {
-      _stateIsLogin = ResultState.hasData;
-      notifyListeners();
-    } else {
-      _stateIsLogin = ResultState.hasData;
-      _messageIsLogin = 'Anda belum login, harap login terlebih dahulu';
-      notifyListeners();
-    }
+    final isLogin = await _preferencesHelper.isLogin;
+
+    _stateIsLogin = LoadingState.loaded(isLogin);
+    notifyListeners();
   }
 
-  /// set login status to SharedPreferences
   void setAndFetchLoginStatus(bool value) {
-    preferencesHelper.setLoginStatus(value);
-    _isLogin = value;
+    _preferencesHelper.setLoginStatus(value);
+    _stateIsLogin = LoadingState.loaded(value);
+    fetchLoginStatus();
+  }
+
+  void removeAndFetchLoginStatus() {
+    _preferencesHelper.removeLoginStatus();
+    _stateIsLogin = const LoadingState.loaded(false);
     fetchLoginStatus();
   }
 }

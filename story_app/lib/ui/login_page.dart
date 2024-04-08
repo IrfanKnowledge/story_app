@@ -5,9 +5,10 @@ import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
+import 'package:story_app/ui/list_story_page.dart';
+import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/button_style_helper.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
-import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class LoginPage extends StatefulWidget {
@@ -24,6 +25,8 @@ class _LoginPageState extends State<LoginPage> {
 
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
+
+  bool _isErrorShow = false;
 
   @override
   void dispose() {
@@ -54,63 +57,71 @@ class _LoginPageState extends State<LoginPage> {
   Widget _buildIsLogin() {
     return Consumer<PreferencesProvider>(
       builder: (context, provider, _) {
-        final stateIsLogin = provider.stateIsLogin;
         final stateToken = provider.stateToken;
-        final vIsLogin = provider.isLogin;
-        final token = provider.token;
+        final stateIsLogin = provider.stateIsLogin;
 
-        print(
-          'login_page, _buildIsLogin(), stateIsLogin: $stateIsLogin | stateToken: $stateToken | vIsLogin: $vIsLogin | token: $token',
+        bool isTokenNotEmpty = false;
+        bool isLogin = false;
+
+        late Widget result;
+
+        result = stateToken.maybeWhen(
+          loading: () => const CenterLoading(),
+          loaded: (data) {
+            if (data.isNotEmpty) {
+              isTokenNotEmpty = true;
+            }
+            return const CenterLoading();
+          },
+          orElse: () => _buildLoginProgress(),
         );
 
-        if (stateIsLogin == ResultState.loading ||
-            stateToken == ResultState.loading) {
-          return const CenterLoading();
-        } else if (vIsLogin && token.isNotEmpty) {
+        result = stateIsLogin.maybeWhen(
+          loading: () => const CenterLoading(),
+          loaded: (data) {
+            if (data) {
+              isLogin = true;
+            }
+            return const CenterLoading();
+          },
+          orElse: () => _buildLoginProgress(),
+        );
+
+        if (isTokenNotEmpty && isLogin) {
           _navigateIfLoginIsTrue();
-          return const CenterLoading();
+          result = const CenterLoading();
         }
 
-        return _buildLoginProgress();
+        return result;
       },
     );
-  }
-
-  void _navigateIfLoginIsTrue() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go('/');
-    });
   }
 
   Widget _buildLoginProgress() {
     return Consumer<LoginProvider>(
       builder: (context, providerLogin, __) {
-        if (providerLogin.state == ResultState.loading) {
-          return const CenterLoading();
-        } else if (providerLogin.state == ResultState.hasData) {
-          _autoNavigateSetLoginAndToken(
-            context,
-            providerLogin.loginWrap.loginResult!.token,
-          );
+        final state = providerLogin.state;
 
-          return const CenterLoading();
-        }
+        Widget result = state.maybeWhen(
+          loading: () => const CenterLoading(),
+          loaded: (data) {
+            if (data.loginResult != null) {
+              _autoNavigateSetLoginAndToken(
+                context,
+                data.loginResult!.token,
+              );
 
-        return _buildSafeAreaAndScroll(context);
+              return const CenterLoading();
+            }
+
+            return _buildSafeAreaAndScroll(context);
+          },
+          orElse: () => _buildSafeAreaAndScroll(context),
+        );
+
+        return result;
       },
     );
-  }
-
-  void _autoNavigateSetLoginAndToken(
-    BuildContext context,
-    String token,
-  ) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<PreferencesProvider>();
-
-      provider.setAndFetchToken(token);
-      provider.setAndFetchLoginStatus(true);
-    });
   }
 
   SafeArea _buildSafeAreaAndScroll(BuildContext context) {
@@ -179,6 +190,32 @@ class _LoginPageState extends State<LoginPage> {
     _controllerPassword.text = 'npc00001';
   }
 
+  void _checkAndShowError(BuildContext context) {
+    final provider = context.read<LoginProvider>();
+    final state = provider.state;
+
+    void showError(String message) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final snackBar = SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 1),
+        );
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      });
+    }
+
+    if (_isErrorShow) {
+      _isErrorShow = false;
+      state.maybeWhen(
+        loaded: (data) {
+          data.loginResult == null ? showError(data.message) : null;
+        },
+        error: (message) => showError(message),
+        orElse: () {},
+      );
+    }
+  }
+
   List<Widget> _buildTextHeadLine() {
     const textStyle16 = TextStyle(fontSize: 16);
 
@@ -229,11 +266,11 @@ class _LoginPageState extends State<LoginPage> {
     ];
   }
 
-  ///
-  /// Mengirim data ke server
-  ///
   void _onLogin(BuildContext context) {
     final provider = context.read<LoginProvider>();
+
+    _isErrorShow = true;
+
     provider.postLogin(
       email: _controllerEmail.text,
       password: _controllerPassword.text,
@@ -241,24 +278,25 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _navigateToSignupPage(BuildContext context) {
-    context.go('/login/signup');
+    context.go('/${LoginPage.goRoutePath}/${SignupPage.goRouteName}');
   }
 
-  void _checkAndShowError(BuildContext context) {
-    final provider = context.read<LoginProvider>();
-    final state = provider.state;
-    final message = provider.message;
+  void _autoNavigateSetLoginAndToken(
+    BuildContext context,
+    String token,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<PreferencesProvider>();
 
-    if (state == ResultState.noData || state == ResultState.error) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        final snackBar = SnackBar(
-          content: Text(message),
-          duration: const Duration(seconds: 1),
-        );
-        ScaffoldMessenger.of(context).showSnackBar(snackBar);
-        provider.setStateToNotStartedWithoutNotify();
-      });
-    }
+      provider.setAndFetchToken(token);
+      provider.setAndFetchLoginStatus(true);
+    });
+  }
+
+  void _navigateIfLoginIsTrue() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.go(ListStoryPage.goRoutePath);
+    });
   }
 
   @override

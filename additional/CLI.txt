@@ -1,0 +1,17 @@
+[merapihkan susunan kode pada seluruh file]
+command: dart format lib
+
+[menerapkan semua sugesti compiler kecuali hapus print]
+command: dart fix --apply
+
+[hapus semua print]
+library: print_remover: ^1.0.1
+command: flutter pub run print_remover:main
+
+[Penggunaan build_runner untuk freezed dan json_serializable]
+flutter pub run build_runner build
+
+[Penggunaan build_runner untuk freezed dan json_serializable, jika terjadi error dan memerlukan konfigurasi baru]
+flutter clean
+flutter pub get
+flutter pub run build_runner build --delete-conflicting-outputs

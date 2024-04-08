@@ -1,75 +1,36 @@
 import 'dart:convert';
 
-class LoginWrap {
-  final bool error;
-  final String message;
-  final LoginResult? loginResult;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  LoginWrap({
-    required this.error,
-    required this.message,
-    required this.loginResult,
-  });
+part 'login_model.freezed.dart';
+part 'login_model.g.dart';
 
-  factory LoginWrap.fromRawJson(String str) =>
-      LoginWrap.fromJson(json.decode(str));
+@freezed
+class LoginModel with _$LoginModel {
+  const factory LoginModel({
+    required final bool error,
+    required final String message,
+    required final LoginResult? loginResult,
+  }) = _LoginModel;
 
-  String toRawJson() => json.encode(toJson());
+  factory LoginModel.fromRawJson(String str) =>
+      LoginModel.fromJson(json.decode(str));
 
-  factory LoginWrap.fromJson(Map<String, dynamic> json) {
-    LoginResult? loginResult;
-
-    if (json.containsKey("loginResult")) {
-      loginResult = LoginResult.fromJson(json["loginResult"]);
-    } else {
-      loginResult = null;
-    }
-
-    return LoginWrap(
-      error: json["error"],
-      message: json["message"],
-      loginResult: loginResult,
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "error": error,
-      "message": message,
-      "loginResult": loginResult?.toJson(),
-    };
-  }
+  factory LoginModel.fromJson(Map<String, dynamic> json) =>
+      _$LoginModelFromJson(json);
 }
 
-class LoginResult {
-  final String userId;
-  final String name;
-  final String token;
-
-  LoginResult({
-    required this.userId,
-    required this.name,
-    required this.token,
-  });
+@freezed
+class LoginResult with _$LoginResult {
+  const factory LoginResult({
+    required final String userId,
+    required final String name,
+    required final String token,
+  }) = _LoginResult;
 
   factory LoginResult.fromRawJson(String str) =>
       LoginResult.fromJson(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
-
-  factory LoginResult.fromJson(Map<String, dynamic> json) {
-    return LoginResult(
-      userId: json["userId"],
-      name: json["name"],
-      token: json["token"],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "userId": userId,
-      "name": name,
-      "token": token,
-    };
-  }
+  factory LoginResult.fromJson(Map<String, dynamic> json) =>
+      _$LoginResultFromJson(json);
 }

@@ -50,7 +50,12 @@ class _MyAppState extends State<MyApp> {
   late final MaterialScheme _materialSchemeDark;
 
   String? _redirectIfIsLogin(BuildContext context) {
-    final isLogin = context.read<PreferencesProvider>().isLogin;
+    final state = context.read<PreferencesProvider>().stateIsLogin;
+
+    final isLogin = state.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => false,
+    );
 
     if (isLogin) {
       return ListStoryPage.goRoutePath;
@@ -60,7 +65,13 @@ class _MyAppState extends State<MyApp> {
   }
 
   String? _redirectIfIsNotLogin(BuildContext context) {
-    final isLogin = context.read<PreferencesProvider>().isLogin;
+    final state = context.read<PreferencesProvider>().stateIsLogin;
+
+    final isLogin = state.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => false,
+    );
+
     if (!isLogin) {
       return '/${LoginPage.goRoutePath}';
     } else {
@@ -80,7 +91,7 @@ class _MyAppState extends State<MyApp> {
   /// sebelum masuk ke path '/'. Jika diposisikan di bawah '/', ketika
   /// terjadi redirect atau go('/') maka yang terjadi adalah aksi pop,
   /// bukan push ataupun pushReplacement.
-  late final _routesLoginAndLoading = <RouteBase> [
+  late final _routesLoginAndLoading = <RouteBase>[
     GoRoute(
       path: '/${LoginPage.goRoutePath}',
       builder: (_, __) {
@@ -133,7 +144,7 @@ class _MyAppState extends State<MyApp> {
         ),
       ],
     ),
-   ..._routesLoginAndLoading,
+    ..._routesLoginAndLoading,
   ];
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {

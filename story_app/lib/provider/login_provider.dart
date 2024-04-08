@@ -3,65 +3,39 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/login_model.dart';
-import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/utils/loading_state.dart';
 import 'package:story_app/utils/string_helper.dart';
 
 class LoginProvider extends ChangeNotifier {
-
   final ApiService _apiService;
 
-  /// constructor ini tidak akan menjalankan proses perubahan state
-  /// perubahan state dimulai ketika memanggil method [LoginProvider.postLogin]
-  LoginProvider({required ApiService apiService})
-      : _apiService = apiService;
+  LoginProvider({required ApiService apiService}) : _apiService = apiService;
 
-  late LoginWrap _loginWrap;
-  ResultState _state = ResultState.notStarted;
-  String _message = '';
+  LoadingState<LoginModel> _state = const LoadingState.initial();
 
-  LoginWrap get loginWrap => _loginWrap;
-
-  ResultState get state => _state;
-
-  String get message => _message;
-
+  LoadingState<LoginModel> get state => _state;
 
   void postLogin({
     required String email,
     required String password,
   }) async {
     try {
-      _state = ResultState.loading;
+      _state = const LoadingState.loading();
       notifyListeners();
+
       final loginWrap = await _apiService.login(
         email: email,
         password: password,
       );
 
-      if (loginWrap.loginResult!.token.isEmpty) {
-        _state = ResultState.noData;
-        _message = loginWrap.message;
-        notifyListeners();
-
-      } else {
-        _state = ResultState.hasData;
-        _loginWrap = loginWrap;
-        notifyListeners();
-      }
-
-    } on SocketException {
-      _state = ResultState.error;
-      _message = StringHelper.noInternetConnection;
+      _state = LoadingState.loaded(loginWrap);
       notifyListeners();
-
+    } on SocketException {
+      _state = const LoadingState.error(StringHelper.noInternetConnection);
+      notifyListeners();
     } catch (e) {
-      _state = ResultState.error;
-      _message = e.toString();
+      _state = LoadingState.error(e.toString());
       notifyListeners();
     }
-  }
-
-  void setStateToNotStartedWithoutNotify() {
-    _state = ResultState.notStarted;
   }
 }

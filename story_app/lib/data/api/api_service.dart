@@ -46,7 +46,7 @@ class ApiService {
   }
 
   /// login with email and password
-  Future<LoginWrap> login({
+  Future<LoginModel> login({
     required String email,
     required String password,
   }) async {
@@ -62,7 +62,7 @@ class ApiService {
     );
 
     var statusCode = response.statusCode;
-    final loginWrap = LoginWrap.fromRawJson(response.body);
+    final loginWrap = LoginModel.fromRawJson(response.body);
 
     if (statusCode == 200) {
       return loginWrap;

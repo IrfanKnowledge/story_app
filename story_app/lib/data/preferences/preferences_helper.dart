@@ -1,42 +1,41 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class PreferencesHelper {
-  final Future<SharedPreferences> sharedPreferences;
+  final Future<SharedPreferences> _sharedPreferences;
 
-  PreferencesHelper({required this.sharedPreferences});
+  PreferencesHelper({required Future<SharedPreferences> sharedPreferences})
+      : _sharedPreferences = sharedPreferences;
 
-  static const login = 'LOGIN';
   static const token = 'TOKEN';
+  static const login = 'LOGIN';
 
-  /// get login status from SharedPreferences with Future return type,
-  /// it can be fail so use Future type,
-  Future<bool> get isLogin async {
-    final prefs = await sharedPreferences;
-    return prefs.getBool(login) ?? false;
-  }
-
-  /// set login status to SharedPreferences
-  void setLoginStatus(bool value) async {
-    final prefs = await sharedPreferences;
-    prefs.setBool(login, value);
-  }
-
-  /// get token from SharedPreferences with Future return type
-  /// it can be fail so use Future type,
   Future<String> get getToken async {
-    final prefs = await sharedPreferences;
+    final prefs = await _sharedPreferences;
     return prefs.getString(token) ?? '';
   }
 
-  /// set token to SharedPreferences
   void setToken(String value) async {
-    final prefs = await sharedPreferences;
+    final prefs = await _sharedPreferences;
     prefs.setString(token, value);
   }
 
-  /// remove token from SharedPreferences
   void removeToken() async {
-    final prefs = await sharedPreferences;
+    final prefs = await _sharedPreferences;
     prefs.remove(token);
+  }
+
+  Future<bool> get isLogin async {
+    final prefs = await _sharedPreferences;
+    return prefs.getBool(login) ?? false;
+  }
+
+  void setLoginStatus(bool value) async {
+    final prefs = await _sharedPreferences;
+    prefs.setBool(login, value);
+  }
+
+  void removeLoginStatus() async {
+    final prefs = await _sharedPreferences;
+    prefs.remove(login);
   }
 }
