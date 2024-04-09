@@ -64,33 +64,35 @@ class _AddStoryPageState extends State<AddStoryPage> {
   Widget _getTokenIfNotGuest() {
     return Consumer<PreferencesProvider>(
       builder: (context, provider, _) {
-        // if state is loading (fetch isLogin from SharedPreference),
-        // show loading
-        if (provider.stateIsLogin == ResultState.loading) {
-          return const CenterLoading();
+        final stateIsLogin = provider.stateIsLogin;
+        final stateToken = provider.stateToken;
+        late Widget? result;
 
-          // if login is true
-        } else if (provider.isLogin) {
-          // if state is loading (fetch token from SharedPreference),
-          // show loading
-          if (provider.stateToken == ResultState.loading) {
-            return const CenterLoading();
+        result = stateIsLogin.when(
+          initial: () => const CenterLoading(),
+          loading: () => const CenterLoading(),
+          loaded: (data) => null,
+          error: (message) => CenterError(description: message),
+        );
 
-            // if token is not empty, then [_buildContainer()]
-          } else if (provider.stateToken == ResultState.hasData) {
-            return _buildContainer(context);
-
-            // if token is empty, show error message
-          } else {
-            return CenterError(
-              description: provider.messageToken,
-            );
-          }
-
-          // if login is not true
-        } else {
-          return _buildContainer(context);
+        if (result != null) {
+          return result;
         }
+
+        result = stateToken.when(
+          initial: () => const CenterLoading(),
+          loading: () => const CenterLoading(),
+          loaded: (data) => null,
+          error: (message) => CenterError(description: message),
+        );
+
+        if (result != null) {
+          return result;
+        }
+
+        result = _buildContainer(context);
+
+        return result;
       },
     );
   }
@@ -232,24 +234,21 @@ class _AddStoryPageState extends State<AddStoryPage> {
       return;
     }
 
-    final preferenceProvider = context.read<PreferencesProvider>();
-    final isLogin = preferenceProvider.isLogin;
-    var token = preferenceProvider.token;
+    final providerPref = context.read<PreferencesProvider>();
+    final stateToken = providerPref.stateToken;
 
-    // if login is not true, token = string empty
-    if (!isLogin) {
-      token = '';
-    }
+    final token = stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
 
     final fileName = imageFile.name;
 
     final readUploadProvider = context.read<UploadImageStoryProvider>();
     final photoBytes = await imageFile.readAsBytes();
 
-
     final compressedPhotoBytes =
         await readUploadProvider.compressImage(photoBytes);
-
 
     readUploadProvider.upload(
       photoBytes: compressedPhotoBytes,

@@ -23,7 +23,13 @@ class ListStoryPage extends StatefulWidget {
 class _ListStoryPageState extends State<ListStoryPage> {
   @override
   void initState() {
-    final token = context.read<PreferencesProvider>().token;
+    final providerPref = context.read<PreferencesProvider>();
+    final stateToken = providerPref.stateToken;
+    final token = stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
+
     final providerListStory = context.read<ListStoryProvider>();
 
     print('list_story_page, initState()');
@@ -74,7 +80,14 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   void _refreshPage(BuildContext context) {
     final listStoryProv = context.read<ListStoryProvider>();
-    final token = context.read<PreferencesProvider>().token;
+
+    final providerPref = context.read<PreferencesProvider>();
+    final stateToken = providerPref.stateToken;
+    final token = stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
+
     listStoryProv.fetchAllStories(token: token);
   }
 

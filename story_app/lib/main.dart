@@ -81,7 +81,12 @@ class _MyAppState extends State<MyApp> {
 
   bool _listStoryPageRefresh(BuildContext context) {
     final listStoryProv = context.read<ListStoryProvider>();
-    final token = context.read<PreferencesProvider>().token;
+    final stateToken = context.read<PreferencesProvider>().stateToken;
+    final token = stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
+
     listStoryProv.fetchAllStories(token: token);
     return true;
   }

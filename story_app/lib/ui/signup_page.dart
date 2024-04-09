@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/signup_provider.dart';
+import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
@@ -259,7 +260,7 @@ class _SignupPageState extends State<SignupPage> {
   ///
   void _goToOtherPage(BuildContext context) {
     _isCanPop = true;
-    context.go('/login');
+    context.go('/${LoginPage.goRoutePath}');
   }
 
   ///

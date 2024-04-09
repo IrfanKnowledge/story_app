@@ -63,7 +63,7 @@ class _LoginPageState extends State<LoginPage> {
         bool isTokenNotEmpty = false;
         bool isLogin = false;
 
-        late Widget result;
+        late Widget? result;
 
         result = stateToken.maybeWhen(
           loading: () => const CenterLoading(),
@@ -71,10 +71,14 @@ class _LoginPageState extends State<LoginPage> {
             if (data.isNotEmpty) {
               isTokenNotEmpty = true;
             }
-            return const CenterLoading();
+            return null;
           },
           orElse: () => _buildLoginProgress(),
         );
+
+        if (result != null) {
+          return result;
+        }
 
         result = stateIsLogin.maybeWhen(
           loading: () => const CenterLoading(),
@@ -82,14 +86,20 @@ class _LoginPageState extends State<LoginPage> {
             if (data) {
               isLogin = true;
             }
-            return const CenterLoading();
+            return null;
           },
           orElse: () => _buildLoginProgress(),
         );
 
+        if (result != null) {
+          return result;
+        }
+
         if (isTokenNotEmpty && isLogin) {
           _navigateIfLoginIsTrue();
           result = const CenterLoading();
+        } else {
+          result = _buildLoginProgress();
         }
 
         return result;
@@ -169,7 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                   _onLogin(context);
                 }
               },
-              child: const Text('Sign In'),
+              child: const Text('Masuk'),
             ),
             const SizedBox(
               height: 20,
@@ -177,7 +187,7 @@ class _LoginPageState extends State<LoginPage> {
             ElevatedButton(
               style: ButtonStyleHelper.elevatedButtonStyle,
               onPressed: () => _navigateToSignupPage(context),
-              child: const Text('Sign Up'),
+              child: const Text('Mendaftar'),
             ),
           ],
         ),

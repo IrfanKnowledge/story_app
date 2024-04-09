@@ -6,5 +6,8 @@ class ButtonStyleHelper {
       double.infinity,
       40,
     ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
   );
 }

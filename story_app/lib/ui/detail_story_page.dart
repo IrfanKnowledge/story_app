@@ -73,35 +73,43 @@ class DetailStoryPage extends StatelessWidget {
   /// used for [_getStoryDetail]
   Widget _getToken() {
     return Consumer<PreferencesProvider>(
-      builder: (context, provPref, _) {
-        // if state is loading (fetch isLogin from SharedPreference),
-        // show loading
-        if (provPref.stateIsLogin == ResultState.loading) {
-          return const CenterLoading();
+      builder: (context, provider, _) {
+        final stateIsLogin = provider.stateIsLogin;
+        final stateToken = provider.stateToken;
+        String token = '';
+        late Widget? result;
 
-          // if isLogin is true
-        } else if (provPref.isLogin) {
-          // if state is loading (fetch token from SharedPreference),
-          // show loading
-          if (provPref.stateToken == ResultState.loading) {
-            return const CenterLoading();
+        result = stateIsLogin.when(
+          initial: () => const CenterLoading(),
+          loading: () => const CenterLoading(),
+          loaded: (data) => null,
+          error: (message) => CenterError(description: message),
+        );
 
-            // if token is not empty, use the token to get story detail from API
-          } else if (provPref.stateToken == ResultState.hasData) {
-            return _getStoryDetail(
-              token: provPref.token,
-              id: id,
-            );
-
-            // if token is empty, show error message
-          } else {
-            return CenterError(description: provPref.messageToken);
-          }
-
-          // if isLogin is not true, show error message
-        } else {
-          return CenterError(description: provPref.messageIsLogin);
+        if (result != null) {
+          return result;
         }
+
+        result = stateToken.when(
+          initial: () => const CenterLoading(),
+          loading: () => const CenterLoading(),
+          loaded: (data) {
+            token = data;
+            return null;
+          },
+          error: (message) => CenterError(description: message),
+        );
+
+        if (result != null) {
+          return result;
+        }
+
+        result = _getStoryDetail(
+          token: token,
+          id: id,
+        );
+
+        return result;
       },
     );
   }
