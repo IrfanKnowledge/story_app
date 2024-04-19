@@ -10,4 +10,14 @@ class ButtonStyleHelper {
       borderRadius: BorderRadius.circular(10),
     ),
   );
+
+  static ButtonStyle filledButtonStyle = FilledButton.styleFrom(
+    minimumSize: const Size(
+      double.infinity,
+      40,
+    ),
+    shape: RoundedRectangleBorder(
+      borderRadius: BorderRadius.circular(10),
+    ),
+  );
 }

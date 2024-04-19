@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:story_app/common/assets/color_scheme/theme.dart';
+import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 
 /// Dikarenakan sebagian variable dari Theme.of(context).colorScheme

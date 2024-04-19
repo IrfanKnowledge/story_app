@@ -2,20 +2,18 @@ import 'dart:io';
 
 import 'package:flutter/foundation.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/data/model/signup_model.dart';
+import 'package:story_app/utils/loading_state.dart';
 import 'package:story_app/utils/string_helper.dart';
 
 class SignupProvider extends ChangeNotifier {
   final ApiService _apiService;
 
-  SignupProvider(this._apiService) : _state = ResultState.notStarted;
+  SignupProvider({required ApiService apiService}) : _apiService = apiService;
 
-  ResultState _state;
-  String _message = '';
+  LoadingState<SignupModel> _state = const LoadingState.initial();
 
-  ResultState get state => _state;
-
-  String get message => _message;
+  LoadingState<SignupModel> get state => _state;
 
   void signup({
     required String name,
@@ -23,7 +21,7 @@ class SignupProvider extends ChangeNotifier {
     required String password,
   }) async {
     try {
-      _state = ResultState.loading;
+      _state = const LoadingState.loading();
       notifyListeners();
 
       final signupWrap = await _apiService.signup(
@@ -32,18 +30,13 @@ class SignupProvider extends ChangeNotifier {
         password: password,
       );
 
-      if (!signupWrap.error) {
-        _state = ResultState.hasData;
-        _message = signupWrap.message;
-        notifyListeners();
-      }
+      _state = LoadingState.loaded(signupWrap);
+      notifyListeners();
     } on SocketException {
-      _state = ResultState.error;
-      _message = StringHelper.noInternetConnection;
+      _state = const LoadingState.error(StringHelper.noInternetConnection);
       notifyListeners();
     } catch (e) {
-      _state = ResultState.error;
-      _message = e.toString();
+      _state = LoadingState.error(e.toString());
       notifyListeners();
     }
   }

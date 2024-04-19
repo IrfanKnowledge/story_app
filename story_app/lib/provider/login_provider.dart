@@ -15,7 +15,7 @@ class LoginProvider extends ChangeNotifier {
 
   LoadingState<LoginModel> get state => _state;
 
-  void postLogin({
+  void login({
     required String email,
     required String password,
   }) async {

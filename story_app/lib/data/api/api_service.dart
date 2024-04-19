@@ -5,7 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:story_app/data/model/detail_story_model.dart';
 import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/data/model/login_model.dart';
-import 'package:story_app/data/model/singup_model.dart';
+import 'package:story_app/data/model/signup_model.dart';
 import 'package:story_app/data/model/upload_image_story_model.dart';
 
 class ApiService {
@@ -18,7 +18,7 @@ class ApiService {
   static const String _endPointPostAddNewStory = 'stories';
 
   /// singup with name, email, password
-  Future<SignupWrap> signup({
+  Future<SignupModel> signup({
     required String name,
     required String email,
     required String password,
@@ -36,7 +36,7 @@ class ApiService {
     );
 
     var statusCode = response.statusCode;
-    final signupWrap = SignupWrap.fromRawJson(response.body);
+    final signupWrap = SignupModel.fromRawJson(response.body);
 
     if (statusCode == 201) {
       return signupWrap;

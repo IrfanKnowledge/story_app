@@ -1,10 +1,11 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:story_app/common/assets/color_scheme/theme.dart';
-import 'package:story_app/common/assets/font/roboto_flex.dart';
+import 'package:story_app/common/color_scheme/theme.dart';
+import 'package:story_app/common/font/roboto_flex.dart';
 import 'package:story_app/common/url_strategy.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
@@ -17,7 +18,6 @@ import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/loading_page.dart';
 import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/ui/signup_page.dart';
-import 'package:story_app/utils/result_state_helper.dart';
 
 void main() {
   usePathUrlStrategy();
@@ -155,13 +155,16 @@ class _MyAppState extends State<MyApp> {
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
     final stateToken = context.read<PreferencesProvider>().stateToken;
 
-    if (stateToken == ResultState.loading) {
-      if (!MyApp.outerRedirectExecuted) {
-        MyApp.outerMatchedLocation = state.matchedLocation;
-        MyApp.outerRedirectExecuted = true;
-      }
-      return '/${LoadingPage.goRoutePath}';
-    }
+    stateToken.maybeWhen(
+      loading: () {
+        if (!MyApp.outerRedirectExecuted) {
+          MyApp.outerMatchedLocation = state.matchedLocation;
+          MyApp.outerRedirectExecuted = true;
+        }
+        return '/${LoadingPage.goRoutePath}';
+      },
+      orElse: () {},
+    );
 
     if (state.matchedLocation == ListStoryPage.goRoutePath) {
       return _redirectIfIsNotLogin(context);

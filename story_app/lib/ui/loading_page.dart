@@ -3,7 +3,6 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/main.dart';
 import 'package:story_app/provider/preferences_provider.dart';
-import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 ///
@@ -23,16 +22,27 @@ class LoadingPage extends StatelessWidget {
     return Scaffold(
       body: Consumer<PreferencesProvider>(
         builder: (context, provider, _) {
-          if (provider.stateToken == ResultState.loading) {
-            return const CenterLoading();
+          final stateToken = provider.stateToken;
+
+          Widget? result = stateToken.maybeWhen(
+            loading: () => const CenterLoading(),
+            orElse: () => null,
+          );
+
+          if (result != null) {
+            return result;
           }
+
           WidgetsBinding.instance.addPostFrameCallback((_) {
             String location = MyApp.outerMatchedLocation;
             MyApp.outerMatchedLocation = '/';
             MyApp.outerRedirectExecuted = false;
             context.go(location);
           });
-          return const CenterLoading();
+
+          result = const CenterLoading();
+
+          return result;
         },
       ),
     );

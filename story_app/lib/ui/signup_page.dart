@@ -6,9 +6,12 @@ import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/signup_provider.dart';
 import 'package:story_app/ui/login_page.dart';
+import 'package:story_app/utils/button_style_helper.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
+import 'package:story_app/utils/future_helper.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
+import 'package:story_app/widget/text_with_red_star.dart';
 
 class SignupPage extends StatefulWidget {
   static const String goRouteName = 'signup';
@@ -26,9 +29,9 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
 
-  bool _isButtonSignUpExecuted = false;
-  bool _isPasswordHide = true;
   bool _isCanPop = false;
+  bool _isPasswordHide = true;
+  bool _isErrorMaybeShow = false;
 
   @override
   void dispose() {
@@ -44,7 +47,7 @@ class _SignupPageState extends State<SignupPage> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (context) => SignupProvider(ApiService()),
+          create: (context) => SignupProvider(apiService: ApiService()),
         )
       ],
       builder: (context, _) => builder(context),
@@ -52,33 +55,39 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget _buildScaffold(BuildContext context) {
-    final colorScheme = context.watch<MaterialThemeProvider>().currentSelected;
-
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Sign Up'),
-        backgroundColor: colorScheme.surfaceContainer,
-        surfaceTintColor: colorScheme.surfaceContainer,
-        bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(
-            decoration: BoxDecoration(
-              border: Border(
-                bottom: BorderSide(
-                  color: Theme.of(context).colorScheme.outlineVariant,
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
+      appBar: _buildAppBar(context),
       body: _buildSafeAreaWithScrollView(
         child: _buildContainer(context),
       ),
     );
   }
 
-  Widget _buildSafeAreaWithScrollView({required Widget child}) {
+  AppBar _buildAppBar(BuildContext context) {
+    final colorScheme = context.watch<MaterialThemeProvider>().currentSelected;
+
+    return AppBar(
+      title: const Text('Mendaftar'),
+      backgroundColor: colorScheme.surfaceContainer,
+      surfaceTintColor: colorScheme.surfaceContainer,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSafeAreaWithScrollView({
+    required Widget child,
+  }) {
     return SafeArea(
       child: SingleChildScrollView(
         child: child,
@@ -87,8 +96,7 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   Widget _buildContainer(BuildContext context) {
-    _snackBarSignup(context);
-    // _test1();
+    _checkAndShowError(context);
 
     return Container(
       alignment: Alignment.topCenter,
@@ -105,7 +113,7 @@ class _SignupPageState extends State<SignupPage> {
             const Gap(10),
             ..._buildPassword(),
             const Gap(20),
-            _buildButton(context),
+            _buildButtonSignUp(context),
           ],
         ),
       ),
@@ -157,7 +165,7 @@ class _SignupPageState extends State<SignupPage> {
           labelText: 'Password',
           border: const OutlineInputBorder(),
           filled: true,
-          suffix: IconButton(
+          suffixIcon: IconButton(
             onPressed: () {
               setState(() {
                 _isPasswordHide = !_isPasswordHide;
@@ -174,63 +182,52 @@ class _SignupPageState extends State<SignupPage> {
     ];
   }
 
-  ///
-  /// Menampilkan button atau proses loading jika pengguna menekannya
-  ///
-  Widget _buildButton(BuildContext context) {
-    Widget result;
-
-    final filledButton = FilledButton(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(
-          double.infinity,
-          40,
-        ),
-      ),
-      onPressed: () {
-        if (_formKey.currentState!.validate()) {
-          _signup(context);
-          // _autoNavigateBack(context: context);
-        }
-      },
-      child: const Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.app_registration),
-          Gap(5),
-          Text('Sign Up'),
-        ],
-      ),
-    );
-
+  Widget _buildButtonSignUp(BuildContext context) {
     final state = context.watch<SignupProvider>().state;
-    const loading = CenterLoading();
 
-    if (state == ResultState.loading) {
-      result = loading;
-    } else if (state == ResultState.hasData) {
-      _autoNavigateBack(context: context);
+    Widget loading() => const CenterLoading();
 
-      result = loading;
-    } else {
-      result = filledButton;
+    Widget filledButton() {
+      return FilledButton(
+        style: ButtonStyleHelper.filledButtonStyle,
+        onPressed: () {
+          if (_formKey.currentState!.validate()) {
+            _signup(context);
+            // _autoNavigateBack(context: context);
+          }
+        },
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.app_registration),
+            Gap(5),
+            Text('Mendaftar'),
+          ],
+        ),
+      );
     }
+
+    final Widget result = state.maybeWhen(
+      loading: () => loading(),
+      loaded: (data) {
+        _autoNavigateBack(context: context);
+
+        return loading();
+      },
+      orElse: () => filledButton(),
+    );
 
     return result;
   }
 
-  ///
-  /// Mengirimkan data pendaftaran ke server
-  ///
-  void _signup(BuildContext context) {
-    final provider = context.read<SignupProvider>();
-    _isButtonSignUpExecuted = true;
-
-    provider.signup(
-      name: _controllerName.text,
-      email: _controllerEmail.text,
-      password: _controllerPassword.text,
-    );
+  void _onPopInvoked(BuildContext context, bool didPop) {
+    if (!didPop) {
+      FutureHelper.buildShowDialog1Auto(
+        context: context,
+        onFalsePressed: () => context.pop(),
+        onTruePressed: () => _goToPreviousPage(context),
+      );
+    }
   }
 
   ///
@@ -247,124 +244,65 @@ class _SignupPageState extends State<SignupPage> {
       Future.delayed(
         const Duration(seconds: 2),
         () {
-          _goToOtherPage(context);
+          _goToPreviousPage(context);
         },
       );
     });
   }
 
   ///
-  /// Pergi ke halaman tertentu.
-  /// Sebelum pergi, status [_isCanPop] diubah menjadi true
+  /// Pergi ke halaman sebelumnya (dianggap melakukan aksi pop).
+  /// Sebelum melakukan aksi pop, status [_isCanPop] diubah menjadi true
   /// untuk menghindari pemanggilan showDialog pada PopScope di bagian [build]
   ///
-  void _goToOtherPage(BuildContext context) {
+  void _goToPreviousPage(BuildContext context) {
     _isCanPop = true;
     context.go('/${LoginPage.goRoutePath}');
   }
 
-  ///
-  /// Memberikan pesan ketika terjadi error
-  ///
-  void _snackBarSignup(BuildContext context) {
-    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
-      final provider = context.read<SignupProvider>();
-      final state = provider.state;
-      final message = provider.message;
+  void _checkAndShowError(BuildContext context) {
+    final provider = context.read<SignupProvider>();
+    final state = provider.state;
 
-      if (_isButtonSignUpExecuted == true && state == ResultState.error) {
-        _isButtonSignUpExecuted = false;
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: const Duration(seconds: 1),
-          ),
+    void showError(String message) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        final snackBar = SnackBar(
+          content: Text(message),
+          duration: const Duration(seconds: 1),
         );
-      }
-    });
+        ScaffoldMessenger.of(context).showSnackBar(snackBar);
+      });
+    }
+
+    if (_isErrorMaybeShow) {
+      _isErrorMaybeShow = false;
+      state.maybeWhen(
+        error: (message) => showError(message),
+        orElse: () {},
+      );
+    }
+  }
+
+  void _signup(BuildContext context) {
+    final provider = context.read<SignupProvider>();
+    _isErrorMaybeShow = true;
+
+    provider.signup(
+      name: _controllerName.text,
+      email: _controllerEmail.text,
+      password: _controllerPassword.text,
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return PopScope(
-      onPopInvoked: (didPop) {
-        const title = 'Keluar dari Halaman Ini';
-        const content = 'Apakah Anda yakin ingin keluar dari halaman ini?';
-        const textOnFalse = 'Tidak';
-        const textOnTrue = 'Ya, keluar dari halaman ini';
-
-        if (!didPop) {
-          showDialog(
-            context: context,
-            builder: (context) {
-              return AlertDialog(
-                title: const Text(
-                  title,
-                  textAlign: TextAlign.center,
-                ),
-                content: const Text(content, textAlign: TextAlign.center),
-                actionsAlignment: MainAxisAlignment.center,
-                actions: [
-                  TextButton(
-                    onPressed: () => context.pop(),
-                    child: const Text(textOnFalse),
-                  ),
-                  TextButton(
-                    onPressed: () {
-                      _goToOtherPage(context);
-                    },
-                    child: const Text(textOnTrue),
-                  ),
-                ],
-              );
-            },
-          );
-        }
-      },
+      onPopInvoked: (didPop) => _onPopInvoked(context, didPop),
       canPop: _isCanPop,
       child: _buildMultiProvider(
         builder: (context) {
           return _buildScaffold(context);
         },
-      ),
-    );
-  }
-
-  void _test1() {
-    _controllerName.text = 'npc5';
-    _controllerEmail.text = 'npc5@gmail.com';
-    _controllerPassword.text = '1234567890';
-  }
-}
-
-///
-/// Memberikan text dengan tanda bintang merah,
-/// yang biasanya digunakan pada halaman input data
-///
-class TextWithRedStar extends StatelessWidget {
-  final String value;
-
-  const TextWithRedStar({
-    super.key,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return RichText(
-      text: TextSpan(
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 14,
-        ),
-        children: <TextSpan>[
-          TextSpan(
-            text: value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
-          ),
-          const TextSpan(text: ' *', style: TextStyle(color: Colors.red)),
-        ],
       ),
     );
   }

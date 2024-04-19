@@ -26,7 +26,8 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
 
-  bool _isErrorShow = false;
+  bool _isPasswordHide = true;
+  bool _isErrorMaybeShow = false;
 
   @override
   void dispose() {
@@ -63,9 +64,7 @@ class _LoginPageState extends State<LoginPage> {
         bool isTokenNotEmpty = false;
         bool isLogin = false;
 
-        late Widget? result;
-
-        result = stateToken.maybeWhen(
+        Widget? result = stateToken.maybeWhen(
           loading: () => const CenterLoading(),
           loaded: (data) {
             if (data.isNotEmpty) {
@@ -97,6 +96,7 @@ class _LoginPageState extends State<LoginPage> {
 
         if (isTokenNotEmpty && isLogin) {
           _navigateIfLoginIsTrue();
+
           result = const CenterLoading();
         } else {
           result = _buildLoginProgress();
@@ -124,9 +124,15 @@ class _LoginPageState extends State<LoginPage> {
               return const CenterLoading();
             }
 
-            return _buildSafeAreaAndScroll(context);
+            return _buildSafeAreaAndScrollView(
+              child: _buildContainer(context),
+            );
           },
-          orElse: () => _buildSafeAreaAndScroll(context),
+          orElse: () {
+            return _buildSafeAreaAndScrollView(
+              child: _buildContainer(context),
+            );
+          },
         );
 
         return result;
@@ -134,10 +140,12 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 
-  SafeArea _buildSafeAreaAndScroll(BuildContext context) {
+  SafeArea _buildSafeAreaAndScrollView({
+    required Widget child,
+  }) {
     return SafeArea(
       child: SingleChildScrollView(
-        child: _buildContainer(context),
+        child: child,
       ),
     );
   }
@@ -160,44 +168,196 @@ class _LoginPageState extends State<LoginPage> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            const CircleAvatar(
-              radius: 75,
-              child: Icon(
-                Icons.person,
-                size: 125,
-              ),
-            ),
+            _buildIcon(),
             const Gap(20),
             ..._buildTextHeadLine(),
             const Gap(20),
-            ..._buildFormEmailAndPassword(),
+            ..._buildForms(),
             const Gap(20),
-            ElevatedButton(
-              style: ButtonStyleHelper.elevatedButtonStyle,
-              onPressed: () {
-                if (_formKey.currentState!.validate()) {
-                  _onLogin(context);
-                }
-              },
-              child: const Text('Masuk'),
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            ElevatedButton(
-              style: ButtonStyleHelper.elevatedButtonStyle,
-              onPressed: () => _navigateToSignupPage(context),
-              child: const Text('Mendaftar'),
-            ),
+            ..._buildButtons(context),
           ],
         ),
       ),
     );
   }
 
+  CircleAvatar _buildIcon() {
+    return const CircleAvatar(
+      radius: 75,
+      child: Icon(
+        Icons.person,
+        size: 125,
+      ),
+    );
+  }
+
+  List<Widget> _buildTextHeadLine() {
+    const textStyle16 = TextStyle(fontSize: 16);
+
+    Widget text1(String text) {
+      return Align(
+        alignment: Alignment.centerLeft,
+        child: Text(
+          text,
+          style: textStyle16,
+        ),
+      );
+    }
+
+    return [
+      text1('Selamat datang di Story App'),
+      const Gap(10),
+      text1('Bagikan kisah-kisah menarikmu melalui Story App!'),
+    ];
+  }
+
+  List<Widget> _buildForms() {
+    return [
+      _buildTextFormFieldEmail(),
+      const Gap(10),
+      _buildTextFormFieldPassword(),
+    ];
+  }
+
+  TextFormField _buildTextFormFieldPassword() {
+    return TextFormField(
+      controller: _controllerPassword,
+      obscureText: _isPasswordHide,
+      decoration: InputDecoration(
+        labelText: 'Password',
+        border: const OutlineInputBorder(),
+        filled: true,
+        suffixIcon: IconButton(
+          onPressed: () {
+            setState(() {
+              _isPasswordHide = !_isPasswordHide;
+            });
+          },
+          icon: _isPasswordHide
+              ? const Icon(Icons.visibility)
+              : const Icon(Icons.visibility_off),
+        ),
+      ),
+      validator: (value) =>
+          FormValidateHelper.validatePasswordAndDoNotEmpty(value),
+    );
+  }
+
+  TextFormField _buildTextFormFieldEmail() {
+    return TextFormField(
+      controller: _controllerEmail,
+      decoration: const InputDecoration(
+        labelText: 'Email',
+        border: OutlineInputBorder(),
+        filled: true,
+        hintText: '...@....com',
+      ),
+      validator: (value) =>
+          FormValidateHelper.validateEmailAndDoNotEmpty(value),
+    );
+  }
+
+  List<Widget> _buildButtons(BuildContext context) {
+    return [
+      _buildButtonSignIn(context),
+      const Gap(10),
+      _buildRowTextOr(),
+      const Gap(10),
+      _buildButtonSignUp(context),
+    ];
+  }
+
+  Row _buildRowTextOr() {
+    return const Row(
+      children: [
+        Expanded(
+          flex: 2,
+          child: Divider(),
+        ),
+        Expanded(
+          child: Text(
+            'Atau',
+            textAlign: TextAlign.center,
+          ),
+        ),
+        Expanded(
+          flex: 2,
+          child: Divider(),
+        ),
+      ],
+    );
+  }
+
+  FilledButton _buildButtonSignIn(BuildContext context) {
+    return FilledButton(
+      style: ButtonStyleHelper.filledButtonStyle,
+      onPressed: () {
+        if (_formKey.currentState!.validate()) {
+          _onLogin(context);
+        }
+      },
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.login),
+          Gap(5),
+          Text('Masuk'),
+        ],
+      ),
+    );
+  }
+
+  ElevatedButton _buildButtonSignUp(BuildContext context) {
+    return ElevatedButton(
+      style: ButtonStyleHelper.elevatedButtonStyle,
+      onPressed: () => _navigateToSignupPage(context),
+      child: const Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.app_registration),
+          Gap(5),
+          Text('Mendaftar'),
+        ],
+      ),
+    );
+  }
+
+  void _navigateIfLoginIsTrue() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.go(ListStoryPage.goRoutePath);
+    });
+  }
+
+  void _autoNavigateSetLoginAndToken(
+    BuildContext context,
+    String token,
+  ) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = context.read<PreferencesProvider>();
+
+      provider.setAndFetchToken(token);
+      provider.setAndFetchLoginStatus(true);
+    });
+  }
+
+  void _navigateToSignupPage(BuildContext context) {
+    context.go('/${LoginPage.goRoutePath}/${SignupPage.goRouteName}');
+  }
+
   void _autoFill() {
     _controllerEmail.text = 'NPC001@gmail.com';
     _controllerPassword.text = 'npc00001';
+  }
+
+  void _onLogin(BuildContext context) {
+    final provider = context.read<LoginProvider>();
+
+    _isErrorMaybeShow = true;
+
+    provider.login(
+      email: _controllerEmail.text,
+      password: _controllerPassword.text,
+    );
   }
 
   void _checkAndShowError(BuildContext context) {
@@ -214,8 +374,8 @@ class _LoginPageState extends State<LoginPage> {
       });
     }
 
-    if (_isErrorShow) {
-      _isErrorShow = false;
+    if (_isErrorMaybeShow) {
+      _isErrorMaybeShow = false;
       state.maybeWhen(
         loaded: (data) {
           data.loginResult == null ? showError(data.message) : null;
@@ -226,91 +386,12 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-  List<Widget> _buildTextHeadLine() {
-    const textStyle16 = TextStyle(fontSize: 16);
-
-    return [
-      const Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Selamat datang di Story App',
-          style: textStyle16,
-        ),
-      ),
-      const Gap(10),
-      const Align(
-        alignment: Alignment.centerLeft,
-        child: Text(
-          'Bagikan kisah-kisah menarikmu melalui Story App!',
-          style: textStyle16,
-        ),
-      ),
-    ];
-  }
-
-  List<Widget> _buildFormEmailAndPassword() {
-    return [
-      TextFormField(
-        controller: _controllerEmail,
-        decoration: const InputDecoration(
-          labelText: 'Email',
-          border: OutlineInputBorder(),
-          filled: true,
-          hintText: '...@....com',
-        ),
-        validator: (value) =>
-            FormValidateHelper.validateEmailAndDoNotEmpty(value),
-      ),
-      const Gap(10),
-      TextFormField(
-        controller: _controllerPassword,
-        obscureText: true,
-        decoration: const InputDecoration(
-          labelText: 'Password',
-          border: OutlineInputBorder(),
-          filled: true,
-        ),
-        validator: (value) =>
-            FormValidateHelper.validatePasswordAndDoNotEmpty(value),
-      ),
-    ];
-  }
-
-  void _onLogin(BuildContext context) {
-    final provider = context.read<LoginProvider>();
-
-    _isErrorShow = true;
-
-    provider.postLogin(
-      email: _controllerEmail.text,
-      password: _controllerPassword.text,
-    );
-  }
-
-  void _navigateToSignupPage(BuildContext context) {
-    context.go('/${LoginPage.goRoutePath}/${SignupPage.goRouteName}');
-  }
-
-  void _autoNavigateSetLoginAndToken(
-    BuildContext context,
-    String token,
-  ) {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final provider = context.read<PreferencesProvider>();
-
-      provider.setAndFetchToken(token);
-      provider.setAndFetchLoginStatus(true);
-    });
-  }
-
-  void _navigateIfLoginIsTrue() {
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(ListStoryPage.goRoutePath);
-    });
-  }
-
   @override
   Widget build(BuildContext context) {
-    return _buildMultiProvider(builder: (_) => _buildScaffold());
+    return _buildMultiProvider(
+      builder: (_) {
+        return _buildScaffold();
+      },
+    );
   }
 }
