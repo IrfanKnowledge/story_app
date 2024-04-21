@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
@@ -28,6 +29,8 @@ class _LoginPageState extends State<LoginPage> {
 
   bool _isPasswordHide = true;
   bool _isErrorMaybeShow = false;
+
+  AppLocalizations? _appLocalizations;
 
   @override
   void dispose() {
@@ -205,9 +208,9 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     return [
-      text1('Selamat datang di Story App'),
+      text1(_appLocalizations!.appSubtitle1(_appLocalizations!.titleApp)),
       const Gap(10),
-      text1('Bagikan kisah-kisah menarikmu melalui Story App!'),
+      text1(_appLocalizations!.appSubtitle2(_appLocalizations!.titleApp)),
     ];
   }
 
@@ -224,7 +227,7 @@ class _LoginPageState extends State<LoginPage> {
       controller: _controllerPassword,
       obscureText: _isPasswordHide,
       decoration: InputDecoration(
-        labelText: 'Password',
+        labelText: _appLocalizations!.password,
         border: const OutlineInputBorder(),
         filled: true,
         suffixIcon: IconButton(
@@ -246,9 +249,9 @@ class _LoginPageState extends State<LoginPage> {
   TextFormField _buildTextFormFieldEmail() {
     return TextFormField(
       controller: _controllerEmail,
-      decoration: const InputDecoration(
-        labelText: 'Email',
-        border: OutlineInputBorder(),
+      decoration: InputDecoration(
+        labelText: _appLocalizations!.email,
+        border: const OutlineInputBorder(),
         filled: true,
         hintText: '...@....com',
       ),
@@ -268,19 +271,19 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   Row _buildRowTextOr() {
-    return const Row(
+    return Row(
       children: [
-        Expanded(
+        const Expanded(
           flex: 2,
           child: Divider(),
         ),
         Expanded(
           child: Text(
-            'Atau',
+            _appLocalizations!.or,
             textAlign: TextAlign.center,
           ),
         ),
-        Expanded(
+        const Expanded(
           flex: 2,
           child: Divider(),
         ),
@@ -296,12 +299,12 @@ class _LoginPageState extends State<LoginPage> {
           _onLogin(context);
         }
       },
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.login),
-          Gap(5),
-          Text('Masuk'),
+          const Icon(Icons.login),
+          const Gap(5),
+          Text(_appLocalizations!.signIn),
         ],
       ),
     );
@@ -311,12 +314,12 @@ class _LoginPageState extends State<LoginPage> {
     return ElevatedButton(
       style: ButtonStyleHelper.elevatedButtonStyle,
       onPressed: () => _navigateToSignupPage(context),
-      child: const Row(
+      child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.app_registration),
-          Gap(5),
-          Text('Mendaftar'),
+          const Icon(Icons.app_registration),
+          const Gap(5),
+          Text(_appLocalizations!.signUp),
         ],
       ),
     );
@@ -389,7 +392,8 @@ class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
     return _buildMultiProvider(
-      builder: (_) {
+      builder: (context) {
+        _appLocalizations = AppLocalizations.of(context);
         return _buildScaffold();
       },
     );

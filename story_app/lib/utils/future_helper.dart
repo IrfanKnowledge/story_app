@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:story_app/common/common.dart';
 
 class FutureHelper {
   static Future<dynamic> buildShowDialog({
@@ -76,12 +77,14 @@ class FutureHelper {
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
   }) {
+    AppLocalizations? appLocalizations = AppLocalizations.of(context);
+
     return buildShowDialog(
       context: context,
-      textTitle: _ShowDialogText.textTitle,
-      textContent: _ShowDialogText.textContent,
-      textOnFalse: _ShowDialogText.textOnFalse,
-      textOnTrue: _ShowDialogText.textOnTrue,
+      textTitle: appLocalizations!.exitThisPageTitle,
+      textContent: appLocalizations.exitThisPageContent,
+      textOnFalse: appLocalizations.no,
+      textOnTrue: appLocalizations.exitThisPageOnTrue,
       onFalsePressed: onFalsePressed,
       onTruePressed: onTruePressed,
     );
@@ -92,12 +95,14 @@ class FutureHelper {
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
   }) {
+    AppLocalizations? appLocalizations = AppLocalizations.of(context);
+
     return buildShowCupertinoDialog(
       context: context,
-      textTitle: _ShowDialogText.textTitle,
-      textContent: _ShowDialogText.textContent,
-      textOnFalse: _ShowDialogText.textOnFalse,
-      textOnTrue: _ShowDialogText.textOnTrue,
+      textTitle: appLocalizations!.exitThisPageTitle,
+      textContent: appLocalizations.exitThisPageContent,
+      textOnFalse: appLocalizations.no,
+      textOnTrue: appLocalizations.exitThisPageOnTrue,
       onFalsePressed: onFalsePressed,
       onTruePressed: onTruePressed,
     );
@@ -141,20 +146,5 @@ class FutureHelper {
     }
 
     return result;
-  }
-}
-
-class _ShowDialogText {
-  static const textTitle = 'Keluar dari Halaman Ini';
-  static const textContent = 'Apakah Anda yakin ingin keluar dari halaman ini?';
-  static const textOnFalse = 'Tidak';
-  static const textOnTrue = 'Ya, keluar dari halaman ini';
-
-  static void onFalsePressed(BuildContext context) {
-    context.pop();
-  }
-
-  static void onTruePressed(BuildContext context, String pathPreviousPage) {
-    context.go(pathPreviousPage);
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/signup_provider.dart';
@@ -32,6 +33,8 @@ class _SignupPageState extends State<SignupPage> {
   bool _isCanPop = false;
   bool _isPasswordHide = true;
   bool _isErrorMaybeShow = false;
+
+  AppLocalizations? _appLocalizations;
 
   @override
   void dispose() {
@@ -67,7 +70,7 @@ class _SignupPageState extends State<SignupPage> {
     final colorScheme = context.watch<MaterialThemeProvider>().currentSelected;
 
     return AppBar(
-      title: const Text('Mendaftar'),
+      title: Text(_appLocalizations!.signUp),
       backgroundColor: colorScheme.surfaceContainer,
       surfaceTintColor: colorScheme.surfaceContainer,
       bottom: PreferredSize(
@@ -122,13 +125,17 @@ class _SignupPageState extends State<SignupPage> {
 
   List<Widget> _buildName() {
     return [
-      const TextWithRedStar(value: 'Isi nama Anda'),
+      TextWithRedStar(
+        value: _appLocalizations!.fillInYourXForm(
+          _appLocalizations!.name.toLowerCase(),
+        ),
+      ),
       const Gap(10),
       TextFormField(
         controller: _controllerName,
-        decoration: const InputDecoration(
-          labelText: 'Name',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: _appLocalizations!.name,
+          border: const OutlineInputBorder(),
           filled: true,
         ),
         validator: (value) => FormValidateHelper.validateDoNotEmpty(value),
@@ -138,13 +145,17 @@ class _SignupPageState extends State<SignupPage> {
 
   List<Widget> _buildEmail() {
     return [
-      const TextWithRedStar(value: 'Isi email Anda'),
+      TextWithRedStar(
+        value: _appLocalizations!.fillInYourXForm(
+          _appLocalizations!.email.toLowerCase(),
+        ),
+      ),
       const Gap(10),
       TextFormField(
         controller: _controllerEmail,
-        decoration: const InputDecoration(
-          labelText: 'Email',
-          border: OutlineInputBorder(),
+        decoration: InputDecoration(
+          labelText: _appLocalizations!.email,
+          border: const OutlineInputBorder(),
           filled: true,
           hintText: '...@....com',
         ),
@@ -156,13 +167,17 @@ class _SignupPageState extends State<SignupPage> {
 
   List<Widget> _buildPassword() {
     return [
-      const TextWithRedStar(value: 'Isi password Anda'),
+      TextWithRedStar(
+        value: _appLocalizations!.fillInYourXForm(
+          _appLocalizations!.password.toLowerCase(),
+        ),
+      ),
       const Gap(10),
       TextFormField(
         controller: _controllerPassword,
         obscureText: _isPasswordHide,
         decoration: InputDecoration(
-          labelText: 'Password',
+          labelText: _appLocalizations!.password,
           border: const OutlineInputBorder(),
           filled: true,
           suffixIcon: IconButton(
@@ -196,12 +211,12 @@ class _SignupPageState extends State<SignupPage> {
             // _autoNavigateBack(context: context);
           }
         },
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.app_registration),
-            Gap(5),
-            Text('Mendaftar'),
+            const Icon(Icons.app_registration),
+            const Gap(5),
+            Text(_appLocalizations!.signUp),
           ],
         ),
       );
@@ -301,6 +316,7 @@ class _SignupPageState extends State<SignupPage> {
       canPop: _isCanPop,
       child: _buildMultiProvider(
         builder: (context) {
+          _appLocalizations = AppLocalizations.of(context);
           return _buildScaffold(context);
         },
       ),

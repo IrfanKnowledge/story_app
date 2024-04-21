@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/color_scheme/theme.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/common/font/roboto_flex.dart';
 import 'package:story_app/common/url_strategy.dart';
 import 'package:story_app/data/api/api_service.dart';
@@ -237,6 +238,9 @@ class _MyAppState extends State<MyApp> {
           themeMode: providerMaterialTheme.themeMode,
           theme: _theme,
           darkTheme: _darkTheme,
+          locale: const Locale('en'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
         );
       },
     );

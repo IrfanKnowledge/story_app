@@ -1,0 +1,16 @@
+{
+  "titleApp": "Story App",
+  "appSubtitle1": "Welcome to {titleApp}",
+  "appSubtitle2": "Share your interesting stories to {titleApp}!",
+  "email": "Email",
+  "password": "Password",
+  "signIn": "Sign In",
+  "or": "Or",
+  "signUp": "Sign Up",
+  "fillInYourXForm": "Fill in Your {formName}",
+  "name": "Name",
+  "exitThisPageTitle": "Exit This Page",
+  "exitThisPageContent": "Are you sure you want to leave this page?",
+  "no": "No",
+  "exitThisPageOnTrue": "Yes, exit this page"
+}

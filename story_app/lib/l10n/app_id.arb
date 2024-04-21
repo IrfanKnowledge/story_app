@@ -1,0 +1,68 @@
+{
+  "titleApp": "Story App",
+  "@titleApp": {
+    "description": "Judul aplikasi yang digunakan di dalam aplikasi"
+  },
+  "appSubtitle1": "Selamat datang di {titleApp}",
+  "@appSubtitle1": {
+    "description": "text yang pertama kali digunakan untuk login page sebagai sambutan",
+    "placeholders": {
+      "titleApp": {
+        "type": "String"
+      }
+    }
+  },
+  "appSubtitle2": "Bagikan kisah-kisah menarikmu melalui {titleApp}!",
+  "@appSubtitle2": {
+    "description": "text yang pertama kali digunakan untuk login page sebagai sambutan",
+    "placeholders": {
+      "titleApp": {
+        "type": "String"
+      }
+    }
+  },
+  "email": "Surel",
+  "@email": {
+    "description": "text email"
+  },
+  "password": "Kata Sandi",
+  "@password": {
+    "description": "text password"
+  },
+  "signIn": "Masuk",
+  "@signIn": {
+    "description": "text untuk log in atau sign in"
+  },
+  "or": "Atau",
+  "@or": {
+    "description": "text 'atau'"
+  },
+  "signUp": "Mendaftar",
+  "@signUp": {
+    "description": "text untuk sign up"
+  },
+  "fillInYourXForm": "Isi {formName} Anda",
+  "@fillInYourXForm": {
+    "description": "Label dari form"
+  },
+  "name": "Nama",
+  "@name": {
+    "description": "text nama"
+  },
+  "exitThisPageTitle": "Keluar dari Halaman Ini",
+  "@exitThisPageTitle": {
+    "description": "text judul dari pop up (showDialog) ketika keluar halaman"
+  },
+  "exitThisPageContent": "Apakah Anda yakin ingin keluar dari halaman ini?",
+  "@exitThisPageContent": {
+    "description": "text content dari pop up (showDialog) ketika keluar halaman"
+  },
+  "no": "Tidak",
+  "@no": {
+    "description": "text 'tidak'"
+  },
+  "exitThisPageOnTrue": "Ya, keluar dari halaman ini",
+  "@exitThisPageOnTrue": {
+    "description": "text untuk opsi pilihan benar dari pop up (showDialog) ketika keluar halaman"
+  }
+}
