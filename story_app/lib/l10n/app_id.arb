@@ -64,5 +64,9 @@
   "exitThisPageOnTrue": "Ya, keluar dari halaman ini",
   "@exitThisPageOnTrue": {
     "description": "text untuk opsi pilihan benar dari pop up (showDialog) ketika keluar halaman"
+  },
+  "succeed": "Berhasil",
+  "@succeed": {
+    "description": "text 'berhasil'"
   }
 }

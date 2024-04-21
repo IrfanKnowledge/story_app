@@ -10,7 +10,6 @@ import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/button_style_helper.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
 import 'package:story_app/utils/future_helper.dart';
-import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/text_with_red_star.dart';
 
@@ -67,12 +66,13 @@ class _SignupPageState extends State<SignupPage> {
   }
 
   AppBar _buildAppBar(BuildContext context) {
-    final colorScheme = context.watch<MaterialThemeProvider>().currentSelected;
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
 
     return AppBar(
       title: Text(_appLocalizations!.signUp),
-      backgroundColor: colorScheme.surfaceContainer,
-      surfaceTintColor: colorScheme.surfaceContainer,
+      backgroundColor: colorSchemeCustom.surfaceContainer,
+      surfaceTintColor: colorSchemeCustom.surfaceContainer,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(
@@ -251,9 +251,9 @@ class _SignupPageState extends State<SignupPage> {
   ///
   void _autoNavigateBack({required BuildContext context}) async {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-        content: Text('Berhasil'),
-        duration: Duration(seconds: 1),
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+        content: Text(_appLocalizations!.succeed),
+        duration: const Duration(seconds: 1),
       ));
 
       Future.delayed(

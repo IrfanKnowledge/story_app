@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
@@ -13,7 +14,7 @@ import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class DetailStoryPage extends StatelessWidget {
-  static const String path = '/stories/';
+  static const String goRoutePath = 'stories/:id';
 
   final String id;
 

@@ -53,18 +53,6 @@ class _ListStoryPageState extends State<ListStoryPage> {
       actions: [
         IconButton(
           onPressed: () {
-            kIsWeb
-                ? context.go(AddStoryPage.path)
-                : context.push(AddStoryPage.path);
-          },
-          icon: const Icon(Icons.add),
-        ),
-        IconButton(
-          onPressed: () {},
-          icon: const Icon(Icons.settings),
-        ),
-        IconButton(
-          onPressed: () {
             var provider = context.read<PreferencesProvider>();
             provider.setAndFetchLoginStatus(false);
             provider.removeAndFetchToken();
@@ -134,9 +122,11 @@ class _ListStoryPageState extends State<ListStoryPage> {
   Container _buildContainer(BuildContext context) {
     return Container(
       alignment: Alignment.topCenter,
-      padding: const EdgeInsets.symmetric(
-        vertical: 8,
-        horizontal: 16,
+      padding: const EdgeInsets.only(
+        left: 16,
+        top: 8,
+        right: 16,
+        bottom: 0,
       ),
       child: _buildListView(context),
     );
@@ -152,9 +142,10 @@ class _ListStoryPageState extends State<ListStoryPage> {
         final item = listStory[index];
         void onTap() {
           kIsWeb
-              ? context.go('${DetailStoryPage.path}${item.id}')
+              ? context.go(
+                  '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}')
               : context.push(
-                  '${DetailStoryPage.path}${item.id}',
+                  '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}',
                 );
         }
 

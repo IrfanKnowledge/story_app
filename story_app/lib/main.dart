@@ -14,10 +14,12 @@ import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
+import 'package:story_app/ui/bottom_nav_bar.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/loading_page.dart';
 import 'package:story_app/ui/login_page.dart';
+import 'package:story_app/ui/settings_page.dart';
 import 'package:story_app/ui/signup_page.dart';
 
 void main() {
@@ -49,6 +51,11 @@ class _MyAppState extends State<MyApp> {
   late final ThemeData _darkTheme;
   late final MaterialScheme _materialSchemeLight;
   late final MaterialScheme _materialSchemeDark;
+
+  final GlobalKey<NavigatorState> _rootNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'root');
+  final GlobalKey<NavigatorState> _shellNavigatorKey =
+      GlobalKey<NavigatorState>(debugLabel: 'shell');
 
   String? _redirectIfIsLogin(BuildContext context) {
     final state = context.read<PreferencesProvider>().stateIsLogin;
@@ -128,30 +135,52 @@ class _MyAppState extends State<MyApp> {
   ];
 
   late final _routes = <RouteBase>[
-    GoRoute(
-      path: ListStoryPage.goRoutePath,
-      builder: (_, state) => const ListStoryPage(),
+    ShellRoute(
+      navigatorKey: _shellNavigatorKey,
+      builder: (BuildContext context, GoRouterState state, Widget child) {
+        return BottomNavBar(child: child);
+      },
       routes: [
         GoRoute(
-          path: 'add_story',
-          builder: (_, __) => const AddStoryPage(),
-          redirect: (context, __) => _redirectIfIsNotLogin(context),
-          onExit: (context) => _listStoryPageRefresh(context),
+          path: '/',
+          builder: (_, state) => const ListStoryPage(),
+          routes: [
+            GoRoute(
+              path: DetailStoryPage.goRoutePath,
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (_, state) {
+                return DetailStoryPage(
+                  id: state.pathParameters['id'] ?? '',
+                );
+              },
+              redirect: (context, __) => _redirectIfIsNotLogin(context),
+              onExit: (context) => _listStoryPageRefresh(context),
+            ),
+            GoRoute(
+              path: AddStoryPage.goRoutePath,
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (_, __) => const AddStoryPage(),
+              redirect: (context, __) => _redirectIfIsNotLogin(context),
+              onExit: (context) => _listStoryPageRefresh(context),
+            ),
+          ],
         ),
         GoRoute(
-          path: 'stories/:id',
-          builder: (_, state) {
-            return DetailStoryPage(
-              id: state.pathParameters['id'] ?? '',
-            );
-          },
-          redirect: (context, __) => _redirectIfIsNotLogin(context),
-          onExit: (context) => _listStoryPageRefresh(context),
+          path: '/${SettingsPage.goRouteName}',
+          builder: (_, __) => const SettingsPage(),
         ),
       ],
     ),
     ..._routesLoginAndLoading,
   ];
+
+  late final _router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    redirect: redirect,
+    routes: _routes,
+  );
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
     final stateToken = context.read<PreferencesProvider>().stateToken;
@@ -172,13 +201,6 @@ class _MyAppState extends State<MyApp> {
     }
     return null;
   }
-
-  late final _router = GoRouter(
-    routes: _routes,
-    initialLocation: ListStoryPage.goRoutePath,
-    debugLogDiagnostics: true,
-    redirect: redirect,
-  );
 
   @override
   void initState() {

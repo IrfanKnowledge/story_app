@@ -12,5 +12,6 @@
   "exitThisPageTitle": "Exit This Page",
   "exitThisPageContent": "Are you sure you want to leave this page?",
   "no": "No",
-  "exitThisPageOnTrue": "Yes, exit this page"
+  "exitThisPageOnTrue": "Yes, exit this page",
+  "succeed": "Succeed"
 }

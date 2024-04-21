@@ -394,6 +394,7 @@ class _LoginPageState extends State<LoginPage> {
     return _buildMultiProvider(
       builder: (context) {
         _appLocalizations = AppLocalizations.of(context);
+
         return _buildScaffold();
       },
     );
