@@ -21,6 +21,7 @@ import 'package:story_app/ui/loading_page.dart';
 import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/ui/settings_page.dart';
 import 'package:story_app/ui/signup_page.dart';
+import 'package:story_app/utils/future_helper.dart';
 
 void main() {
   usePathUrlStrategy();
@@ -116,9 +117,20 @@ class _MyAppState extends State<MyApp> {
           path: SignupPage.goRouteName,
           builder: (_, __) => const SignupPage(),
           redirect: (context, __) => _redirectIfIsLogin(context),
-          onExit: (context) {
-            print('signup, onExit');
-            return true;
+          onExit: (context) async {
+            late final bool? result;
+
+            if (!SignupPage.isPopAutomate) {
+              result = await FutureHelper.buildShowDialog1Auto<bool>(
+                context: context,
+                onFalsePressed: () => context.pop(false),
+                onTruePressed: () => context.pop(true),
+              );
+            } else {
+              result = true;
+            }
+
+            return result ?? false;
           },
         ),
       ],

@@ -2,9 +2,10 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/provider/list_story_provider.dart';
+import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
-import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/card_story_widget.dart';
@@ -21,6 +22,9 @@ class ListStoryPage extends StatefulWidget {
 }
 
 class _ListStoryPageState extends State<ListStoryPage> {
+
+  AppLocalizations? _appLocalizations;
+
   @override
   void initState() {
     final providerPref = context.read<PreferencesProvider>();
@@ -37,6 +41,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
     Future.microtask(() async {
       providerListStory.fetchAllStories(token: token);
     });
+
     super.initState();
   }
 
@@ -48,21 +53,25 @@ class _ListStoryPageState extends State<ListStoryPage> {
   }
 
   AppBar _buildAppBar(BuildContext context) {
-    return AppBar(
-      title: const Text('Story'),
-      actions: [
-        IconButton(
-          onPressed: () {
-            var provider = context.read<PreferencesProvider>();
-            provider.setAndFetchLoginStatus(false);
-            provider.removeAndFetchToken();
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
 
-            context.go('/login');
-          },
-          icon: const Icon(Icons.logout),
+    return AppBar(
+      title: Text(_appLocalizations!.titleApp),
+      backgroundColor: colorSchemeCustom.surfaceContainer,
+      surfaceTintColor: colorSchemeCustom.surfaceContainer,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+          ),
         ),
-        const SizedBox(width: 10),
-      ],
+      ),
     );
   }
 
@@ -122,12 +131,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
   Container _buildContainer(BuildContext context) {
     return Container(
       alignment: Alignment.topCenter,
-      padding: const EdgeInsets.only(
-        left: 16,
-        top: 8,
-        right: 16,
-        bottom: 0,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: _buildListView(context),
     );
   }
@@ -161,6 +165,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   @override
   Widget build(BuildContext context) {
+    _appLocalizations = AppLocalizations.of(context);
     return _buildScaffold(context);
   }
 }

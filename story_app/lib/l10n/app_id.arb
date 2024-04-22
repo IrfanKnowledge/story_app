@@ -68,5 +68,69 @@
   "succeed": "Berhasil",
   "@succeed": {
     "description": "text 'berhasil'"
+  },
+  "settings": "Setelan",
+  "@settings": {
+    "description": "text 'setelan'"
+  },
+  "account": "Akun",
+  "@account": {
+    "description": "text 'akun'"
+  },
+  "accountType": "Jenis Akun",
+  "@accountType": {
+    "description": "text 'jenis akun'"
+  },
+  "freeOfCharge": "Gratis",
+  "@freeOfCharge": {
+    "description": "text 'gratis'"
+  },
+  "paid": "Berbayar",
+  "@paid": {
+    "description": "text 'berbayar'"
+  },
+  "theme": "Tema",
+  "@theme": {
+    "description": "text 'tema'"
+  },
+  "light": "Terang",
+  "@light": {
+    "description": "text 'terang'"
+  },
+  "dark": "Gelap",
+  "@dark": {
+    "description": "text 'gelap'"
+  },
+  "language": "Bahasa",
+  "@language": {
+    "description": "text 'bahasa'"
+  },
+  "languageId": "Bahasa Indonesia",
+  "@languageId": {
+    "description": "text 'bahasa indonesia'"
+  },
+  "languageEn": "English",
+  "@languageEn": {
+    "description": "text 'bahasa inggris'"
+  },
+  "themeAndLanguage": "Tema dan Bahasa",
+  "@themeAndLanguage": {
+    "description": "text 'tema dan bahasa'"
+  },
+  "other": "Lainnya",
+  "@other": {
+    "description": "text 'lainnya'"
+  },
+  "signOut": "Keluar",
+  "@signOut": {
+    "description": "text 'keluar'"
+  },
+  "homeBarTitle": "Beranda",
+  "@homeBarTitle": {
+    "description": "text 'beranda'"
+  },
+  "add": "Tambah",
+  "@add": {
+    "description": "text 'tambah'"
   }
 }

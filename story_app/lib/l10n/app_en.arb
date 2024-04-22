@@ -13,5 +13,21 @@
   "exitThisPageContent": "Are you sure you want to leave this page?",
   "no": "No",
   "exitThisPageOnTrue": "Yes, exit this page",
-  "succeed": "Succeed"
+  "succeed": "Succeed",
+  "settings": "Settings",
+  "account": "Account",
+  "accountType": "Account Type",
+  "freeOfCharge": "Free of Charge",
+  "paid": "Paid",
+  "theme": "Theme",
+  "light": "Light",
+  "dark": "Dark",
+  "language": "Language",
+  "languageId": "Bahasa Indonesia",
+  "languageEn": "English",
+  "themeAndLanguage": "Theme and Language",
+  "other": "Other",
+  "signOut": "Sign Out",
+  "homeBarTitle": "Home",
+  "add": "Add"
 }

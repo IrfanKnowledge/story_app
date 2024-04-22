@@ -6,15 +6,14 @@ import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/signup_provider.dart';
-import 'package:story_app/ui/login_page.dart';
 import 'package:story_app/utils/button_style_helper.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
-import 'package:story_app/utils/future_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/text_with_red_star.dart';
 
 class SignupPage extends StatefulWidget {
   static const String goRouteName = 'signup';
+  static bool isPopAutomate = false;
 
   const SignupPage({super.key});
 
@@ -29,7 +28,6 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
 
-  bool _isCanPop = false;
   bool _isPasswordHide = true;
   bool _isErrorMaybeShow = false;
 
@@ -41,6 +39,12 @@ class _SignupPageState extends State<SignupPage> {
     _controllerEmail.dispose();
     _controllerPassword.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    SignupPage.isPopAutomate = false;
+    super.initState();
   }
 
   Widget _buildMultiProvider({
@@ -235,16 +239,6 @@ class _SignupPageState extends State<SignupPage> {
     return result;
   }
 
-  void _onPopInvoked(BuildContext context, bool didPop) {
-    if (!didPop) {
-      FutureHelper.buildShowDialog1Auto(
-        context: context,
-        onFalsePressed: () => context.pop(),
-        onTruePressed: () => _goToPreviousPage(context),
-      );
-    }
-  }
-
   ///
   /// Jika proses mendaftar berhasil, maka memberikan pesan,
   /// kemudian berpindah halaman
@@ -259,20 +253,11 @@ class _SignupPageState extends State<SignupPage> {
       Future.delayed(
         const Duration(seconds: 2),
         () {
-          _goToPreviousPage(context);
+          SignupPage.isPopAutomate = true;
+          context.pop();
         },
       );
     });
-  }
-
-  ///
-  /// Pergi ke halaman sebelumnya (dianggap melakukan aksi pop).
-  /// Sebelum melakukan aksi pop, status [_isCanPop] diubah menjadi true
-  /// untuk menghindari pemanggilan showDialog pada PopScope di bagian [build]
-  ///
-  void _goToPreviousPage(BuildContext context) {
-    _isCanPop = true;
-    context.go('/${LoginPage.goRoutePath}');
   }
 
   void _checkAndShowError(BuildContext context) {
@@ -311,15 +296,11 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
-    return PopScope(
-      onPopInvoked: (didPop) => _onPopInvoked(context, didPop),
-      canPop: _isCanPop,
-      child: _buildMultiProvider(
-        builder: (context) {
-          _appLocalizations = AppLocalizations.of(context);
-          return _buildScaffold(context);
-        },
-      ),
+    return _buildMultiProvider(
+      builder: (context) {
+        _appLocalizations = AppLocalizations.of(context);
+        return _buildScaffold(context);
+      },
     );
   }
 }

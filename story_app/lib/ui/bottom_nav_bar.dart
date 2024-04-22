@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
 import 'package:story_app/ui/list_story_page.dart';
@@ -24,11 +25,11 @@ class BottomNavBar extends StatelessWidget {
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
-        GoRouter.of(context).go('/');
+        context.go('/');
       case 1:
-        GoRouter.of(context).go("/${AddStoryPage.goRoutePath}");
+        context.go("/${AddStoryPage.goRoutePath}");
       case 2:
-        GoRouter.of(context).go("/${SettingsPage.goRouteName}");
+        context.go("/${SettingsPage.goRouteName}");
     }
   }
 
@@ -37,6 +38,8 @@ class BottomNavBar extends StatelessWidget {
     final colorSchemeCustom =
         context.watch<MaterialThemeProvider>().currentSelected;
     final colorScheme = Theme.of(context).colorScheme;
+
+    final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
       body: child,
@@ -49,18 +52,18 @@ class BottomNavBar extends StatelessWidget {
           ),
         ),
         child: BottomNavigationBar(
-          items: const [
+          items: [
             BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Beranda',
+              icon: const Icon(Icons.home),
+              label: appLocalizations!.homeBarTitle,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.add),
-              label: 'Tambah',
+              icon: const Icon(Icons.add),
+              label: appLocalizations.add,
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Setelan',
+              icon: const Icon(Icons.settings),
+              label: appLocalizations.settings,
             ),
           ],
           backgroundColor: colorSchemeCustom.surfaceContainer,

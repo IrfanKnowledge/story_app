@@ -1,11 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:story_app/common/common.dart';
 
 class FutureHelper {
-  static Future<dynamic> buildShowDialog({
+  static Future<T?> buildShowDialog<T>({
     required BuildContext context,
     String? textTitle,
     String? textContent,
@@ -14,7 +13,7 @@ class FutureHelper {
     void Function()? onFalsePressed,
     void Function()? onTruePressed,
   }) {
-    return showDialog(
+    return showDialog<T>(
       context: context,
       builder: (context) {
         return AlertDialog(
@@ -40,7 +39,7 @@ class FutureHelper {
     );
   }
 
-  static Future<dynamic> buildShowCupertinoDialog({
+  static Future<T?> buildShowCupertinoDialog<T>({
     required BuildContext context,
     String? textTitle,
     String? textContent,
@@ -49,7 +48,7 @@ class FutureHelper {
     void Function()? onFalsePressed,
     void Function()? onTruePressed,
   }) {
-    return showCupertinoDialog(
+    return showCupertinoDialog<T>(
       context: context,
       builder: (context) {
         return CupertinoAlertDialog(
@@ -72,14 +71,14 @@ class FutureHelper {
     );
   }
 
-  static Future<dynamic> buildShowDialog1({
+  static Future<T?> buildShowDialog1<T>({
     required BuildContext context,
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
   }) {
     AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
-    return buildShowDialog(
+    return buildShowDialog<T>(
       context: context,
       textTitle: appLocalizations!.exitThisPageTitle,
       textContent: appLocalizations.exitThisPageContent,
@@ -90,14 +89,14 @@ class FutureHelper {
     );
   }
 
-  static Future<dynamic> buildShowCupertinoDialog1({
+  static Future<T?> buildShowCupertinoDialog1<T>({
     required BuildContext context,
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
   }) {
     AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
-    return buildShowCupertinoDialog(
+    return buildShowCupertinoDialog<T>(
       context: context,
       textTitle: appLocalizations!.exitThisPageTitle,
       textContent: appLocalizations.exitThisPageContent,
@@ -108,7 +107,7 @@ class FutureHelper {
     );
   }
 
-  static Future<dynamic> buildShowDialog1Auto({
+  static Future<T?> buildShowDialog1Auto<T>({
     required BuildContext context,
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
@@ -117,28 +116,28 @@ class FutureHelper {
     final isIos = Theme.of(context).platform == TargetPlatform.iOS;
     const isWeb = kIsWeb;
 
-    late final Future<dynamic> result;
+    late final Future<T?> result;
 
     if (isAndroid) {
-      result = buildShowDialog1(
+      result = buildShowDialog1<T>(
         context: context,
         onFalsePressed: onFalsePressed,
         onTruePressed: onTruePressed,
       );
     } else if (isIos) {
-      result = buildShowCupertinoDialog1(
+      result = buildShowCupertinoDialog1<T>(
         context: context,
         onFalsePressed: onFalsePressed,
         onTruePressed: onTruePressed,
       );
     } else if (isWeb) {
-      result = buildShowDialog1(
+      result = buildShowDialog1<T>(
         context: context,
         onFalsePressed: onFalsePressed,
         onTruePressed: onTruePressed,
       );
     } else {
-      result = buildShowDialog1(
+      result = buildShowDialog1<T>(
         context: context,
         onFalsePressed: onFalsePressed,
         onTruePressed: onTruePressed,

@@ -327,7 +327,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _navigateIfLoginIsTrue() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.go(ListStoryPage.goRoutePath);
+      context.go('/');
     });
   }
 
@@ -394,7 +394,6 @@ class _LoginPageState extends State<LoginPage> {
     return _buildMultiProvider(
       builder: (context) {
         _appLocalizations = AppLocalizations.of(context);
-
         return _buildScaffold();
       },
     );
