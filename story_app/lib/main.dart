@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
+import 'dart:ui';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -10,7 +13,9 @@ import 'package:story_app/common/font/roboto_flex.dart';
 import 'package:story_app/common/url_strategy.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
+import 'package:story_app/data/string/StringData.dart';
 import 'package:story_app/provider/list_story_provider.dart';
+import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
@@ -53,6 +58,8 @@ class _MyAppState extends State<MyApp> {
   late final MaterialScheme _materialSchemeLight;
   late final MaterialScheme _materialSchemeDark;
   late final Brightness _brightness;
+  late final Locale _locale;
+  late final bool _isLocaleSystem;
 
   final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -82,6 +89,8 @@ class _MyAppState extends State<MyApp> {
       orElse: () => false,
     );
 
+    print('_redirectIfIsNotLogin, isLogin: $isLogin');
+
     if (!isLogin) {
       return '/${LoginPage.goRoutePath}';
     } else {
@@ -110,6 +119,7 @@ class _MyAppState extends State<MyApp> {
     GoRoute(
       path: '/${LoginPage.goRoutePath}',
       builder: (_, __) {
+        print('GoRoute LoginPage');
         return const LoginPage();
       },
       redirect: (context, __) => _redirectIfIsLogin(context),
@@ -117,8 +127,7 @@ class _MyAppState extends State<MyApp> {
         late final bool? result;
 
         if (LoginPage.isShowDialogTrue) {
-          result =
-          await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+          result = await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
             context: context,
             onFalsePressed: () => context.pop(false),
             onTruePressed: () => context.pop(true),
@@ -183,7 +192,7 @@ class _MyAppState extends State<MyApp> {
 
             if (ListStoryPage.isShowDialogTrue) {
               result =
-              await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+                  await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
                 context: context,
                 onFalsePressed: () => context.pop(false),
                 onTruePressed: () => context.pop(true),
@@ -254,22 +263,55 @@ class _MyAppState extends State<MyApp> {
   );
 
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
-    final stateToken = context.read<PreferencesProvider>().stateToken;
+    print('GoRouterState: ${state.matchedLocation}');
 
-    stateToken.maybeWhen(
+    final stateToken = context.read<PreferencesProvider>().stateToken;
+    final stateThemeMode = context.read<PreferencesProvider>().stateThemeMode;
+
+    print('redirect, stateToken: $stateToken, stateThemeMode: $stateThemeMode');
+
+    String? result;
+
+    result = stateToken.maybeWhen<String?>(
       loading: () {
         if (!MyApp.outerRedirectExecuted) {
           MyApp.outerMatchedLocation = state.matchedLocation;
           MyApp.outerRedirectExecuted = true;
         }
+        print('stateTokenLoading');
         return '/${LoadingPage.goRoutePath}';
       },
-      orElse: () {},
+      orElse: () {
+        print('stateTokenOrElse');
+        return null;
+      },
     );
+
+    if (result != null) return result;
+
+    result = stateThemeMode.maybeWhen<String?>(
+      loading: () {
+        if (!MyApp.outerRedirectExecuted) {
+          MyApp.outerMatchedLocation = state.matchedLocation;
+          MyApp.outerRedirectExecuted = true;
+        }
+        print('stateThemeMode');
+        return '/${LoadingPage.goRoutePath}';
+      },
+      orElse: () {
+        print('stateThemeModeOrElse');
+        return null;
+      },
+    );
+
+    if (result != null) return result;
+
+    print('last');
 
     if (state.matchedLocation == ListStoryPage.goRoutePath) {
       return _redirectIfIsNotLogin(context);
     }
+
     return null;
   }
 
@@ -282,6 +324,24 @@ class _MyAppState extends State<MyApp> {
     _materialSchemeDark = MaterialTheme.darkScheme();
     _materialSchemeCurrentSelected = _materialSchemeLight;
     _themeMode = ThemeMode.system;
+
+    final localeSystemName = !kIsWeb
+        ? Platform.localeName
+        : PlatformDispatcher.instance.locale.languageCode;
+
+    print(
+        'PlatformDispatcher.instance.locale.languageCode;; initState: ${PlatformDispatcher.instance.locale.languageCode}');
+
+    String localeSystemNameSplitFirst = localeSystemName.split('_').first;
+    if (localeSystemNameSplitFirst.isEmpty) {
+      localeSystemNameSplitFirst = localeSystemName;
+    }
+
+    final localeSystem = Locale(localeSystemNameSplitFirst);
+    _locale = localeSystem;
+
+    _isLocaleSystem = true;
+
     super.initState();
   }
 
@@ -309,6 +369,14 @@ class _MyAppState extends State<MyApp> {
           },
         ),
         ChangeNotifierProvider(
+          create: (context) {
+            return LocalizationsProvider(
+              locale: _locale,
+              isLocaleSystem: _isLocaleSystem,
+            );
+          },
+        ),
+        ChangeNotifierProvider(
           create: (_) => PreferencesProvider(
             preferencesHelper: PreferencesHelper(
               sharedPreferences: SharedPreferences.getInstance(),
@@ -332,14 +400,20 @@ class _MyAppState extends State<MyApp> {
     return _buildMultiProvider(
       builder: (context) {
         final providerMaterialTheme = context.watch<MaterialThemeProvider>();
+        final themeMode = providerMaterialTheme.themeMode;
+
+        final providerLocalizations = context.watch<LocalizationsProvider>();
+        final locale = providerLocalizations.locale;
+
+        const titleApp = StringData.titleApp;
 
         return MaterialApp.router(
           routerConfig: _router,
-          title: 'Story App',
-          themeMode: providerMaterialTheme.themeMode,
+          title: titleApp,
+          themeMode: themeMode,
           theme: _theme,
           darkTheme: _darkTheme,
-          locale: const Locale('en'),
+          locale: locale,
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
         );

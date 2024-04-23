@@ -121,6 +121,10 @@
   "@language": {
     "description": "text 'bahasa'"
   },
+  "pickLanguage": "Pilih Bahasa",
+  "@pickLanguage": {
+    "description": "text 'pilih bahasa'"
+  },
   "themeAndLanguage": "Tema dan Bahasa",
   "@themeAndLanguage": {
     "description": "text 'tema dan bahasa'"

@@ -27,6 +27,7 @@
   "light": "Light",
   "dark": "Dark",
   "language": "Language",
+  "pickLanguage": "Pick Language",
   "themeAndLanguage": "Theme and Language",
   "other": "Other",
   "signOut": "Sign Out",

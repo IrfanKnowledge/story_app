@@ -4,10 +4,11 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/string/StringData.dart';
+import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/login_page.dart';
-import 'package:story_app/widget/list_radio.dart';
+import 'package:story_app/widget/alert_dialog_option.dart';
 
 class SettingsPage extends StatefulWidget {
   static const String goRouteName = 'settings_page';
@@ -25,12 +26,19 @@ class _SettingsPageState extends State<SettingsPage> {
 
   AppLocalizations? _appLocalizations;
 
-  final List<String> _themeModeLabel = [];
+  final List<String> _listThemeModeLabel = [];
   ThemeMode _themeMode = ThemeMode.system;
+
+  late final List<Locale> _listLocaleSupported;
+  Locale _locale = Locale('en');
+
+  final List<String> _listLocaleSupportedLabel = [];
 
   @override
   void initState() {
     SettingsPage.isShowDialogTrue = true;
+    _listLocaleSupported = AppLocalizations.supportedLocales;
+    final test = Locale('id');
     super.initState();
   }
 
@@ -135,7 +143,7 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget _buildThemeAndLanguage(BuildContext context) {
     const paddingHorizontal = 16.0;
 
-    String themePickName () {
+    String themePickName() {
       switch (_themeMode) {
         case ThemeMode.system:
           return _appLocalizations!.system;
@@ -143,6 +151,17 @@ class _SettingsPageState extends State<SettingsPage> {
           return _appLocalizations!.light;
         case ThemeMode.dark:
           return _appLocalizations!.dark;
+      }
+    }
+
+    String langPickName() {
+      switch (_locale.languageCode) {
+        case 'id':
+          return StringData.langBahasaIndonesia;
+        case 'en':
+          return StringData.langEnglish;
+        default:
+          return StringData.langEnglish;
       }
     }
 
@@ -162,47 +181,20 @@ class _SettingsPageState extends State<SettingsPage> {
             showDialog(
               context: context,
               builder: (context) {
-                return AlertDialog(
-                  title: Text(_appLocalizations!.pickTheme),
-                  content: SizedBox(
-                    height: 150,
-                    width: 100,
-                    child: StatefulBuilder(
-                      builder: (context, setState) {
-                        return ListView.builder(
-                          itemBuilder: (context, index) {
-                            return ListRadio(
-                              onChanged: (value) {
-                                setState(() {
-                                  _themeMode = value;
-                                });
-                              },
-                              label: _themeModeLabel[index],
-                              padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                              groupValue: _themeMode,
-                              value: ThemeMode.values[index],
-                            );
-                          },
-                          itemCount: ThemeMode.values.length,
-                        );
-                      }
-                    ),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 0.0, vertical: 16.0),
-                  actions: [
-                    TextButton(
-                      onPressed: () => context.pop(),
-                      child: Text(_appLocalizations!.cancel),
-                    ),
-                    TextButton(
-                      onPressed: () {
-                        final providerTheme = context.read<MaterialThemeProvider>();
-                        providerTheme.setCurrentSelected(context, _themeMode);
-                        context.pop();
-                      },
-                      child: const Text('Ok'),
-                    ),
-                  ],
+                return AlertDialogOption<ThemeMode>(
+                  titleAlertDialog: _appLocalizations!.pickTheme,
+                  height: 150,
+                  groupedValue: _themeMode,
+                  listValue: ThemeMode.values,
+                  listLabel: _listThemeModeLabel,
+                  textCancel: _appLocalizations!.cancel,
+                  onTruePressed: (BuildContext context, ThemeMode value) {
+                    final providerTheme = context.read<MaterialThemeProvider>();
+                    final providerPref = context.read<PreferencesProvider>();
+                    providerPref.setTheme(value);
+                    providerTheme.setCurrentSelected(context, value);
+                    context.pop();
+                  },
                 );
               },
             );
@@ -229,7 +221,27 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         const Gap(8),
         InkWell(
-          onTap: () {},
+          onTap: () {
+            showDialog(
+              context: context,
+              builder: (context) {
+                return AlertDialogOption<Locale>(
+                  titleAlertDialog: _appLocalizations!.pickTheme,
+                  height: 150,
+                  groupedValue: _locale,
+                  listValue: _listLocaleSupported,
+                  listLabel: _listLocaleSupportedLabel,
+                  textCancel: _appLocalizations!.cancel,
+                  onTruePressed: (BuildContext context, Locale value) {
+                    final providerLocalizations =
+                        context.read<LocalizationsProvider>();
+                    providerLocalizations.locale = value;
+                    context.pop();
+                  },
+                );
+              },
+            );
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: paddingHorizontal,
@@ -243,7 +255,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(_appLocalizations!.language),
-                    const Text(StringData.langBahasaIndonesia),
+                    Text(langPickName()),
                   ],
                 ),
               ],
@@ -301,12 +313,9 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    _appLocalizations = AppLocalizations.of(context);
-
-    _themeModeLabel.clear();
-    _themeModeLabel.addAll([
+  void _initTheme(BuildContext context) {
+    _listThemeModeLabel.clear();
+    _listThemeModeLabel.addAll([
       _appLocalizations!.system,
       _appLocalizations!.light,
       _appLocalizations!.dark,
@@ -315,6 +324,27 @@ class _SettingsPageState extends State<SettingsPage> {
     final providerTheme = context.watch<MaterialThemeProvider>();
     final themeMode = providerTheme.themeMode;
     _themeMode = themeMode;
+  }
+
+  void _initLocale(BuildContext context) {
+    _listLocaleSupportedLabel.clear();
+    _listLocaleSupportedLabel.addAll([
+      StringData.langEnglish,
+      StringData.langBahasaIndonesia,
+    ]);
+
+    final providerLocalizations = context.watch<LocalizationsProvider>();
+    final locale = providerLocalizations.locale;
+    _locale = locale;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _appLocalizations = AppLocalizations.of(context);
+
+    _initTheme(context);
+
+    _initLocale(context);
 
     return _buildScaffold(context);
   }
