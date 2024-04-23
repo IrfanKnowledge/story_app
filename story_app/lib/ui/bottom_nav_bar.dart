@@ -25,10 +25,13 @@ class BottomNavBar extends StatelessWidget {
   void _onItemTapped(int index, BuildContext context) {
     switch (index) {
       case 0:
+        SettingsPage.isShowDialogTrue = false;
         context.go('/');
       case 1:
+        SettingsPage.isShowDialogTrue = false;
         context.go("/${AddStoryPage.goRoutePath}");
       case 2:
+        ListStoryPage.isShowDialogTrue = false;
         context.go("/${SettingsPage.goRouteName}");
     }
   }

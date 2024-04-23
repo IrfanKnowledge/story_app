@@ -4,9 +4,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
+import 'package:story_app/data/string/StringData.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
-import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/button_style_helper.dart';
 import 'package:story_app/utils/form_validate_helper.dart';
@@ -14,6 +14,7 @@ import 'package:story_app/widget/center_loading.dart';
 
 class LoginPage extends StatefulWidget {
   static const String goRoutePath = 'login';
+  static bool isShowDialogTrue = true;
 
   const LoginPage({super.key});
 
@@ -37,6 +38,12 @@ class _LoginPageState extends State<LoginPage> {
     _controllerEmail.dispose();
     _controllerPassword.dispose();
     super.dispose();
+  }
+
+  @override
+  void initState() {
+    LoginPage.isShowDialogTrue = true;
+    super.initState();
   }
 
   Widget _buildMultiProvider({
@@ -208,9 +215,9 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     return [
-      text1(_appLocalizations!.appSubtitle1(_appLocalizations!.titleApp)),
+      text1(_appLocalizations!.appSubtitle1(StringData.titleApp)),
       const Gap(10),
-      text1(_appLocalizations!.appSubtitle2(_appLocalizations!.titleApp)),
+      text1(_appLocalizations!.appSubtitle2(StringData.titleApp)),
     ];
   }
 
@@ -327,6 +334,7 @@ class _LoginPageState extends State<LoginPage> {
 
   void _navigateIfLoginIsTrue() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      LoginPage.isShowDialogTrue = false;
       context.go('/');
     });
   }

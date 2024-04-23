@@ -13,7 +13,7 @@ import 'package:story_app/widget/text_with_red_star.dart';
 
 class SignupPage extends StatefulWidget {
   static const String goRouteName = 'signup';
-  static bool isPopAutomate = false;
+  static bool isShowDialogTrue = true;
 
   const SignupPage({super.key});
 
@@ -43,7 +43,7 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   void initState() {
-    SignupPage.isPopAutomate = false;
+    SignupPage.isShowDialogTrue = true;
     super.initState();
   }
 
@@ -253,7 +253,7 @@ class _SignupPageState extends State<SignupPage> {
       Future.delayed(
         const Duration(seconds: 2),
         () {
-          SignupPage.isPopAutomate = true;
+          SignupPage.isShowDialogTrue = false;
           context.pop();
         },
       );

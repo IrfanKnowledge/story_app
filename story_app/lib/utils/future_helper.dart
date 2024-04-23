@@ -4,81 +4,84 @@ import 'package:flutter/material.dart';
 import 'package:story_app/common/common.dart';
 
 class FutureHelper {
-  static Future<T?> buildShowDialog<T>({
+  static Future<T?> buildShowAlertDialogText<T>({
     required BuildContext context,
-    String? textTitle,
-    String? textContent,
+    required String textTitle,
+    required String textContent,
     required String textOnFalse,
     required String textOnTrue,
     void Function()? onFalsePressed,
     void Function()? onTruePressed,
   }) {
-    return showDialog<T>(
+    return showDialog(
       context: context,
       builder: (context) {
-        return AlertDialog(
-          title: textTitle != null
-              ? Text(textTitle, textAlign: TextAlign.center)
-              : null,
-          content: textContent != null
-              ? Text(textContent, textAlign: TextAlign.center)
-              : null,
-          actionsAlignment: MainAxisAlignment.center,
-          actions: [
-            TextButton(
-              onPressed: onFalsePressed,
-              child: Text(textOnFalse),
-            ),
-            TextButton(
-              onPressed: onTruePressed,
-              child: Text(textOnTrue),
-            ),
-          ],
-        );
+        Widget alertDialog() {
+          return AlertDialog(
+            title: Text(textTitle, textAlign: TextAlign.center),
+            content: Text(textContent, textAlign: TextAlign.center),
+            actionsAlignment: MainAxisAlignment.center,
+            actions: [
+              TextButton(
+                onPressed: onFalsePressed,
+                child: Text(textOnFalse),
+              ),
+              TextButton(
+                onPressed: onTruePressed,
+                child: Text(textOnTrue),
+              ),
+            ],
+          );
+        }
+
+        Widget cupertinoDialog() {
+          return CupertinoAlertDialog(
+            title: Text(textTitle),
+            content: Text(textContent),
+            actions: [
+              CupertinoDialogAction(
+                isDefaultAction: true,
+                onPressed: onFalsePressed,
+                child: Text(textOnFalse),
+              ),
+              CupertinoDialogAction(
+                isDestructiveAction: true,
+                onPressed: onTruePressed,
+                child: Text(textOnTrue),
+              ),
+            ],
+          );
+        }
+
+        final isAndroid = Theme.of(context).platform == TargetPlatform.android;
+        final isIos = Theme.of(context).platform == TargetPlatform.iOS;
+        const isWeb = kIsWeb;
+
+        late final Widget result;
+
+        if (isAndroid) {
+          result = alertDialog();
+        } else if (isIos) {
+          result = cupertinoDialog();
+        } else if (isWeb) {
+          result = alertDialog();
+        } else {
+          result = alertDialog();
+        }
+
+        return result;
       },
     );
   }
 
-  static Future<T?> buildShowCupertinoDialog<T>({
-    required BuildContext context,
-    String? textTitle,
-    String? textContent,
-    required String textOnFalse,
-    required String textOnTrue,
-    void Function()? onFalsePressed,
-    void Function()? onTruePressed,
-  }) {
-    return showCupertinoDialog<T>(
-      context: context,
-      builder: (context) {
-        return CupertinoAlertDialog(
-          title: textTitle != null ? Text(textTitle) : null,
-          content: textContent != null ? Text(textContent) : null,
-          actions: [
-            CupertinoDialogAction(
-              isDefaultAction: true,
-              onPressed: onFalsePressed,
-              child: Text(textOnFalse),
-            ),
-            CupertinoDialogAction(
-              isDestructiveAction: true,
-              onPressed: onTruePressed,
-              child: Text(textOnTrue),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  static Future<T?> buildShowDialog1<T>({
+  static Future<T?> buildShowAlertDialogTextForExitPage<T>({
     required BuildContext context,
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
   }) {
     AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
-    return buildShowDialog<T>(
+    return buildShowAlertDialogText<T>(
       context: context,
       textTitle: appLocalizations!.exitThisPageTitle,
       textContent: appLocalizations.exitThisPageContent,
@@ -89,61 +92,21 @@ class FutureHelper {
     );
   }
 
-  static Future<T?> buildShowCupertinoDialog1<T>({
+  static Future<T?> buildShowAlertDialogTextForExitApp<T>({
     required BuildContext context,
     required void Function() onFalsePressed,
     required void Function() onTruePressed,
   }) {
     AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
-    return buildShowCupertinoDialog<T>(
+    return buildShowAlertDialogText<T>(
       context: context,
-      textTitle: appLocalizations!.exitThisPageTitle,
-      textContent: appLocalizations.exitThisPageContent,
+      textTitle: appLocalizations!.exitAppTitle,
+      textContent: appLocalizations.exitAppContent,
       textOnFalse: appLocalizations.no,
-      textOnTrue: appLocalizations.exitThisPageOnTrue,
+      textOnTrue: appLocalizations.exitAppOnTrue,
       onFalsePressed: onFalsePressed,
       onTruePressed: onTruePressed,
     );
-  }
-
-  static Future<T?> buildShowDialog1Auto<T>({
-    required BuildContext context,
-    required void Function() onFalsePressed,
-    required void Function() onTruePressed,
-  }) {
-    final isAndroid = Theme.of(context).platform == TargetPlatform.android;
-    final isIos = Theme.of(context).platform == TargetPlatform.iOS;
-    const isWeb = kIsWeb;
-
-    late final Future<T?> result;
-
-    if (isAndroid) {
-      result = buildShowDialog1<T>(
-        context: context,
-        onFalsePressed: onFalsePressed,
-        onTruePressed: onTruePressed,
-      );
-    } else if (isIos) {
-      result = buildShowCupertinoDialog1<T>(
-        context: context,
-        onFalsePressed: onFalsePressed,
-        onTruePressed: onTruePressed,
-      );
-    } else if (isWeb) {
-      result = buildShowDialog1<T>(
-        context: context,
-        onFalsePressed: onFalsePressed,
-        onTruePressed: onTruePressed,
-      );
-    } else {
-      result = buildShowDialog1<T>(
-        context: context,
-        onFalsePressed: onFalsePressed,
-        onTruePressed: onTruePressed,
-      );
-    }
-
-    return result;
   }
 }

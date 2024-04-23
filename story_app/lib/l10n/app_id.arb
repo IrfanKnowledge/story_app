@@ -1,8 +1,4 @@
 {
-  "titleApp": "Story App",
-  "@titleApp": {
-    "description": "Judul aplikasi yang digunakan di dalam aplikasi"
-  },
   "appSubtitle1": "Selamat datang di {titleApp}",
   "@appSubtitle1": {
     "description": "text yang pertama kali digunakan untuk login page sebagai sambutan",
@@ -65,6 +61,18 @@
   "@exitThisPageOnTrue": {
     "description": "text untuk opsi pilihan benar dari pop up (showDialog) ketika keluar halaman"
   },
+  "exitAppTitle": "Keluar dari Aplikasi",
+  "@exitAppTitle": {
+    "description": "text text judul dari pop up (showDialog) ketika keluar aplikasi"
+  },
+  "exitAppContent": "Apakah Anda yakin ingin keluar dari aplikasi?",
+  "@exitAppContent": {
+    "description": "text content dari pop up (showDialog) ketika keluar aplikasi"
+  },
+  "exitAppOnTrue": "Ya, keluar dari aplikasi",
+  "@exitAppOnTrue": {
+    "description": "text untuk opsi pilihan benar dari pop up (showDialog) ketika keluar aplikasi"
+  },
   "succeed": "Berhasil",
   "@succeed": {
     "description": "text 'berhasil'"
@@ -93,6 +101,14 @@
   "@theme": {
     "description": "text 'tema'"
   },
+  "pickTheme": "Pilih Tema",
+  "@pickTheme": {
+    "description": "text 'pilih tema'"
+  },
+  "system": "Sistem",
+  "@system": {
+    "description": "text 'sistem'"
+  },
   "light": "Terang",
   "@light": {
     "description": "text 'terang'"
@@ -104,14 +120,6 @@
   "language": "Bahasa",
   "@language": {
     "description": "text 'bahasa'"
-  },
-  "languageId": "Bahasa Indonesia",
-  "@languageId": {
-    "description": "text 'bahasa indonesia'"
-  },
-  "languageEn": "English",
-  "@languageEn": {
-    "description": "text 'bahasa inggris'"
   },
   "themeAndLanguage": "Tema dan Bahasa",
   "@themeAndLanguage": {
@@ -132,5 +140,9 @@
   "add": "Tambah",
   "@add": {
     "description": "text 'tambah'"
+  },
+  "cancel": "Batal",
+  "@cancel": {
+    "description": "text 'batal'"
   }
 }

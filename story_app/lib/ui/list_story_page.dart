@@ -3,17 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
+import 'package:story_app/data/string/StringData.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
-import 'package:story_app/widget/card_story_widget.dart';
+import 'package:story_app/widget/card_story.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class ListStoryPage extends StatefulWidget {
   static const String goRoutePath = '/';
+  static bool isShowDialogTrue = true;
 
   const ListStoryPage({super.key});
 
@@ -42,6 +44,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
       providerListStory.fetchAllStories(token: token);
     });
 
+    ListStoryPage.isShowDialogTrue = true;
+
     super.initState();
   }
 
@@ -57,7 +61,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
         context.watch<MaterialThemeProvider>().currentSelected;
 
     return AppBar(
-      title: Text(_appLocalizations!.titleApp),
+      title: const Text(StringData.titleApp),
       backgroundColor: colorSchemeCustom.surfaceContainer,
       surfaceTintColor: colorSchemeCustom.surfaceContainer,
       bottom: PreferredSize(
@@ -153,7 +157,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
                 );
         }
 
-        return CardStoryWidget(
+        return CardStory(
           photo: item.photoUrl,
           name: item.name,
           description: item.description,

@@ -15,14 +15,25 @@ class MaterialThemeProvider extends ChangeNotifier {
   ResultState _state = ResultState.notStarted;
 
   MaterialThemeProvider({
+    required BuildContext context,
+    required Brightness brightness,
     required MaterialScheme currentSelected,
     required ThemeMode themeMode,
     required MaterialScheme light,
     required MaterialScheme dark,
-  })  : _currentSelected = currentSelected,
+  })
+      : _currentSelected = currentSelected,
         _themeMode = themeMode,
         _dark = dark,
-        _light = light;
+        _light = light {
+    if (themeMode == ThemeMode.system) {
+      if (brightness == Brightness.light) {
+        _currentSelected = _light;
+      } else {
+        _currentSelected = _dark;
+      }
+    }
+  }
 
   MaterialScheme get currentSelected => _currentSelected;
 
@@ -34,22 +45,29 @@ class MaterialThemeProvider extends ChangeNotifier {
 
   MaterialScheme get light => _light;
 
-  void setCurrentSelectedToLight() {
+  void setCurrentSelected(BuildContext context, ThemeMode vThemeMode) {
     _state = ResultState.loading;
     notifyListeners();
 
-    _currentSelected = _light;
-    _themeMode = ThemeMode.light;
-    _state = ResultState.hasData;
-    notifyListeners();
-  }
+    _themeMode = vThemeMode;
 
-  void setCurrentSelectedToDark() {
-    _state = ResultState.loading;
-    notifyListeners();
+    switch (_themeMode) {
+      case ThemeMode.system:
+        final brightness = MediaQuery
+            .of(context)
+            .platformBrightness;
 
-    _currentSelected = _dark;
-    _themeMode = ThemeMode.dark;
+        if (brightness == Brightness.light) {
+          _currentSelected = _light;
+        } else {
+          _currentSelected = _dark;
+        }
+      case ThemeMode.light:
+        _currentSelected = _light;
+      case ThemeMode.dark:
+        _currentSelected = _dark;
+    }
+
     _state = ResultState.hasData;
     notifyListeners();
   }

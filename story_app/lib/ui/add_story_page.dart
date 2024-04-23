@@ -11,6 +11,7 @@ import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/add_story_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
+import 'package:story_app/ui/bottom_nav_bar.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_error.dart';

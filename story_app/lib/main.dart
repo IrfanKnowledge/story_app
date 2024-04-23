@@ -52,6 +52,7 @@ class _MyAppState extends State<MyApp> {
   late final ThemeData _darkTheme;
   late final MaterialScheme _materialSchemeLight;
   late final MaterialScheme _materialSchemeDark;
+  late final Brightness _brightness;
 
   final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -112,6 +113,25 @@ class _MyAppState extends State<MyApp> {
         return const LoginPage();
       },
       redirect: (context, __) => _redirectIfIsLogin(context),
+      onExit: (context) async {
+        late final bool? result;
+
+        if (LoginPage.isShowDialogTrue) {
+          result =
+          await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+            context: context,
+            onFalsePressed: () => context.pop(false),
+            onTruePressed: () => context.pop(true),
+          );
+        } else {
+          LoginPage.isShowDialogTrue = true;
+          result = true;
+        }
+
+        print('LoginPage.isShowDialogTrue: ${LoginPage.isShowDialogTrue}');
+
+        return result ?? false;
+      },
       routes: [
         GoRoute(
           path: SignupPage.goRouteName,
@@ -120,13 +140,15 @@ class _MyAppState extends State<MyApp> {
           onExit: (context) async {
             late final bool? result;
 
-            if (!SignupPage.isPopAutomate) {
-              result = await FutureHelper.buildShowDialog1Auto<bool>(
+            if (SignupPage.isShowDialogTrue) {
+              result =
+                  await FutureHelper.buildShowAlertDialogTextForExitPage<bool>(
                 context: context,
                 onFalsePressed: () => context.pop(false),
                 onTruePressed: () => context.pop(true),
               );
             } else {
+              SignupPage.isShowDialogTrue = true;
               result = true;
             }
 
@@ -156,6 +178,23 @@ class _MyAppState extends State<MyApp> {
         GoRoute(
           path: '/',
           builder: (_, state) => const ListStoryPage(),
+          onExit: (context) async {
+            late final bool? result;
+
+            if (ListStoryPage.isShowDialogTrue) {
+              result =
+              await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+                context: context,
+                onFalsePressed: () => context.pop(false),
+                onTruePressed: () => context.pop(true),
+              );
+            } else {
+              ListStoryPage.isShowDialogTrue = true;
+              result = true;
+            }
+
+            return result ?? false;
+          },
           routes: [
             GoRoute(
               path: DetailStoryPage.goRoutePath,
@@ -173,13 +212,33 @@ class _MyAppState extends State<MyApp> {
               parentNavigatorKey: _rootNavigatorKey,
               builder: (_, __) => const AddStoryPage(),
               redirect: (context, __) => _redirectIfIsNotLogin(context),
-              onExit: (context) => _listStoryPageRefresh(context),
+              onExit: (context) {
+                ListStoryPage.isShowDialogTrue = true;
+                return _listStoryPageRefresh(context);
+              },
             ),
           ],
         ),
         GoRoute(
           path: '/${SettingsPage.goRouteName}',
           builder: (_, __) => const SettingsPage(),
+          onExit: (context) async {
+            late final bool? result;
+
+            if (SettingsPage.isShowDialogTrue) {
+              result =
+                  await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+                context: context,
+                onFalsePressed: () => context.pop(false),
+                onTruePressed: () => context.pop(true),
+              );
+            } else {
+              SettingsPage.isShowDialogTrue = true;
+              result = true;
+            }
+
+            return result ?? false;
+          },
         ),
       ],
     ),
@@ -222,8 +281,14 @@ class _MyAppState extends State<MyApp> {
     _materialSchemeLight = MaterialTheme.lightScheme();
     _materialSchemeDark = MaterialTheme.darkScheme();
     _materialSchemeCurrentSelected = _materialSchemeLight;
-    _themeMode = ThemeMode.light;
+    _themeMode = ThemeMode.system;
     super.initState();
+  }
+
+  @override
+  void didChangeDependencies() {
+    _brightness = MediaQuery.of(context).platformBrightness;
+    super.didChangeDependencies();
   }
 
   MultiProvider _buildMultiProvider({
@@ -234,6 +299,8 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(
           create: (context) {
             return MaterialThemeProvider(
+              context: context,
+              brightness: _brightness,
               currentSelected: _materialSchemeCurrentSelected,
               themeMode: _themeMode,
               light: _materialSchemeLight,

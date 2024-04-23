@@ -1,5 +1,4 @@
 {
-  "titleApp": "Story App",
   "appSubtitle1": "Welcome to {titleApp}",
   "appSubtitle2": "Share your interesting stories to {titleApp}!",
   "email": "Email",
@@ -13,6 +12,9 @@
   "exitThisPageContent": "Are you sure you want to leave this page?",
   "no": "No",
   "exitThisPageOnTrue": "Yes, exit this page",
+  "exitAppTitle": "Exit the Application",
+  "exitAppContent": "Are you sure you want to leave the app?",
+  "exitAppOnTrue": "Yes, leave the app",
   "succeed": "Succeed",
   "settings": "Settings",
   "account": "Account",
@@ -20,14 +22,15 @@
   "freeOfCharge": "Free of Charge",
   "paid": "Paid",
   "theme": "Theme",
+  "pickTheme": "Pick Theme",
+  "system": "System",
   "light": "Light",
   "dark": "Dark",
   "language": "Language",
-  "languageId": "Bahasa Indonesia",
-  "languageEn": "English",
   "themeAndLanguage": "Theme and Language",
   "other": "Other",
   "signOut": "Sign Out",
   "homeBarTitle": "Home",
-  "add": "Add"
+  "add": "Add",
+  "cancel": "Cancel"
 }

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 
-class CardStoryWidget extends StatelessWidget {
+class CardStory extends StatelessWidget {
   final String photo;
   final String name;
   final String description;
   final Function() onTap;
 
-  const CardStoryWidget({
+  const CardStory({
     super.key,
     required this.photo,
     required this.name,
@@ -16,11 +16,13 @@ class CardStoryWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       clipBehavior: Clip.hardEdge,
       child: InkWell(
-        splashColor: const ColorScheme.light().primary.withAlpha(30),
-        highlightColor: const ColorScheme.light().primary.withAlpha(30),
+        splashColor: colorScheme.primary.withOpacity(0.10),
+        highlightColor: colorScheme.primary.withOpacity(0.10),
         onTap: onTap,
         child: Column(
           mainAxisSize: MainAxisSize.min,
