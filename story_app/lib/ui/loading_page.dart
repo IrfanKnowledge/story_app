@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/main.dart';
+import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/widget/center_loading.dart';
@@ -25,6 +26,7 @@ class LoadingPage extends StatelessWidget {
   Widget build(BuildContext context) {
     print('LoadingPage, build, first');
     final providerTheme = context.read<MaterialThemeProvider>();
+    final providerLocalizations = context.read<LocalizationsProvider>();
 
     return Scaffold(
       body: Consumer<PreferencesProvider>(
@@ -32,6 +34,7 @@ class LoadingPage extends StatelessWidget {
           print('loaidng_page, first');
           final stateToken = provider.stateToken;
           final stateTheme = provider.stateThemeMode;
+          final stateLangCode = provider.stateLangCode;
 
           Widget? result = stateToken.maybeWhen(
             loading: () => const CenterLoading(),
@@ -56,8 +59,23 @@ class LoadingPage extends StatelessWidget {
 
           if (result != null) return result;
 
-          print('stateTheme: $stateTheme');
+          result = stateLangCode.maybeWhen(
+            loading: () => const CenterLoading(),
+            loaded: (data) {
+              if (data != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  print('loading_page, stateLangCode.loaded, data: $data');
+                  providerLocalizations.locale = Locale(data);
+                });
+              }
+              return null;
+            },
+            orElse: () => null,
+          );
 
+          if (result != null) return result;
+
+          print('stateTheme: $stateTheme');
 
           WidgetsBinding.instance.addPostFrameCallback((_) {
             String location = MyApp.outerMatchedLocation;

@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/data/string/StringData.dart';
+import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/provider/login_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/signup_page.dart';

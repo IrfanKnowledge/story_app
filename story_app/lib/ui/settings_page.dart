@@ -3,11 +3,12 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
-import 'package:story_app/data/string/StringData.dart';
+import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/login_page.dart';
+import 'package:story_app/utils/locale_helper.dart';
 import 'package:story_app/widget/alert_dialog_option.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -37,8 +38,10 @@ class _SettingsPageState extends State<SettingsPage> {
   @override
   void initState() {
     SettingsPage.isShowDialogTrue = true;
-    _listLocaleSupported = AppLocalizations.supportedLocales;
-    final test = Locale('id');
+    _listLocaleSupported = [
+      LocaleHelper.localeSystem,
+      ...AppLocalizations.supportedLocales,
+    ];
     super.initState();
   }
 
@@ -160,6 +163,8 @@ class _SettingsPageState extends State<SettingsPage> {
           return StringData.langBahasaIndonesia;
         case 'en':
           return StringData.langEnglish;
+        case 'system':
+          return _appLocalizations!.system;
         default:
           return StringData.langEnglish;
       }
@@ -191,8 +196,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTruePressed: (BuildContext context, ThemeMode value) {
                     final providerTheme = context.read<MaterialThemeProvider>();
                     final providerPref = context.read<PreferencesProvider>();
-                    providerPref.setTheme(value);
+
+                    providerPref.setAndFetchTheme(value);
                     providerTheme.setCurrentSelected(context, value);
+
                     context.pop();
                   },
                 );
@@ -226,7 +233,7 @@ class _SettingsPageState extends State<SettingsPage> {
               context: context,
               builder: (context) {
                 return AlertDialogOption<Locale>(
-                  titleAlertDialog: _appLocalizations!.pickTheme,
+                  titleAlertDialog: _appLocalizations!.pickLanguage,
                   height: 150,
                   groupedValue: _locale,
                   listValue: _listLocaleSupported,
@@ -235,7 +242,11 @@ class _SettingsPageState extends State<SettingsPage> {
                   onTruePressed: (BuildContext context, Locale value) {
                     final providerLocalizations =
                         context.read<LocalizationsProvider>();
+                    final providerPref = context.read<PreferencesProvider>();
+
+                    providerPref.setAndFetchLangCode(value.languageCode);
                     providerLocalizations.locale = value;
+
                     context.pop();
                   },
                 );
@@ -283,7 +294,7 @@ class _SettingsPageState extends State<SettingsPage> {
         InkWell(
           onTap: () {
             final provider = context.read<PreferencesProvider>();
-            provider.setAndFetchLoginStatus(false);
+            provider.removeAndFetchLoginStatus();
             provider.removeAndFetchToken();
 
             SettingsPage.isShowDialogTrue = false;
@@ -329,12 +340,14 @@ class _SettingsPageState extends State<SettingsPage> {
   void _initLocale(BuildContext context) {
     _listLocaleSupportedLabel.clear();
     _listLocaleSupportedLabel.addAll([
+      _appLocalizations!.system,
       StringData.langEnglish,
       StringData.langBahasaIndonesia,
     ]);
 
     final providerLocalizations = context.watch<LocalizationsProvider>();
     final locale = providerLocalizations.locale;
+    print('settings, _initLocale, locale: $locale');
     _locale = locale;
   }
 

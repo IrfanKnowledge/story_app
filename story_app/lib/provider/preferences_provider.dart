@@ -11,11 +11,15 @@ class PreferencesProvider extends ChangeNotifier {
 
   LoadingState<ThemeMode?> _stateThemeMode = const LoadingState.initial();
 
+  LoadingState<String?> _stateLangCode = const LoadingState.initial();
+
   LoadingState<String> get stateToken => _stateToken;
 
   LoadingState<bool> get stateIsLogin => _stateIsLogin;
 
   LoadingState<ThemeMode?> get stateThemeMode => _stateThemeMode;
+
+  LoadingState<String?> get stateLangCode => _stateLangCode;
 
   PreferencesProvider({required PreferencesHelper preferencesHelper})
       : _preferencesHelper = preferencesHelper {
@@ -23,6 +27,7 @@ class PreferencesProvider extends ChangeNotifier {
     fetchToken();
     fetchLoginStatus();
     fetchTheme();
+    fetchLangCode();
   }
 
   void fetchToken() async {
@@ -88,11 +93,27 @@ class PreferencesProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void setTheme(ThemeMode value) {
+  void setAndFetchTheme(ThemeMode value) {
     _preferencesHelper.setTheme(value.name);
+    fetchTheme();
   }
 
-  void removeTheme() {
-    _preferencesHelper.removeTheme();
+  void fetchLangCode() async {
+    _stateLangCode = const LoadingState.loading();
+    notifyListeners();
+
+    final langCode = await _preferencesHelper.langCode;
+
+    if (langCode.isEmpty) {
+      _stateLangCode = const LoadingState.loaded(null);
+    } else {
+      _stateLangCode = LoadingState.loaded(langCode);
+    }
+    notifyListeners();
+  }
+
+  void setAndFetchLangCode(String value) {
+    _preferencesHelper.setLangCode(value);
+    fetchLangCode();
   }
 }

@@ -13,7 +13,7 @@ import 'package:story_app/common/font/roboto_flex.dart';
 import 'package:story_app/common/url_strategy.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
-import 'package:story_app/data/string/StringData.dart';
+import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
@@ -265,8 +265,10 @@ class _MyAppState extends State<MyApp> {
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
     print('GoRouterState: ${state.matchedLocation}');
 
-    final stateToken = context.read<PreferencesProvider>().stateToken;
-    final stateThemeMode = context.read<PreferencesProvider>().stateThemeMode;
+    final providerPref = context.read<PreferencesProvider>();
+    final stateToken = providerPref.stateToken;
+    final stateThemeMode = providerPref.stateThemeMode;
+    final stateLangCode = providerPref.stateLangCode;
 
     print('redirect, stateToken: $stateToken, stateThemeMode: $stateThemeMode');
 
@@ -302,6 +304,19 @@ class _MyAppState extends State<MyApp> {
         print('stateThemeModeOrElse');
         return null;
       },
+    );
+
+    if (result != null) return result;
+
+    result = stateLangCode.maybeWhen(
+      loading: () {
+        if (!MyApp.outerRedirectExecuted) {
+          MyApp.outerMatchedLocation = state.matchedLocation;
+          MyApp.outerRedirectExecuted = true;
+        }
+        return '/${LoadingPage.goRoutePath}';
+      },
+      orElse: () => null,
     );
 
     if (result != null) return result;
@@ -399,13 +414,19 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return _buildMultiProvider(
       builder: (context) {
+        const titleApp = StringData.titleApp;
+
         final providerMaterialTheme = context.watch<MaterialThemeProvider>();
         final themeMode = providerMaterialTheme.themeMode;
 
         final providerLocalizations = context.watch<LocalizationsProvider>();
-        final locale = providerLocalizations.locale;
 
-        const titleApp = StringData.titleApp;
+        final Locale? locale;
+        if (providerLocalizations.locale.languageCode == 'system') {
+          locale = null;
+        } else {
+          locale = providerLocalizations.locale;
+        }
 
         return MaterialApp.router(
           routerConfig: _router,

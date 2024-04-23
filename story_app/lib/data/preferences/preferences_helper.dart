@@ -12,9 +12,6 @@ class PreferencesHelper {
   static const _theme = 'THEME';
   static const _langCode = 'LANG_CODE';
 
-  /// is language use system configuration or not?
-  static const _langStatus = 'LANG_STATUS';
-
   Future<String> get token async {
     final prefs = await _sharedPreferences;
     return prefs.getString(_token) ?? '';
@@ -55,8 +52,13 @@ class PreferencesHelper {
     prefs.setString(_theme, value);
   }
 
-  void removeTheme() async {
+  Future<String> get langCode async {
     final prefs = await _sharedPreferences;
-    prefs.remove(_theme);
+    return prefs.getString(_langCode) ?? '';
+  }
+
+  void setLangCode(String value) async {
+    final prefs = await _sharedPreferences;
+    prefs.setString(_langCode, value);
   }
 }
