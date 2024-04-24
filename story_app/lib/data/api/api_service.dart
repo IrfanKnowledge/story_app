@@ -72,7 +72,7 @@ class ApiService {
   }
 
   /// get all stories, using the token obtained from a successful login
-  Future<ListStoryWrap> getAllStories({required String token}) async {
+  Future<ListStoryModel> getAllStories({required String token}) async {
     print('api_service, getAllStories(), token: $token');
     final getAllStoriesQueryParameters = {
       'page': '1',
@@ -92,7 +92,7 @@ class ApiService {
     );
 
     var statusCode = response.statusCode;
-    final listStoryWrap = ListStoryWrap.fromRawJson(response.body);
+    final listStoryWrap = ListStoryModel.fromRawJson(response.body);
 
     if (statusCode == 200) {
       return listStoryWrap;

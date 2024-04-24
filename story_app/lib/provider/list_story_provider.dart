@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/list_story_model.dart';
-import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/utils/loading_state.dart';
 import 'package:story_app/utils/string_helper.dart';
 
 class ListStoryProvider extends ChangeNotifier {
@@ -13,41 +13,26 @@ class ListStoryProvider extends ChangeNotifier {
     required ApiService apiService,
   }) : _apiService = apiService;
 
-  late ListStoryWrap _listStoryWrap;
-  ResultState _state = ResultState.notStarted;
-  String _message = '';
+  LoadingState<ListStoryModel> _stateListStory = const LoadingState.initial();
 
-  ListStoryWrap get listStoryWrap => _listStoryWrap;
-
-  String get message => _message;
-
-  ResultState get state => _state;
+  LoadingState<ListStoryModel> get stateListStory => _stateListStory;
 
   void fetchAllStories({required String token}) async {
     try {
-      _state = ResultState.loading;
+      _stateListStory = const LoadingState.loading();
       notifyListeners();
-      final listStoryWrap = await _apiService.getAllStories(token: token);
 
-      if (listStoryWrap.listStory!.isEmpty) {
-        _state = ResultState.noData;
-        _message = StringHelper.emptyData;
-        notifyListeners();
+      final listStoryModel =
+          await _apiService.getAllStories(token: token);
 
-      } else {
-        _state = ResultState.hasData;
-        _listStoryWrap = listStoryWrap;
-        notifyListeners();
-      }
-
+      _stateListStory = LoadingState.loaded(listStoryModel);
+      notifyListeners();
     } on SocketException {
-      _state = ResultState.error;
-      _message = StringHelper.noInternetConnection;
+      _stateListStory =
+          const LoadingState.error(StringHelper.noInternetConnection);
       notifyListeners();
-
     } catch (e, stacktrace) {
-      _state = ResultState.error;
-      _message = e.toString();
+      _stateListStory = LoadingState.error(e.toString());
       notifyListeners();
     }
   }

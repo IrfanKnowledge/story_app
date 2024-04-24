@@ -2,13 +2,13 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:story_app/common/common.dart';
+import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/detail_story_page.dart';
-import 'package:story_app/utils/result_state_helper.dart';
+import 'package:story_app/utils/string_helper.dart';
 import 'package:story_app/widget/card_story.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
@@ -24,9 +24,6 @@ class ListStoryPage extends StatefulWidget {
 }
 
 class _ListStoryPageState extends State<ListStoryPage> {
-
-  AppLocalizations? _appLocalizations;
-
   @override
   void initState() {
     final providerPref = context.read<PreferencesProvider>();
@@ -79,55 +76,24 @@ class _ListStoryPageState extends State<ListStoryPage> {
     );
   }
 
-  void _refreshPage(BuildContext context) {
-    final listStoryProv = context.read<ListStoryProvider>();
-
-    final providerPref = context.read<PreferencesProvider>();
-    final stateToken = providerPref.stateToken;
-    final token = stateToken.maybeWhen(
-      loaded: (data) => data,
-      orElse: () => '',
-    );
-
-    listStoryProv.fetchAllStories(token: token);
-  }
-
-  Widget _buildIsLogin() {
-    return Consumer<PreferencesProvider>(
-      builder: (context, provider, _) {
-        final stateIsLogin = provider.stateIsLogin;
-        final stateToken = provider.stateToken;
-        if (stateIsLogin == ResultState.loading ||
-            stateToken == ResultState.loading) {
-          return const CenterLoading();
-        }
-
-        return _buildGetStories(context);
-      },
-    );
-  }
-
   Widget _buildGetStories(BuildContext context) {
     return Consumer<ListStoryProvider>(
-      builder: (context, provListStory, _) {
-        print('provListStory.state: ${provListStory.state}');
-        if (provListStory.state == ResultState.notStarted) {
-          // WidgetsBinding.instance.addPostFrameCallback((_) {
-          //   final providerPref = context.read<PreferencesProvider>();
-          //   provListStory.fetchAllStories(token: providerPref.token);
-          // });
-          return const CenterLoading();
-        } else if (provListStory.state == ResultState.loading) {
-          return const CenterLoading();
-        } else if (provListStory.state == ResultState.hasData) {
-          return _buildContainer(context);
-        } else if (provListStory.state == ResultState.noData) {
-          return CenterError(description: provListStory.message);
-        } else if (provListStory.state == ResultState.error) {
-          return CenterError(description: provListStory.message);
-        } else {
-          return CenterError(description: provListStory.message);
-        }
+      builder: (context, provider, _) {
+        final state = provider.stateListStory;
+
+        Widget result = state.when(
+          initial: () => const CenterLoading(),
+          loading: () => const CenterLoading(),
+          loaded: (data) {
+            if (data.listStory.isEmpty) {
+              return const CenterError(description: StringHelper.emptyData);
+            }
+            return _buildContainer(context);
+          },
+          error: (message) => CenterError(description: message),
+        );
+
+        return result;
       },
     );
   }
@@ -142,19 +108,22 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   Widget _buildListView(BuildContext context) {
     final providerListStory = context.read<ListStoryProvider>();
-    final listStory = providerListStory.listStoryWrap.listStory;
+    final stateListStory = providerListStory.stateListStory;
+
+    // Tidak akan kosong sebab sudah divalidasi
+    final List<ListStory> listStory = stateListStory.maybeWhen(
+      loaded: (data) => data.listStory,
+      orElse: () => [],
+    );
 
     return ListView.builder(
-      itemCount: listStory!.length,
+      itemCount: listStory.length,
       itemBuilder: (context, index) {
         final item = listStory[index];
         void onTap() {
-          kIsWeb
-              ? context.go(
-                  '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}')
-              : context.push(
-                  '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}',
-                );
+          context.go(
+            '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}',
+          );
         }
 
         return CardStory(
@@ -167,9 +136,21 @@ class _ListStoryPageState extends State<ListStoryPage> {
     );
   }
 
+  void _refreshPage(BuildContext context) {
+    final listStoryProv = context.read<ListStoryProvider>();
+
+    final providerPref = context.read<PreferencesProvider>();
+    final stateToken = providerPref.stateToken;
+    final token = stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
+
+    listStoryProv.fetchAllStories(token: token);
+  }
+
   @override
   Widget build(BuildContext context) {
-    _appLocalizations = AppLocalizations.of(context);
     return _buildScaffold(context);
   }
 }
