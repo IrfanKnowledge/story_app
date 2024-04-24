@@ -24,6 +24,8 @@ class ListStoryPage extends StatefulWidget {
 }
 
 class _ListStoryPageState extends State<ListStoryPage> {
+  bool _isUseSliverStyle = true;
+
   @override
   void initState() {
     final providerPref = context.read<PreferencesProvider>();
@@ -49,7 +51,11 @@ class _ListStoryPageState extends State<ListStoryPage> {
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _buildGetStories(context),
+      body: _buildGetStories(
+        builder: (context) {
+          return _buildContainer(context);
+        },
+      ),
     );
   }
 
@@ -76,7 +82,61 @@ class _ListStoryPageState extends State<ListStoryPage> {
     );
   }
 
-  Widget _buildGetStories(BuildContext context) {
+  Scaffold _buildScaffoldSliver(BuildContext context) {
+    return Scaffold(
+      body: SafeArea(
+        child: _buildNestedScrollView(),
+      ),
+    );
+  }
+
+  NestedScrollView _buildNestedScrollView() {
+    return NestedScrollView(
+      floatHeaderSlivers: true,
+      headerSliverBuilder: (context, innerBoxIsScrolled) {
+        return [
+          _buildSliverAppBar(
+            context: context,
+            innerBoxIsScrolled: innerBoxIsScrolled,
+          ),
+        ];
+      },
+      body: _buildGetStories(
+        builder: (context) {
+          return CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: _buildContainer(context),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  SliverAppBar _buildSliverAppBar({
+    required BuildContext context,
+    required bool innerBoxIsScrolled,
+  }) {
+    final providerMaterial = context.watch<MaterialThemeProvider>();
+    final colorSchemeCustom = providerMaterial.currentSelected;
+    final textTheme = Theme.of(context).textTheme;
+
+    return SliverAppBar(
+      pinned: false,
+      snap: true,
+      floating: true,
+      forceElevated: innerBoxIsScrolled,
+      backgroundColor: colorSchemeCustom.surfaceContainer,
+      surfaceTintColor: colorSchemeCustom.surfaceContainer,
+      title: Text(StringData.titleApp, style: textTheme.titleLarge),
+    );
+  }
+
+  Widget _buildGetStories({
+    required Widget Function(BuildContext context) builder,
+  }) {
     return Consumer<ListStoryProvider>(
       builder: (context, provider, _) {
         final state = provider.stateListStory;
@@ -88,7 +148,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
             if (data.listStory.isEmpty) {
               return const CenterError(description: StringHelper.emptyData);
             }
-            return _buildContainer(context);
+            return builder(context);
           },
           error: (message) => CenterError(description: message),
         );
@@ -117,7 +177,10 @@ class _ListStoryPageState extends State<ListStoryPage> {
     );
 
     return ListView.builder(
-      itemCount: listStory.length,
+      physics: _isUseSliverStyle
+          ? const NeverScrollableScrollPhysics()
+          : const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: _isUseSliverStyle ? true : false,
       itemBuilder: (context, index) {
         final item = listStory[index];
         void onTap() {
@@ -133,6 +196,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
           onTap: onTap,
         );
       },
+      itemCount: listStory.length,
     );
   }
 
@@ -151,6 +215,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   @override
   Widget build(BuildContext context) {
-    return _buildScaffold(context);
+    return _isUseSliverStyle
+        ? _buildScaffoldSliver(context)
+        : _buildScaffold(context);
   }
 }
