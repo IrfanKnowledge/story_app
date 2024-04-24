@@ -106,7 +106,8 @@ class _MyAppState extends State<MyApp> {
       orElse: () => '',
     );
 
-    listStoryProv.fetchAllStories(token: token);
+    listStoryProv.setAllValueToDefault();
+    listStoryProv.fetchAllStoriesWithPagination(token: token);
     return true;
   }
 

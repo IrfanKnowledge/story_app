@@ -72,11 +72,15 @@ class ApiService {
   }
 
   /// get all stories, using the token obtained from a successful login
-  Future<ListStoryModel> getAllStories({required String token}) async {
+  Future<ListStoryModel> getAllStories({
+    required String token,
+    int pageItems = 1,
+    int sizeItems = 10,
+  }) async {
     print('api_service, getAllStories(), token: $token');
     final getAllStoriesQueryParameters = {
-      'page': '1',
-      'size': '20',
+      'page': pageItems.toString(),
+      'size': sizeItems.toString(),
       'location': '0',
     };
 

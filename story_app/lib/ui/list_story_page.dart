@@ -1,4 +1,3 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
@@ -24,7 +23,7 @@ class ListStoryPage extends StatefulWidget {
 }
 
 class _ListStoryPageState extends State<ListStoryPage> {
-  bool _isUseSliverStyle = true;
+  final bool _isUseSliverStyle = true;
 
   @override
   void initState() {
@@ -40,7 +39,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
     print('list_story_page, initState()');
 
     Future.microtask(() async {
-      providerListStory.fetchAllStories(token: token);
+      providerListStory.setAllValueToDefault();
+      providerListStory.fetchAllStoriesWithPagination(token: token);
     });
 
     ListStoryPage.isShowDialogTrue = true;
@@ -51,10 +51,16 @@ class _ListStoryPageState extends State<ListStoryPage> {
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
-      body: _buildGetStories(
-        builder: (context) {
-          return _buildContainer(context);
-        },
+      body: RefreshIndicator(
+        onRefresh: () async => _refreshPage(context),
+        child: _buildGetStories(
+          builder: (context) {
+            return _buildNotificationListener(
+              context: context,
+              child: _buildContainer(context),
+            );
+          },
+        ),
       ),
     );
   }
@@ -85,12 +91,12 @@ class _ListStoryPageState extends State<ListStoryPage> {
   Scaffold _buildScaffoldSliver(BuildContext context) {
     return Scaffold(
       body: SafeArea(
-        child: _buildNestedScrollView(),
+        child: _buildNestedScrollView(context),
       ),
     );
   }
 
-  NestedScrollView _buildNestedScrollView() {
+  NestedScrollView _buildNestedScrollView(BuildContext context) {
     return NestedScrollView(
       floatHeaderSlivers: true,
       headerSliverBuilder: (context, innerBoxIsScrolled) {
@@ -101,16 +107,23 @@ class _ListStoryPageState extends State<ListStoryPage> {
           ),
         ];
       },
-      body: _buildGetStories(
-        builder: (context) {
-          return CustomScrollView(
-            slivers: [
-              SliverToBoxAdapter(
-                child: _buildContainer(context),
+      body: RefreshIndicator(
+        onRefresh: () async => _refreshPage(context),
+        child: _buildGetStories(
+          builder: (context) {
+            return _buildNotificationListener(
+              context: context,
+              child: CustomScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                slivers: [
+                  SliverToBoxAdapter(
+                    child: _buildContainer(context),
+                  ),
+                ],
               ),
-            ],
-          );
-        },
+            );
+          },
+        ),
       ),
     );
   }
@@ -134,6 +147,36 @@ class _ListStoryPageState extends State<ListStoryPage> {
     );
   }
 
+  NotificationListener<ScrollEndNotification> _buildNotificationListener({
+    required BuildContext context,
+    required Widget child,
+  }) {
+    final providerListStory = context.watch<ListStoryProvider>();
+    final int? pageItems = providerListStory.pageItems;
+
+    final providerPref = context.read<PreferencesProvider>();
+    final token = providerPref.stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
+
+    return NotificationListener<ScrollEndNotification>(
+      onNotification: (notification) {
+        if (notification.metrics.pixels ==
+            notification.metrics.maxScrollExtent) {
+          if (pageItems != null) {
+            print('notificationListener, executed');
+            providerListStory.fetchAllStoriesWithPagination(token: token);
+          } else {
+            return true;
+          }
+        }
+        return false;
+      },
+      child: child,
+    );
+  }
+
   Widget _buildGetStories({
     required Widget Function(BuildContext context) builder,
   }) {
@@ -141,19 +184,41 @@ class _ListStoryPageState extends State<ListStoryPage> {
       builder: (context, provider, _) {
         final state = provider.stateListStory;
 
+        print('list_story_page, _buildGetStories, state: $state');
+
         Widget result = state.when(
           initial: () => const CenterLoading(),
           loading: () => const CenterLoading(),
           loaded: (data) {
             if (data.listStory.isEmpty) {
-              return const CenterError(description: StringHelper.emptyData);
+              return _buildScrollableCenterText(StringHelper.emptyData);
             }
             return builder(context);
           },
-          error: (message) => CenterError(description: message),
+          error: (message) => _buildScrollableCenterText(message),
         );
 
         return result;
+      },
+    );
+  }
+
+  ///
+  /// Berfungsi agar penggunaan [RefreshIndicator] bisa tetap berjalan dengan baik.
+  /// Walaupun list sedang kosong.
+  ///
+  LayoutBuilder _buildScrollableCenterText(String text) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        return SingleChildScrollView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              minHeight: constraints.maxHeight,
+            ),
+            child: Center(child: Text(text)),
+          ),
+        );
       },
     );
   }
@@ -167,14 +232,11 @@ class _ListStoryPageState extends State<ListStoryPage> {
   }
 
   Widget _buildListView(BuildContext context) {
-    final providerListStory = context.read<ListStoryProvider>();
-    final stateListStory = providerListStory.stateListStory;
+    final providerListStory = context.watch<ListStoryProvider>();
+    final savedListStory = providerListStory.listStory;
+    final int? pageItems = providerListStory.pageItems;
 
-    // Tidak akan kosong sebab sudah divalidasi
-    final List<ListStory> listStory = stateListStory.maybeWhen(
-      loaded: (data) => data.listStory,
-      orElse: () => [],
-    );
+    print('savedListStory = $savedListStory');
 
     return ListView.builder(
       physics: _isUseSliverStyle
@@ -182,7 +244,16 @@ class _ListStoryPageState extends State<ListStoryPage> {
           : const AlwaysScrollableScrollPhysics(),
       shrinkWrap: _isUseSliverStyle ? true : false,
       itemBuilder: (context, index) {
-        final item = listStory[index];
+        if (index == savedListStory.length && pageItems != null) {
+          return const Center(
+            child: Padding(
+              padding: EdgeInsets.all(8.0),
+              child: CircularProgressIndicator(),
+            ),
+          );
+        }
+
+        final item = savedListStory[index];
         void onTap() {
           context.go(
             '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}',
@@ -196,12 +267,12 @@ class _ListStoryPageState extends State<ListStoryPage> {
           onTap: onTap,
         );
       },
-      itemCount: listStory.length,
+      itemCount: savedListStory.length + (pageItems != null ? 1 : 0),
     );
   }
 
   void _refreshPage(BuildContext context) {
-    final listStoryProv = context.read<ListStoryProvider>();
+    final provListStory = context.read<ListStoryProvider>();
 
     final providerPref = context.read<PreferencesProvider>();
     final stateToken = providerPref.stateToken;
@@ -210,7 +281,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
       orElse: () => '',
     );
 
-    listStoryProv.fetchAllStories(token: token);
+    provListStory.setAllValueToDefault();
+    provListStory.fetchAllStoriesWithPagination(token: token);
   }
 
   @override
