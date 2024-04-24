@@ -148,5 +148,29 @@
   "cancel": "Batal",
   "@cancel": {
     "description": "text 'batal'"
+  },
+  "newStory": "Cerita Baru",
+  "@newStory": {
+    "description": "text 'cerita baru'"
+  },
+  "camera": "Kamera",
+  "@camera": {
+    "description": "text 'kamera'"
+  },
+  "gallery": "Galeri",
+  "@gallery": {
+    "description": "text 'galeri'"
+  },
+  "description": "Deskripsi",
+  "@description": {
+    "description": "text 'Deskripsi'"
+  },
+  "upload": "Unggah",
+  "@upload": {
+    "description": "text 'Unggah'"
+  },
+  "changeDescription": "Ubah Deskripsi",
+  "@changeDescription": {
+    "description": "text 'Ubah Deskripsi'"
   }
 }

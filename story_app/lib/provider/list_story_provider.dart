@@ -23,25 +23,6 @@ class ListStoryProvider extends ChangeNotifier {
 
   List<ListStory> get listStory => _listStory;
 
-  // void fetchAllStories({required String token}) async {
-  //   try {
-  //     _stateListStory = const LoadingState.loading();
-  //     notifyListeners();
-  //
-  //     final listStoryModel = await _apiService.getAllStories(token: token);
-  //
-  //     _stateListStory = LoadingState.loaded(listStoryModel);
-  //     notifyListeners();
-  //   } on SocketException {
-  //     _stateListStory =
-  //         const LoadingState.error(StringHelper.noInternetConnection);
-  //     notifyListeners();
-  //   } catch (e, stacktrace) {
-  //     _stateListStory = LoadingState.error(e.toString());
-  //     notifyListeners();
-  //   }
-  // }
-
   void fetchAllStoriesWithPagination({required String token}) async {
     try {
       if (pageItems == 1) {

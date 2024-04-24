@@ -144,6 +144,18 @@ class _ListStoryPageState extends State<ListStoryPage> {
       backgroundColor: colorSchemeCustom.surfaceContainer,
       surfaceTintColor: colorSchemeCustom.surfaceContainer,
       title: Text(StringData.titleApp, style: textTheme.titleLarge),
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 

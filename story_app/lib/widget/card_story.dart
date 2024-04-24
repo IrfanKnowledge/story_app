@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:story_app/provider/material_theme_provider.dart';
 
 class CardStory extends StatelessWidget {
   final String photo;
@@ -16,52 +18,77 @@ class CardStory extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorSchemeCustom =
+        context.read<MaterialThemeProvider>().currentSelected;
     final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
-    return Card(
-      clipBehavior: Clip.hardEdge,
-      child: InkWell(
-        splashColor: colorScheme.primary.withOpacity(0.10),
-        highlightColor: colorScheme.primary.withOpacity(0.10),
-        onTap: onTap,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.start,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Image.network(
-              photo,
-              height: 150,
-              cacheWidth: 512,
-              cacheHeight: 512,
-              fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) {
-                return const Icon(
-                  Icons.image,
-                  size: 100,
-                );
-              },
-            ),
-            const SizedBox(height: 10),
-            Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(name),
-                  const SizedBox(height: 10),
-                  Text(
-                    description,
-                    maxLines: 3,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
+    return Stack(
+      children: [
+        Card(
+          clipBehavior: Clip.hardEdge,
+          color: colorSchemeCustom.surfaceContainerLow,
+          surfaceTintColor: colorSchemeCustom.surfaceContainerLow,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Image.network(
+                photo,
+                height: 150,
+                cacheWidth: 512,
+                cacheHeight: 512,
+                fit: BoxFit.cover,
+                errorBuilder: (context, error, stackTrace) {
+                  return const Icon(
+                    Icons.image,
+                    size: 100,
+                  );
+                },
               ),
-            ),
-          ],
+              const SizedBox(height: 10),
+              Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: textTheme.bodyLarge!.copyWith(
+                        color: colorSchemeCustom.onSurface,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Text(
+                      description,
+                      style: textTheme.bodyMedium!.copyWith(
+                        color: colorSchemeCustom.onSurfaceVariant,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
-      ),
+        Positioned.fill(
+          child: Card(
+            clipBehavior: Clip.hardEdge,
+            color: Colors.transparent,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            child: InkWell(
+              splashColor: colorScheme.primary.withOpacity(0.10),
+              highlightColor: colorScheme.primary.withOpacity(0.10),
+              onTap: onTap,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }

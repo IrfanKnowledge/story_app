@@ -1,14 +1,18 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/add_story_provider.dart';
+import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
 import 'package:story_app/ui/bottom_nav_bar.dart';
@@ -16,6 +20,7 @@ import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
+import 'package:story_app/widget/text_with_red_star.dart';
 
 class AddStoryPage extends StatefulWidget {
   static const String goRoutePath = 'add_story';
@@ -29,19 +34,34 @@ class AddStoryPage extends StatefulWidget {
 class _AddStoryPageState extends State<AddStoryPage> {
   final TextEditingController _controllerDescription = TextEditingController();
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('New Story'),
-      ),
-      body: SingleChildScrollView(
-        child: _buildMultiProvider(),
+  AppLocalizations? _appLocalizations;
+
+  AppBar _buildAppBar(BuildContext context) {
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
+
+    return AppBar(
+      title: Text(_appLocalizations!.newStory),
+      backgroundColor: colorSchemeCustom.surfaceContainer,
+      surfaceTintColor: colorSchemeCustom.surfaceContainer,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
 
-  Widget _buildMultiProvider() {
+  Widget _buildMultiProvider({
+    required Widget Function(BuildContext context) builder,
+  }) {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
@@ -58,116 +78,200 @@ class _AddStoryPageState extends State<AddStoryPage> {
           create: (_) => UploadImageStoryProvider(apiService: ApiService()),
         ),
       ],
-      child: _getTokenIfNotGuest(),
-    );
-  }
-
-  Widget _getTokenIfNotGuest() {
-    return Consumer<PreferencesProvider>(
-      builder: (context, provider, _) {
-        final stateIsLogin = provider.stateIsLogin;
-        final stateToken = provider.stateToken;
-        late Widget? result;
-
-        result = stateIsLogin.when(
-          initial: () => const CenterLoading(),
-          loading: () => const CenterLoading(),
-          loaded: (data) => null,
-          error: (message) => CenterError(description: message),
-        );
-
-        if (result != null) {
-          return result;
-        }
-
-        result = stateToken.when(
-          initial: () => const CenterLoading(),
-          loading: () => const CenterLoading(),
-          loaded: (data) => null,
-          error: (message) => CenterError(description: message),
-        );
-
-        if (result != null) {
-          return result;
-        }
-
-        result = _buildContainer(context);
-
-        return result;
-      },
+      builder: (context, _) => builder(context),
     );
   }
 
   Container _buildContainer(BuildContext context) {
     return Container(
       alignment: Alignment.topCenter,
-      padding: const EdgeInsets.only(
-        top: 32,
-        bottom: 8,
-        right: 16.0,
-        left: 16.0,
-      ),
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: Column(
         mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // context.watch == provider.of<>(context)
-          // to listen imagePath from AddStoryProvider
-          context.watch<AddStoryProvider>().imagePath == null
-
-              // if null, show default image
-              ? const Icon(
-                  Icons.image,
-                  size: 100,
-                )
-
-              // if not null, show image
-              : _showImage(context),
-          const SizedBox(height: 20),
-          Row(
-            mainAxisSize: MainAxisSize.max,
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton(
-                onPressed: () => _onCameraView(context),
-                child: const Text('Camera'),
+          _buildGetPicture(context),
+          const Divider(height: 32),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: TextField(
+              controller: _controllerDescription,
+              keyboardType: TextInputType.multiline,
+              minLines: 3,
+              maxLines: 6,
+              maxLength: 50,
+              buildCounter: (
+                context, {
+                required currentLength,
+                required isFocused,
+                maxLength,
+              }) {
+                return Text('$currentLength / $maxLength');
+              },
+              decoration: InputDecoration(
+                hintText: _appLocalizations!.description,
+                border: const OutlineInputBorder(),
+                filled: true,
               ),
-              const SizedBox(width: 10),
-              ElevatedButton(
-                onPressed: () => _onGalleryView(context),
-                child: const Text('Gallery'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 20),
-          TextField(
-            controller: _controllerDescription,
-            keyboardType: TextInputType.multiline,
-            maxLines: 5,
-            decoration: const InputDecoration(
-              hintText: 'Deskripsi',
-              border: OutlineInputBorder(),
-              filled: true,
             ),
           ),
-          const SizedBox(height: 10),
+          // _buildDescription(context),
+          const Divider(height: 32),
           _buildUploadButtonOrLoadingButton(),
         ],
       ),
     );
   }
 
+  Column _buildGetPicture(BuildContext context) {
+    return Column(
+      children: [
+        context.watch<AddStoryProvider>().imagePath == null
+            ? const Icon(
+                Icons.image,
+                size: 100,
+              )
+            : _showImage(context),
+        const Gap(16),
+        Row(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            ElevatedButton(
+              onPressed: () => _onCameraView(context),
+              child: Text(_appLocalizations!.camera),
+            ),
+            const SizedBox(width: 10),
+            ElevatedButton(
+              onPressed: () => _onGalleryView(context),
+              child: Text(_appLocalizations!.gallery),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _showImage(BuildContext context) {
+    final imagePath = context.read<AddStoryProvider>().imagePath;
+    const double height = 300.0;
+    const BoxFit boxFit = BoxFit.contain;
+
+    final image = kIsWeb
+        ? Image.network(
+            imagePath ?? '',
+            fit: boxFit,
+            height: height,
+          )
+        : Image.file(
+            File(imagePath ?? ''),
+            fit: boxFit,
+            height: height,
+          );
+
+    return SizedBox(
+      width: MediaQuery.of(context).size.width,
+      height: 300,
+      child: image,
+    );
+  }
+
+  Widget _buildDescription(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: MediaQuery.of(context).size.width),
+          TextWithRedStar(value: '${_appLocalizations!.description}:'),
+          const Gap(4),
+          const Text('-'),
+          const Gap(16),
+          Align(
+            alignment: Alignment.center,
+            child: ElevatedButton(
+              onPressed: () {},
+              child: Text(_appLocalizations!.changeDescription),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildUploadButtonOrLoadingButton() {
+    return Consumer<UploadImageStoryProvider>(
+      builder: (context, provider, _) {
+        if (provider.stateUpload == ResultState.loading) {
+          return _buildIconButtonLoading();
+        } else if (provider.stateUpload == ResultState.hasData) {
+          return FutureBuilder(
+            future: _autoNavigateBack(context),
+            builder: (_, __) => _buildIconButtonLoading(),
+          );
+        }
+        return Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: _buildFilledButtonUpload(context),
+        );
+      },
+    );
+  }
+
+  /// button for upload image
+  FilledButton _buildFilledButtonUpload(BuildContext context) {
+    return FilledButton(
+      style: FilledButton.styleFrom(
+        minimumSize: const Size(
+          double.infinity,
+          40,
+        ),
+      ),
+      onPressed: () {
+        _onUpload(
+          context: context,
+          description: _controllerDescription.text,
+        );
+      },
+      child: Text(_appLocalizations!.upload),
+    );
+  }
+
+  /// loading button for upload image process
+  IconButton _buildIconButtonLoading() {
+    return IconButton(
+      onPressed: () {},
+      icon: const CircularProgressIndicator(),
+    );
+  }
+
+  SnackBar snackBar(String text) {
+    return SnackBar(
+      content: Text(text),
+      duration: const Duration(
+        seconds: 1,
+      ),
+    );
+  }
+
+  /// auto navigate back to previous page if upload image is success
+  Future<String> _autoNavigateBack(BuildContext context) async {
+    Future.delayed(
+      const Duration(seconds: 1),
+      () {
+        kIsWeb ? context.go(ListStoryPage.goRoutePath) : context.pop();
+      },
+    );
+    return 'Loading...';
+  }
+
   void _onGalleryView(BuildContext context) async {
-    // context.read == Provider.of<>(context, listen: false),
-    // access AddStoryProvider();
     final provider = context.read<AddStoryProvider>();
 
     final ImagePicker picker = ImagePicker();
 
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.gallery,
-      maxHeight: 500,
-      imageQuality: 100,
+      imageQuality: 70,
     );
 
     if (pickedFile != null) {
@@ -188,29 +292,13 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
     final XFile? pickedFile = await picker.pickImage(
       source: ImageSource.camera,
-      maxHeight: 500,
-      imageQuality: 100,
+      imageQuality: 70,
     );
 
     if (pickedFile != null) {
       provider.setImageFile(pickedFile);
       provider.setImagePath(pickedFile.path);
     }
-  }
-
-  Widget _showImage(BuildContext context) {
-    final imagePath = context.read<AddStoryProvider>().imagePath;
-
-    // check is app running on Web Environment or not
-    return kIsWeb
-        ? Image.network(
-            imagePath.toString(),
-            fit: BoxFit.contain,
-          )
-        : Image.file(
-            File(imagePath.toString()),
-            fit: BoxFit.contain,
-          );
   }
 
   void _onUpload({
@@ -259,66 +347,19 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
-  SnackBar snackBar(String text) {
-    return SnackBar(
-      content: Text(text),
-      duration: const Duration(
-        seconds: 1,
-      ),
-    );
-  }
+  @override
+  Widget build(BuildContext context) {
+    _appLocalizations = AppLocalizations.of(context);
 
-  Widget _buildUploadButtonOrLoadingButton() {
-    return Consumer<UploadImageStoryProvider>(
-      builder: (context, provider, _) {
-        if (provider.stateUpload == ResultState.loading) {
-          return _buildIconButtonLoading();
-        } else if (provider.stateUpload == ResultState.hasData) {
-          return FutureBuilder(
-            future: _autoNavigateBack(context),
-            builder: (_, __) => _buildIconButtonLoading(),
-          );
-        }
-        return _buildElevatedButtonUpload(context);
-      },
-    );
-  }
-
-  /// button for upload image
-  ElevatedButton _buildElevatedButtonUpload(BuildContext context) {
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        minimumSize: const Size(
-          double.infinity,
-          40,
+    return Scaffold(
+      appBar: _buildAppBar(context),
+      body: SingleChildScrollView(
+        child: _buildMultiProvider(
+          builder: (context) {
+            return _buildContainer(context);
+          },
         ),
       ),
-      onPressed: () {
-        _onUpload(
-          context: context,
-          description: _controllerDescription.text,
-        );
-      },
-      child: const Text('Upload'),
     );
-  }
-
-  /// loading button for upload image process
-  IconButton _buildIconButtonLoading() {
-    return IconButton(
-      onPressed: () {},
-      icon: const CircularProgressIndicator(),
-    );
-  }
-
-  /// auto navigate back to previous page if upload image is success
-  Future<String> _autoNavigateBack(BuildContext context) async {
-    Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        kIsWeb ? context.go(ListStoryPage.goRoutePath) : context.pop();
-      },
-    );
-    return 'Loading...';
   }
 }

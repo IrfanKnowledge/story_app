@@ -33,5 +33,11 @@
   "signOut": "Sign Out",
   "homeBarTitle": "Home",
   "add": "Add",
-  "cancel": "Cancel"
+  "cancel": "Cancel",
+  "newStory": "New Story",
+  "camera": "Camera",
+  "gallery": "Gallery",
+  "description": "Description",
+  "upload": "Upload",
+  "changeDescription": "Change Description"
 }
