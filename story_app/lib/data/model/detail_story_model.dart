@@ -3,7 +3,7 @@ import 'dart:convert';
 class DetailStoryWrap {
   final bool error;
   final String message;
-  final Story? story;
+  final Story story;
 
   DetailStoryWrap({
     required this.error,
@@ -17,16 +17,11 @@ class DetailStoryWrap {
   String toRawJson() => json.encode(toJson());
 
   factory DetailStoryWrap.fromJson(Map<String, dynamic> json) {
-    Story? story;
-
-    if (json.containsKey("story")) {
-      story = Story.fromJson(json["story"]);
-    }
 
     return DetailStoryWrap(
       error: json["error"],
       message: json["message"],
-      story: story,
+      story: Story.fromJson(json["story"]),
     );
   }
 
@@ -34,7 +29,7 @@ class DetailStoryWrap {
     return {
       "error": error,
       "message": message,
-      "story": story?.toJson(),
+      "story": story.toJson(),
     };
   }
 }

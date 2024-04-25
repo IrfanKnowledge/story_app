@@ -3,55 +3,48 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/detail_story_model.dart';
+import 'package:story_app/utils/loading_state.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/utils/string_helper.dart';
 
 class DetailStoryProvider extends ChangeNotifier {
-  final ApiService apiService;
+  final ApiService _apiService;
 
-  DetailStoryProvider({required this.apiService})
-      : _state = ResultState.notStarted;
+  DetailStoryProvider({
+    required ApiService apiService,
+    required String token,
+    required String id,
+  }) : _apiService = apiService {
+    fetchStoryDetail(token: token, id: id);
+  }
 
-  late DetailStoryWrap _detailStoryWrap;
-  String _message = '';
-  ResultState _state;
+  LoadingState<DetailStoryWrap> _stateDetailStoryModel =
+      const LoadingState.initial();
 
-  DetailStoryWrap get detailStoryWrap => _detailStoryWrap;
-
-  ResultState get state => _state;
-
-  String get message => _message;
+  LoadingState<DetailStoryWrap> get stateDetailStoryModel =>
+      _stateDetailStoryModel;
 
   void fetchStoryDetail({
     required String token,
     required String id,
   }) async {
     try {
-      // initiate process, _state = ResultState.loading
-      _state = ResultState.loading;
+      _stateDetailStoryModel = const LoadingState.loading();
       notifyListeners();
 
-      final detailStoryWrap = await apiService.getDetailStory(
+      final detailStoryModel = await _apiService.getDetailStory(
         token: token,
         id: id,
       );
 
-      if (detailStoryWrap.story!.id.isNotEmpty) {
-        _state = ResultState.hasData;
-        _detailStoryWrap = detailStoryWrap;
-        notifyListeners();
-      }
-
-      // if no internet connection, _state = ResultState.error
-    } on SocketException {
-      _state = ResultState.error;
-      _message = StringHelper.noInternetConnection;
+      _stateDetailStoryModel = LoadingState.loaded(detailStoryModel);
       notifyListeners();
-
-      // if other error show up, _state = ResultState.error
-    } catch (e) {
-      _state = ResultState.error;
-      _message = e.toString();
+    } on SocketException {
+      _stateDetailStoryModel =
+          const LoadingState.error(StringHelper.noInternetConnection);
+      notifyListeners();
+    } catch (e, stacktrace) {
+      _stateDetailStoryModel = LoadingState.error(e.toString());
       notifyListeners();
     }
   }

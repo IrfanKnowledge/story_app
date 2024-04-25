@@ -4,16 +4,18 @@ import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/detail_story_model.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/detail_story_provider.dart';
+import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
-class DetailStoryPage extends StatelessWidget {
+class DetailStoryPage extends StatefulWidget {
   static const String goRoutePath = 'stories/:id';
 
   final String id;
@@ -23,6 +25,11 @@ class DetailStoryPage extends StatelessWidget {
     required this.id,
   });
 
+  @override
+  State<DetailStoryPage> createState() => _DetailStoryPageState();
+}
+
+class _DetailStoryPageState extends State<DetailStoryPage> {
   final textStyle16 = const TextStyle(
     fontSize: 16,
   );
@@ -32,86 +39,72 @@ class DetailStoryPage extends StatelessWidget {
     fontWeight: FontWeight.bold,
   );
 
-  @override
-  Widget build(BuildContext context) {
-    return _buildScaffold();
-  }
+  AppLocalizations? _appLocalizations;
 
-  Widget _buildScaffold() {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Detail Story'),
-      ),
-      body: _buildMultiProvider(),
+  Widget _buildMultiProvider({
+    required Widget Function(BuildContext context) builder,
+  }) {
+    final providerPref = context.read<PreferencesProvider>();
+    final token = providerPref.stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
     );
-  }
 
-  Widget _buildMultiProvider() {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
           create: (_) {
-            return PreferencesProvider(
-              preferencesHelper: PreferencesHelper(
-                sharedPreferences: SharedPreferences.getInstance(),
-              ),
-            );
-          },
-        ),
-        ChangeNotifierProvider(
-          create: (_) {
             return DetailStoryProvider(
               apiService: ApiService(),
+              id: widget.id,
+              token: token,
             );
           },
         )
       ],
-      child: _getToken(),
+      builder: (context, _) => builder(context),
     );
   }
 
-  /// get token from SharedPreference
-  /// used for [_getStoryDetail]
-  Widget _getToken() {
-    return Consumer<PreferencesProvider>(
-      builder: (context, provider, _) {
-        final stateIsLogin = provider.stateIsLogin;
-        final stateToken = provider.stateToken;
-        String token = '';
-        late Widget? result;
+  Widget _buildScaffold(BuildContext context) {
+    final providerPref = context.read<PreferencesProvider>();
+    final token = providerPref.stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
 
-        result = stateIsLogin.when(
-          initial: () => const CenterLoading(),
-          loading: () => const CenterLoading(),
-          loaded: (data) => null,
-          error: (message) => CenterError(description: message),
-        );
+    return Scaffold(
+      appBar: _buildAppBar(context),
+      body: _getStoryDetail(
+        token: token,
+        id: widget.id,
+        builder: (context) {
+          return _buildContainer(context);
+        },
+      ),
+    );
+  }
 
-        if (result != null) {
-          return result;
-        }
+  AppBar _buildAppBar(BuildContext context) {
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
 
-        result = stateToken.when(
-          initial: () => const CenterLoading(),
-          loading: () => const CenterLoading(),
-          loaded: (data) {
-            token = data;
-            return null;
-          },
-          error: (message) => CenterError(description: message),
-        );
-
-        if (result != null) {
-          return result;
-        }
-
-        result = _getStoryDetail(
-          token: token,
-          id: id,
-        );
-
-        return result;
-      },
+    return AppBar(
+      title: Text(_appLocalizations!.detailStory),
+      backgroundColor: colorSchemeCustom.surfaceContainer,
+      surfaceTintColor: colorSchemeCustom.surfaceContainer,
+      bottom: PreferredSize(
+        preferredSize: const Size.fromHeight(1),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              bottom: BorderSide(
+                color: Theme.of(context).colorScheme.outlineVariant,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 
@@ -120,43 +113,49 @@ class DetailStoryPage extends StatelessWidget {
   Widget _getStoryDetail({
     required String token,
     required String id,
+    required Widget Function(BuildContext context) builder,
   }) {
     return Consumer<DetailStoryProvider>(
       builder: (context, provider, _) {
-        // if state is not started,
-        // then fetch story detail from API,
-        if (provider.state == ResultState.notStarted) {
-          // fetch story detail from API, required token and id.
-          return FutureBuilder(
-            future: _fetchStoryDetail(
-              context: context,
-              token: token,
-              id: id,
-            ),
-            builder: (_, __) => const CenterLoading(),
-          );
+        final state = provider.stateDetailStoryModel;
 
-          // if state is loading (fetch story detail from API),
-          // show loading
-        } else if (provider.state == ResultState.loading) {
-          return const CenterLoading();
+        Widget result = state.when(
+          initial: () => const CenterLoading(),
+          loading: () => const CenterLoading(),
+          loaded: (_) => builder(context),
+          error: (message) => CenterError(description: message),
+        );
 
-          // if state is has data, show the data
-        } else if (provider.state == ResultState.hasData) {
-          return _buildContainer(context);
+        return result;
 
-          // if state is error, show error message
-        } else if (provider.state == ResultState.error) {
-          return CenterError(
-            description: provider.message,
-          );
-
-          // if state is other else, show error message
-        } else {
-          return CenterError(
-            description: provider.message,
-          );
-        }
+        // if (provider.state == ResultState.notStarted) {
+        //   return FutureBuilder(
+        //     future: _fetchStoryDetail(
+        //       context: context,
+        //       token: token,
+        //       id: id,
+        //     ),
+        //     builder: (_, __) => const CenterLoading(),
+        //   );
+        // } else if (provider.state == ResultState.loading) {
+        //   return const CenterLoading();
+        //
+        //   // if state is has data, show the data
+        // } else if (provider.state == ResultState.hasData) {
+        //   return _buildContainer(context);
+        //
+        //   // if state is error, show error message
+        // } else if (provider.state == ResultState.error) {
+        //   return CenterError(
+        //     description: provider.message,
+        //   );
+        //
+        //   // if state is other else, show error message
+        // } else {
+        //   return CenterError(
+        //     description: provider.message,
+        //   );
+        // }
       },
     );
   }
@@ -186,7 +185,11 @@ class DetailStoryPage extends StatelessWidget {
 
   Widget _buildContainer(BuildContext context) {
     final provider = context.read<DetailStoryProvider>();
-    final Story? story = provider.detailStoryWrap.story;
+    final state = provider.stateDetailStoryModel;
+    final Story? story = state.maybeWhen(
+      loaded: (data) => data.story,
+      orElse: () => null,
+    );
 
     final image = story!.photoUrl;
 
@@ -199,89 +202,108 @@ class DetailStoryPage extends StatelessWidget {
     final description = story.description;
 
     var textStyle14BoldColor = TextStyle(
-      color: const ColorScheme.light().secondary,
+      color: Theme.of(context).colorScheme.primary,
       fontSize: 14,
       fontWeight: FontWeight.bold,
     );
 
-    return SafeArea(
-      child: SingleChildScrollView(
-        child: Container(
-          alignment: Alignment.topCenter,
-          padding: const EdgeInsets.symmetric(
-            vertical: 8.0,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Container(
-                decoration: BoxDecoration(
-                  color: const ColorScheme.light().secondary,
-                ),
-                child: Image.network(
-                  image,
-                  height: 500,
-                  fit: BoxFit.contain,
-                  errorBuilder: (_, error, stackTrace) {
-                    return const Icon(
-                      Icons.image,
-                      size: 100,
-                    );
-                  },
-                ),
+    return SingleChildScrollView(
+      child: Container(
+        alignment: Alignment.topCenter,
+        padding: const EdgeInsets.symmetric(
+          vertical: 8.0,
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              decoration: const BoxDecoration(
+                color: Colors.black,
               ),
-              const SizedBox(
-                height: 10,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16.0,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      createdAt,
-                      style: textStyle16,
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    Text(
-                      name,
-                      style: textStyle16Bold,
-                    ),
-                    const SizedBox(
-                      height: 10,
-                    ),
-                    ..._buildLatLon(
-                      latitude: latitude,
-                      longitude: longitude,
-                    ),
-                    _buildContainerLabel('Deskripsi:'),
-                    const SizedBox(
-                      height: 5,
-                    ),
-                    ReadMoreText(
-                      description,
-                      textAlign: TextAlign.justify,
-                      style: const TextStyle(
-                        fontSize: 14,
+              child: Image.network(
+                headers: const {
+                  'Connection': 'keep-alive',
+                },
+                image,
+                height: 300,
+                fit: BoxFit.contain,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) {
+                    return child;
+                  }
+                  return SizedBox(
+                    width: MediaQuery.of(context).size.width,
+                    height: 300,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        value: loadingProgress.expectedTotalBytes != null
+                            ? loadingProgress.cumulativeBytesLoaded /
+                                loadingProgress.expectedTotalBytes!
+                            : null,
                       ),
-                      trimLines: 3,
-                      trimMode: TrimMode.Line,
-                      trimCollapsedText: 'Selengkapnya',
-                      trimExpandedText: 'Lebih sedikit',
-                      moreStyle: textStyle14BoldColor,
-                      lessStyle: textStyle14BoldColor,
                     ),
-                  ],
-                ),
+                  );
+                },
+                errorBuilder: (_, error, stackTrace) {
+                  return const Icon(
+                    Icons.image,
+                    size: 100,
+                  );
+                },
               ),
-            ],
-          ),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    createdAt,
+                    style: textStyle16,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  Text(
+                    name,
+                    style: textStyle16Bold,
+                  ),
+                  const SizedBox(
+                    height: 10,
+                  ),
+                  ..._buildLatLon(
+                    latitude: latitude,
+                    longitude: longitude,
+                  ),
+                  _buildContainerLabel('Deskripsi:'),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  ReadMoreText(
+                    description,
+                    textAlign: TextAlign.justify,
+                    style: const TextStyle(
+                      fontSize: 14,
+                    ),
+                    trimLines: 3,
+                    trimMode: TrimMode.Line,
+                    trimCollapsedText: 'Selengkapnya',
+                    trimExpandedText: 'Lebih sedikit',
+                    moreStyle: textStyle14BoldColor,
+                    lessStyle: textStyle14BoldColor,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );
@@ -302,7 +324,7 @@ class DetailStoryPage extends StatelessWidget {
         const SizedBox(
           height: 10,
         ),
-        _buildContainerLabel('longitude:'),
+        _buildContainerLabel('Longitude:'),
         const SizedBox(
           height: 5,
         ),
@@ -324,6 +346,14 @@ class DetailStoryPage extends StatelessWidget {
   }
 
   Widget _buildContainerLabel(String label) {
+    return Text(
+      label,
+      style: const TextStyle(
+        fontSize: 16,
+        fontWeight: FontWeight.bold,
+      ),
+    );
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
@@ -333,10 +363,21 @@ class DetailStoryPage extends StatelessWidget {
       child: Text(
         label,
         style: TextStyle(
-            color: const ColorScheme.light().onSecondary,
-            fontSize: 16,
-            fontWeight: FontWeight.bold),
+          color: const ColorScheme.light().onSecondary,
+          fontSize: 16,
+          fontWeight: FontWeight.bold,
+        ),
       ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    _appLocalizations = AppLocalizations.of(context);
+    return _buildMultiProvider(
+      builder: (context) {
+        return _buildScaffold(context);
+      },
     );
   }
 }

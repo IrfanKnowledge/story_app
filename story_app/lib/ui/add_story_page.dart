@@ -5,7 +5,9 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/common.dart';
@@ -65,13 +67,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(
-          create: (_) => PreferencesProvider(
-            preferencesHelper: PreferencesHelper(
-              sharedPreferences: SharedPreferences.getInstance(),
-            ),
-          ),
-        ),
-        ChangeNotifierProvider(
           create: (_) => AddStoryProvider(),
         ),
         ChangeNotifierProvider(
@@ -91,30 +86,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
         children: [
           _buildGetPicture(context),
           const Divider(height: 32),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: TextField(
-              controller: _controllerDescription,
-              keyboardType: TextInputType.multiline,
-              minLines: 3,
-              maxLines: 6,
-              maxLength: 50,
-              buildCounter: (
-                context, {
-                required currentLength,
-                required isFocused,
-                maxLength,
-              }) {
-                return Text('$currentLength / $maxLength');
-              },
-              decoration: InputDecoration(
-                hintText: _appLocalizations!.description,
-                border: const OutlineInputBorder(),
-                filled: true,
-              ),
-            ),
-          ),
-          // _buildDescription(context),
+          _buildDescription1(context),
+          // _buildDescription2(context),
           const Divider(height: 32),
           _buildUploadButtonOrLoadingButton(),
         ],
@@ -140,7 +113,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
               onPressed: () => _onCameraView(context),
               child: Text(_appLocalizations!.camera),
             ),
-            const SizedBox(width: 10),
+            const Gap(10),
             ElevatedButton(
               onPressed: () => _onGalleryView(context),
               child: Text(_appLocalizations!.gallery),
@@ -175,7 +148,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
-  Widget _buildDescription(BuildContext context) {
+  Widget _buildDescription1(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -183,7 +156,41 @@ class _AddStoryPageState extends State<AddStoryPage> {
         children: [
           SizedBox(width: MediaQuery.of(context).size.width),
           TextWithRedStar(value: '${_appLocalizations!.description}:'),
-          const Gap(4),
+          const Gap(8),
+          TextField(
+            controller: _controllerDescription,
+            keyboardType: TextInputType.multiline,
+            minLines: 3,
+            maxLines: 6,
+            maxLength: 50,
+            buildCounter: (
+                context, {
+                  required currentLength,
+                  required isFocused,
+                  maxLength,
+                }) {
+              return Text('$currentLength / $maxLength');
+            },
+            decoration: InputDecoration(
+              hintText: _appLocalizations!.description,
+              border: const OutlineInputBorder(),
+              filled: true,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDescription2(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(width: MediaQuery.of(context).size.width),
+          TextWithRedStar(value: '${_appLocalizations!.description}:'),
+          const Gap(8),
           const Text('-'),
           const Gap(16),
           Align(
@@ -264,6 +271,27 @@ class _AddStoryPageState extends State<AddStoryPage> {
     return 'Loading...';
   }
 
+  void _onCameraView(BuildContext context) async {
+    final provider = context.read<AddStoryProvider>();
+
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    final isNotMobile = !(isAndroid || isIos);
+
+    if (isNotMobile) return;
+
+    final ImagePicker picker = ImagePicker();
+
+    final XFile? pickedFile = await picker.pickImage(
+      source: ImageSource.camera,
+      imageQuality: 70,
+    );
+
+    if (pickedFile != null) {
+      _onCroppedFile(pickedFile, provider);
+    }
+  }
+
   void _onGalleryView(BuildContext context) async {
     final provider = context.read<AddStoryProvider>();
 
@@ -275,27 +303,29 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
 
     if (pickedFile != null) {
-      provider.setImageFile(pickedFile);
-      provider.setImagePath(pickedFile.path);
+      _onCroppedFile(pickedFile, provider);
     }
   }
 
-  void _onCameraView(BuildContext context) async {
-    final provider = context.read<AddStoryProvider>();
-
-    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
-    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-    final isNotMobile = !(isAndroid || isIos);
-    if (isNotMobile) return;
-
-    final ImagePicker picker = ImagePicker();
-
-    final XFile? pickedFile = await picker.pickImage(
-      source: ImageSource.camera,
-      imageQuality: 70,
+  void _onCroppedFile(XFile pickedFile, AddStoryProvider provider) async {
+    CroppedFile? croppedFile = await ImageCropper().cropImage(
+      sourcePath: pickedFile.path,
+      aspectRatio: const CropAspectRatio(ratioX: 4, ratioY: 3),
+      compressQuality: 70,
     );
 
-    if (pickedFile != null) {
+    if (croppedFile != null) {
+      List<int> bytes = await croppedFile.readAsBytes();
+      pickedFile = XFile.fromData(
+        Uint8List.fromList(bytes),
+        path: croppedFile.path,
+      );
+
+      final directory = await getExternalStorageDirectory();
+      final file = File('${directory!.path}/${pickedFile.name}');
+
+      await file.writeAsBytes(Uint8List.fromList(bytes));
+
       provider.setImageFile(pickedFile);
       provider.setImagePath(pickedFile.path);
     }
@@ -311,14 +341,14 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
     if (imagePath == null || imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        snackBar('Foto/Gambar belum dipilih'),
+        snackBar(_appLocalizations!.imageSelectError),
       );
       return;
     }
 
     if (description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        snackBar('deskripsi tidak boleh kosong'),
+        snackBar(_appLocalizations!.descriptionFormError),
       );
       return;
     }
@@ -330,6 +360,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
       loaded: (data) => data,
       orElse: () => '',
     );
+
+    print('upload token: $token');
 
     final fileName = imageFile.name;
 

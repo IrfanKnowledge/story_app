@@ -172,5 +172,17 @@
   "changeDescription": "Ubah Deskripsi",
   "@changeDescription": {
     "description": "text 'Ubah Deskripsi'"
+  },
+  "detailStory": "Detail Cerita",
+  "@detailStory": {
+    "description": "text 'Detail Cerita'"
+  },
+  "imageSelectError": "Foto/Gambar belum dipilih",
+  "@imageSelectError": {
+    "description": "pesan error ketika pengguna belum memilih gambar"
+  },
+  "descriptionFormError": "Deskripsi tidak boleh kosong",
+  "@descriptionFormError": {
+    "description": "pesan error ketika pengguna belum mengisi form deskripsi"
   }
 }

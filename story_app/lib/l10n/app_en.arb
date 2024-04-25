@@ -39,5 +39,8 @@
   "gallery": "Gallery",
   "description": "Description",
   "upload": "Upload",
-  "changeDescription": "Change Description"
+  "changeDescription": "Change Description",
+  "detailStory": "Detail Story",
+  "imageSelectError": "Photo/Image has not been selected",
+  "descriptionFormError": "Description cannot be empty"
 }
