@@ -8,15 +8,15 @@ class AddStoryProvider extends ChangeNotifier {
 
   String? get imagePath => _imagePath;
 
-  XFile? get imageFile => _imageFile;
-
-  void setImageFile(XFile? value) {
-    _imageFile = value;
+  set imagePath(String? value) {
+    _imagePath = value;
     notifyListeners();
   }
 
-  void setImagePath(String value) {
-    _imagePath = value;
+  XFile? get imageFile => _imageFile;
+
+  set imageFile(XFile? value) {
+    _imageFile = value;
     notifyListeners();
   }
 }

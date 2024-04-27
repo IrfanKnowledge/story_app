@@ -6,9 +6,9 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey =
-GlobalKey<NavigatorState>(debugLabel: 'root');
+    GlobalKey<NavigatorState>(debugLabel: 'root');
 final GlobalKey<NavigatorState> _shellNavigatorKey =
-GlobalKey<NavigatorState>(debugLabel: 'shell');
+    GlobalKey<NavigatorState>(debugLabel: 'shell');
 
 // This scenario demonstrates how to set up nested navigation using ShellRoute,
 // which is a pattern where an additional Navigator is placed in the widget tree

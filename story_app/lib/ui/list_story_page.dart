@@ -1,15 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-import 'package:story_app/data/model/list_story_model.dart';
 import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/detail_story_page.dart';
-import 'package:story_app/utils/string_helper.dart';
 import 'package:story_app/widget/card_story.dart';
-import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
 class ListStoryPage extends StatefulWidget {
@@ -203,7 +200,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
           loading: () => const CenterLoading(),
           loaded: (data) {
             if (data.listStory.isEmpty) {
-              return _buildScrollableCenterText(StringHelper.emptyData);
+              return _buildScrollableCenterText(StringData.emptyData);
             }
             return builder(context);
           },

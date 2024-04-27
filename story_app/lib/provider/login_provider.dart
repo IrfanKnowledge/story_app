@@ -3,8 +3,8 @@ import 'dart:io';
 import 'package:flutter/cupertino.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/login_model.dart';
+import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/utils/loading_state.dart';
-import 'package:story_app/utils/string_helper.dart';
 
 class LoginProvider extends ChangeNotifier {
   final ApiService _apiService;
@@ -31,9 +31,9 @@ class LoginProvider extends ChangeNotifier {
       _state = LoadingState.loaded(loginWrap);
       notifyListeners();
     } on SocketException {
-      _state = const LoadingState.error(StringHelper.noInternetConnection);
+      _state = const LoadingState.error(StringData.noInternetConnection);
       notifyListeners();
-    } catch (e) {
+    } catch (e, _) {
       _state = LoadingState.error(e.toString());
       notifyListeners();
     }

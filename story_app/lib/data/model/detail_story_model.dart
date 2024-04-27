@@ -1,83 +1,39 @@
 import 'dart:convert';
 
-class DetailStoryWrap {
-  final bool error;
-  final String message;
-  final Story story;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  DetailStoryWrap({
-    required this.error,
-    required this.message,
-    required this.story,
-  });
+part 'detail_story_model.freezed.dart';
 
-  factory DetailStoryWrap.fromRawJson(String str) =>
-      DetailStoryWrap.fromJson(json.decode(str));
+part 'detail_story_model.g.dart';
 
-  String toRawJson() => json.encode(toJson());
+@freezed
+class DetailStoryModel with _$DetailStoryModel {
+  const factory DetailStoryModel({
+    required final bool error,
+    required final String message,
+    required final Story story,
+  }) = _DetailStoryModel;
 
-  factory DetailStoryWrap.fromJson(Map<String, dynamic> json) {
+  factory DetailStoryModel.fromRawJson(String str) =>
+      DetailStoryModel.fromJson(json.decode(str));
 
-    return DetailStoryWrap(
-      error: json["error"],
-      message: json["message"],
-      story: Story.fromJson(json["story"]),
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "error": error,
-      "message": message,
-      "story": story.toJson(),
-    };
-  }
+  factory DetailStoryModel.fromJson(Map<String, dynamic> json) =>
+      _$DetailStoryModelFromJson(json);
 }
 
-class Story {
-  final String id;
-  final String name;
-  final String description;
-  final String photoUrl;
-  final DateTime createdAt;
-  final dynamic lat;
-  final dynamic lon;
-
-  Story({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.photoUrl,
-    required this.createdAt,
-    required this.lat,
-    required this.lon,
-  });
+@freezed
+class Story with _$Story {
+  const factory Story({
+    required final String id,
+    required final String name,
+    required final String description,
+    required final String photoUrl,
+    required final DateTime createdAt,
+    required final dynamic lat,
+    required final dynamic lon,
+  }) = _Story;
 
   factory Story.fromRawJson(String str) => Story.fromJson(json.decode(str));
 
-  String toRawJson() => json.encode(toJson());
-
-  factory Story.fromJson(Map<String, dynamic> json) {
-    return Story(
-      id: json["id"],
-      name: json["name"],
-      description: json["description"],
-      photoUrl: json["photoUrl"],
-      createdAt: DateTime.parse(json["createdAt"]),
-      lat: json["lat"],
-      lon: json["lon"],
-    );
-  }
-
-  Map<String, dynamic> toJson() {
-    return {
-      "id": id,
-      "name": name,
-      "description": description,
-      "photoUrl": photoUrl,
-      "createdAt": createdAt.toIso8601String(),
-      "lat": lat,
-      "lon": lon,
-    };
-  }
+  factory Story.fromJson(Map<String, dynamic> json) => _$StoryFromJson(json);
 }

@@ -13,11 +13,10 @@ class ApiService {
   static const String _endPointPostRegister = 'register';
   static const String _endPointPostLogin = 'login';
   static const String _endPointGetAllStories = 'stories';
-  static const String _endPointGetStoryDetail = 'stories/';
-  static const String _endPointPostAddNewStoryGuest = 'stories/guest';
+  static const String _endPointGetStoryDetail = 'stories/{id}';
+  static const String _endPointPostAddNewStoryAsGuest = 'stories/guest';
   static const String _endPointPostAddNewStory = 'stories';
 
-  /// singup with name, email, password
   Future<SignupModel> signup({
     required String name,
     required String email,
@@ -36,16 +35,15 @@ class ApiService {
     );
 
     var statusCode = response.statusCode;
-    final signupWrap = SignupModel.fromRawJson(response.body);
+    final signupModel = SignupModel.fromRawJson(response.body);
 
     if (statusCode == 201) {
-      return signupWrap;
+      return signupModel;
     } else {
-      throw signupWrap.message;
+      throw signupModel;
     }
   }
 
-  /// login with email and password
   Future<LoginModel> login({
     required String email,
     required String password,
@@ -62,31 +60,30 @@ class ApiService {
     );
 
     var statusCode = response.statusCode;
-    final loginWrap = LoginModel.fromRawJson(response.body);
+    final loginModel = LoginModel.fromRawJson(response.body);
 
     if (statusCode == 200) {
-      return loginWrap;
+      return loginModel;
     } else {
-      throw loginWrap.message;
+      throw loginModel;
     }
   }
 
-  /// get all stories, using the token obtained from a successful login
   Future<ListStoryModel> getAllStories({
     required String token,
     int pageItems = 1,
     int sizeItems = 10,
+    int location = 0,
   }) async {
-    print('api_service, getAllStories(), token: $token');
     final getAllStoriesQueryParameters = {
       'page': pageItems.toString(),
       'size': sizeItems.toString(),
-      'location': '0',
+      'location': location.toString(),
     };
 
     final response = await http.get(
       Uri.parse(
-        '$_baseUrl$_endPointGetAllStories' '?',
+        '$_baseUrl$_endPointGetAllStories?',
       ).replace(
         queryParameters: getAllStoriesQueryParameters,
       ),
@@ -96,42 +93,29 @@ class ApiService {
     );
 
     var statusCode = response.statusCode;
-    final listStoryWrap = ListStoryModel.fromRawJson(response.body);
+    final listStoryModel = ListStoryModel.fromRawJson(response.body);
 
     if (statusCode == 200) {
-      return listStoryWrap;
+      return listStoryModel;
     } else {
-      throw listStoryWrap.message;
+      throw listStoryModel;
     }
   }
 
-  /// upload story
-  Future<UploadImageStoryResponse> uploadStory({
+  Future<UploadImageStoryModel> uploadStory({
     required List<int> photoBytes,
     required String fileName,
     required String description,
     String token = '',
   }) async {
-    // if token is empty then use guest end point,
-    // if token is not empty then use token end point
     final endPoint = token.isEmpty
-        ? _endPointPostAddNewStoryGuest
+        ? _endPointPostAddNewStoryAsGuest
         : _endPointPostAddNewStory;
 
     final request = http.MultipartRequest(
       'POST',
       Uri.parse('$_baseUrl$endPoint'),
     );
-
-    final multiPartFile = http.MultipartFile.fromBytes(
-      'photo',
-      photoBytes,
-      filename: fileName,
-    );
-
-    final Map<String, String> fields = {
-      'description': description,
-    };
 
     Map<String, String> headers = {
       'Content-Type': 'multipart/form-data',
@@ -143,9 +127,20 @@ class ApiService {
       );
     }
 
-    request.files.add(multiPartFile);
-    request.fields.addAll(fields);
+    final Map<String, String> fields = {
+      'description': description,
+    };
+
+    // fileName is a must, if not it will fail
+    final multiPartFile = http.MultipartFile.fromBytes(
+      'photo',
+      photoBytes,
+      filename: fileName,
+    );
+
     request.headers.addAll(headers);
+    request.fields.addAll(fields);
+    request.files.add(multiPartFile);
 
     final http.StreamedResponse streamedResponse = await request.send();
     final int statusCode = streamedResponse.statusCode;
@@ -153,24 +148,23 @@ class ApiService {
     final Uint8List responseList = await streamedResponse.stream.toBytes();
     final String responseData = String.fromCharCodes(responseList);
 
-    final UploadImageStoryResponse uploadImageStoryResponse =
-        UploadImageStoryResponse.fromRawJson(responseData);
+    final UploadImageStoryModel uploadImageStoryModel =
+        UploadImageStoryModel.fromRawJson(responseData);
 
     if (statusCode == 201) {
-      return uploadImageStoryResponse;
+      return uploadImageStoryModel;
     } else {
-      throw uploadImageStoryResponse.message;
+      throw uploadImageStoryModel;
     }
   }
 
-  /// get story detail
-  Future<DetailStoryWrap> getDetailStory({
+  Future<DetailStoryModel> getDetailStory({
     required String token,
     required String id,
   }) async {
     final response = await http.get(
       Uri.parse(
-        '$_baseUrl$_endPointGetStoryDetail/$id',
+        '$_baseUrl${_endPointGetStoryDetail.replaceAll('{id}', id)}',
       ),
       headers: {
         'Authorization': 'Bearer $token',
@@ -178,12 +172,12 @@ class ApiService {
     );
 
     final statusCode = response.statusCode;
-    final detailStoryWrap = DetailStoryWrap.fromRawJson(response.body);
+    final detailStoryModel = DetailStoryModel.fromRawJson(response.body);
 
     if (statusCode == 200) {
-      return detailStoryWrap;
+      return detailStoryModel;
     } else {
-      throw detailStoryWrap.message;
+      throw detailStoryModel;
     }
   }
 }

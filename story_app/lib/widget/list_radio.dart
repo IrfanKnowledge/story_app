@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 
 // class ListRadio<T> extends StatelessWidget {
@@ -48,7 +47,13 @@ class ListRadio<T> extends StatelessWidget {
   final T value;
   final ValueChanged<T> onChanged;
 
-  const ListRadio({super.key, required this.onChanged, required this.label, required this.padding, required this.groupValue, required this.value});
+  const ListRadio(
+      {super.key,
+      required this.onChanged,
+      required this.label,
+      required this.padding,
+      required this.groupValue,
+      required this.value});
 
   @override
   Widget build(BuildContext context) {

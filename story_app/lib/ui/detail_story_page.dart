@@ -1,17 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
 import 'package:readmore/readmore.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/detail_story_model.dart';
-import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/detail_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
-import 'package:story_app/utils/result_state_helper.dart';
 import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 
@@ -210,9 +206,6 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
     return SingleChildScrollView(
       child: Container(
         alignment: Alignment.topCenter,
-        padding: const EdgeInsets.symmetric(
-          vertical: 8.0,
-        ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -237,7 +230,8 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
                     height: 300,
                     child: Center(
                       child: CircularProgressIndicator(
-                        backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+                        backgroundColor:
+                            Theme.of(context).colorScheme.primaryContainer,
                         value: loadingProgress.expectedTotalBytes != null
                             ? loadingProgress.cumulativeBytesLoaded /
                                 loadingProgress.expectedTotalBytes!

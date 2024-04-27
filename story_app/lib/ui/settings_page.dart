@@ -8,7 +8,6 @@ import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/login_page.dart';
-import 'package:story_app/utils/locale_helper.dart';
 import 'package:story_app/widget/alert_dialog_option.dart';
 
 class SettingsPage extends StatefulWidget {
@@ -31,7 +30,7 @@ class _SettingsPageState extends State<SettingsPage> {
   ThemeMode _themeMode = ThemeMode.system;
 
   late final List<Locale> _listLocaleSupported;
-  Locale _locale = Locale('en');
+  Locale _locale = const Locale('en');
 
   final List<String> _listLocaleSupportedLabel = [];
 
@@ -39,7 +38,7 @@ class _SettingsPageState extends State<SettingsPage> {
   void initState() {
     SettingsPage.isShowDialogTrue = true;
     _listLocaleSupported = [
-      LocaleHelper.localeSystem,
+      LocalizationsProvider.localeSystem,
       ...AppLocalizations.supportedLocales,
     ];
     super.initState();

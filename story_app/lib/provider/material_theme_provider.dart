@@ -4,8 +4,7 @@ import 'package:story_app/utils/result_state_helper.dart';
 
 /// Dikarenakan sebagian variable dari Theme.of(context).colorScheme
 /// tidak sepenuhnya mendukung konsep Material Design 3 terkini,
-/// maka inisiatif membuat provider khusus untuk
-/// menanganinya.
+/// maka dibuatkan provider khusus untuk menanganinya.
 class MaterialThemeProvider extends ChangeNotifier {
   MaterialScheme _currentSelected;
   ThemeMode _themeMode;
@@ -21,8 +20,7 @@ class MaterialThemeProvider extends ChangeNotifier {
     required ThemeMode themeMode,
     required MaterialScheme light,
     required MaterialScheme dark,
-  })
-      : _currentSelected = currentSelected,
+  })  : _currentSelected = currentSelected,
         _themeMode = themeMode,
         _dark = dark,
         _light = light {
@@ -53,9 +51,7 @@ class MaterialThemeProvider extends ChangeNotifier {
 
     switch (_themeMode) {
       case ThemeMode.system:
-        final brightness = MediaQuery
-            .of(context)
-            .platformBrightness;
+        final brightness = MediaQuery.of(context).platformBrightness;
 
         if (brightness == Brightness.light) {
           _currentSelected = _light;

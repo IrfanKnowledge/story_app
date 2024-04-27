@@ -4,22 +4,19 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img;
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/utils/result_state_helper.dart';
-import 'package:story_app/utils/string_helper.dart';
+import 'package:story_app/data/model/upload_image_story_model.dart';
+import 'package:story_app/data/string/string_data.dart';
+import 'package:story_app/utils/loading_state.dart';
 
 class UploadImageStoryProvider extends ChangeNotifier {
   final ApiService apiService;
 
-  UploadImageStoryProvider({required this.apiService})
-      : _stateUpload = ResultState.notStarted;
+  UploadImageStoryProvider({required this.apiService});
 
-  String _messageUpload = '';
+  LoadingState<UploadImageStoryModel> _stateUpload =
+      const LoadingState.initial();
 
-  ResultState _stateUpload;
-
-  ResultState get stateUpload => _stateUpload;
-
-  String get messageUpload => _messageUpload;
+  LoadingState<UploadImageStoryModel> get stateUpload => _stateUpload;
 
   Future<List<int>> compressImage(List<int> bytes) async {
     const int maxBytes = 1000000;
@@ -59,32 +56,23 @@ class UploadImageStoryProvider extends ChangeNotifier {
     String token = '',
   }) async {
     try {
-      _stateUpload = ResultState.loading;
+      _stateUpload = const LoadingState.loading();
       notifyListeners();
 
-      final uploadResponse = await apiService.uploadStory(
+      final uploadImageStoryModel = await apiService.uploadStory(
         photoBytes: photoBytes,
         fileName: fileName,
         description: description,
         token: token,
       );
 
-      if (!uploadResponse.error) {
-        _stateUpload = ResultState.hasData;
-        _messageUpload = uploadResponse.message;
-        notifyListeners();
-      }
-
-      // if no internet connection, _state = ResultState.error
-    } on SocketException {
-      _stateUpload = ResultState.error;
-      _messageUpload = StringHelper.noInternetConnection;
+      _stateUpload = LoadingState.loaded(uploadImageStoryModel);
       notifyListeners();
-
-      // if other error show up, _state = ResultState.error
-    } catch (e) {
-      _stateUpload = ResultState.error;
-      _messageUpload = e.toString();
+    } on SocketException {
+      _stateUpload = const LoadingState.error(StringData.noInternetConnection);
+      notifyListeners();
+    } catch (e, _) {
+      _stateUpload = LoadingState.error(e.toString());
       notifyListeners();
     }
   }

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
-import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -9,19 +8,13 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
-import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/provider/add_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
-import 'package:story_app/ui/bottom_nav_bar.dart';
 import 'package:story_app/ui/list_story_page.dart';
-import 'package:story_app/utils/result_state_helper.dart';
-import 'package:story_app/widget/center_error.dart';
-import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/text_with_red_star.dart';
 
 class AddStoryPage extends StatefulWidget {
@@ -164,11 +157,11 @@ class _AddStoryPageState extends State<AddStoryPage> {
             maxLines: 6,
             maxLength: 50,
             buildCounter: (
-                context, {
-                  required currentLength,
-                  required isFocused,
-                  maxLength,
-                }) {
+              context, {
+              required currentLength,
+              required isFocused,
+              maxLength,
+            }) {
               return Text('$currentLength / $maxLength');
             },
             decoration: InputDecoration(
@@ -208,18 +201,26 @@ class _AddStoryPageState extends State<AddStoryPage> {
   Widget _buildUploadButtonOrLoadingButton() {
     return Consumer<UploadImageStoryProvider>(
       builder: (context, provider, _) {
-        if (provider.stateUpload == ResultState.loading) {
-          return _buildIconButtonLoading();
-        } else if (provider.stateUpload == ResultState.hasData) {
-          return FutureBuilder(
-            future: _autoNavigateBack(context),
-            builder: (_, __) => _buildIconButtonLoading(),
-          );
-        }
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: _buildFilledButtonUpload(context),
+        final state = provider.stateUpload;
+
+        Widget result = state.maybeWhen(
+          loading: () => _buildIconButtonLoading(),
+          loaded: (data) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              context.pop();
+            });
+
+            return _buildIconButtonLoading();
+          },
+          orElse: () {
+            return Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16.0),
+              child: _buildFilledButtonUpload(context),
+            );
+          },
         );
+
+        return result;
       },
     );
   }
@@ -258,17 +259,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
         seconds: 1,
       ),
     );
-  }
-
-  /// auto navigate back to previous page if upload image is success
-  Future<String> _autoNavigateBack(BuildContext context) async {
-    Future.delayed(
-      const Duration(seconds: 1),
-      () {
-        kIsWeb ? context.go(ListStoryPage.goRoutePath) : context.pop();
-      },
-    );
-    return 'Loading...';
   }
 
   void _onCameraView(BuildContext context) async {
@@ -326,8 +316,8 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
       await file.writeAsBytes(Uint8List.fromList(bytes));
 
-      provider.setImageFile(pickedFile);
-      provider.setImagePath(pickedFile.path);
+      provider.imageFile = pickedFile;
+      provider.imagePath = pickedFile.path;
     }
   }
 

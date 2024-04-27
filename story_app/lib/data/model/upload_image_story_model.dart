@@ -1,30 +1,21 @@
 import 'dart:convert';
 
-class UploadImageStoryResponse {
-  final bool error;
-  final String message;
+import 'package:freezed_annotation/freezed_annotation.dart';
 
-  UploadImageStoryResponse({
-    required this.error,
-    required this.message,
-  });
+part 'upload_image_story_model.freezed.dart';
 
-  factory UploadImageStoryResponse.fromRawJson(String str) =>
-      UploadImageStoryResponse.fromJson(json.decode(str));
+part 'upload_image_story_model.g.dart';
 
-  String toRawJson() => json.encode(toJson());
+@freezed
+class UploadImageStoryModel with _$UploadImageStoryModel {
+  const factory UploadImageStoryModel({
+    required bool error,
+    required String message,
+  }) = _UploadImageStoryModel;
 
-  factory UploadImageStoryResponse.fromJson(Map<String, dynamic> json) {
-    return UploadImageStoryResponse(
-      error: json["error"],
-      message: json["message"],
-    );
-  }
+  factory UploadImageStoryModel.fromRawJson(String str) =>
+      UploadImageStoryModel.fromJson(json.decode(str));
 
-  Map<String, dynamic> toJson() {
-    return {
-      "error": error,
-      "message": message,
-    };
-  }
+  factory UploadImageStoryModel.fromJson(Map<String, dynamic> json) =>
+      _$UploadImageStoryModelFromJson(json);
 }

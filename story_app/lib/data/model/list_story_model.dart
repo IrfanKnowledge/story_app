@@ -23,7 +23,6 @@ class ListStoryModel with _$ListStoryModel {
 
 @freezed
 class ListStory with _$ListStory {
-
   const factory ListStory({
     required final String id,
     required final String name,
@@ -32,7 +31,7 @@ class ListStory with _$ListStory {
     required final DateTime createdAt,
     required final double? lat,
     required final double? lon,
-  }) = _ListStory ;
+  }) = _ListStory;
 
   factory ListStory.fromRawJson(String str) =>
       ListStory.fromJson(json.decode(str));

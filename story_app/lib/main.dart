@@ -59,7 +59,6 @@ class _MyAppState extends State<MyApp> {
   late final MaterialScheme _materialSchemeDark;
   late final Brightness _brightness;
   late final Locale _locale;
-  late final bool _isLocaleSystem;
 
   final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
@@ -189,7 +188,7 @@ class _MyAppState extends State<MyApp> {
           path: '/',
           builder: (_, state) => const ListStoryPage(),
           onExit: (context) async {
-            late final bool? result;
+            final bool? result;
 
             if (ListStoryPage.isShowDialogTrue) {
               result =
@@ -356,8 +355,6 @@ class _MyAppState extends State<MyApp> {
     final localeSystem = Locale(localeSystemNameSplitFirst);
     _locale = localeSystem;
 
-    _isLocaleSystem = true;
-
     super.initState();
   }
 
@@ -386,10 +383,7 @@ class _MyAppState extends State<MyApp> {
         ),
         ChangeNotifierProvider(
           create: (context) {
-            return LocalizationsProvider(
-              locale: _locale,
-              isLocaleSystem: _isLocaleSystem,
-            );
+            return LocalizationsProvider(locale: _locale);
           },
         ),
         ChangeNotifierProvider(
@@ -423,7 +417,8 @@ class _MyAppState extends State<MyApp> {
         final providerLocalizations = context.watch<LocalizationsProvider>();
 
         final Locale? locale;
-        if (providerLocalizations.locale.languageCode == 'system') {
+        if (providerLocalizations.locale.languageCode ==
+            LocalizationsProvider.localeSystem.languageCode) {
           locale = null;
         } else {
           locale = providerLocalizations.locale;
