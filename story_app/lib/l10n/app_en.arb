@@ -42,5 +42,6 @@
   "changeDescription": "Change Description",
   "detailStory": "Detail Story",
   "imageSelectError": "Photo/Image has not been selected",
-  "descriptionFormError": "Description cannot be empty"
+  "descriptionFormError": "Description cannot be empty",
+  "addLocation": "Add Location"
 }

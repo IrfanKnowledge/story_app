@@ -14,6 +14,7 @@ import 'package:story_app/common/url_strategy.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/preferences/preferences_helper.dart';
 import 'package:story_app/data/string/string_data.dart';
+import 'package:story_app/flavor_config.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
@@ -30,6 +31,13 @@ import 'package:story_app/utils/future_helper.dart';
 
 void main() {
   usePathUrlStrategy();
+
+  FlavorConfig(
+    flavorType: FlavorType.free,
+    flavorValues: const FlavorValues(
+      isPaidVersion: false,
+    ),
+  );
 
   runApp(const MyApp());
 }

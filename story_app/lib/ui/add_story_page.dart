@@ -10,6 +10,7 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
+import 'package:story_app/flavor_config.dart';
 import 'package:story_app/provider/add_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
@@ -81,6 +82,10 @@ class _AddStoryPageState extends State<AddStoryPage> {
           const Divider(height: 32),
           _buildDescription1(context),
           // _buildDescription2(context),
+          _buildAddStoryFromMap(
+            context: context,
+            isPaidVersion: FlavorConfig.instance.flavorValues.isPaidVersion,
+          ),
           const Divider(height: 32),
           _buildUploadButtonOrLoadingButton(),
         ],
@@ -195,6 +200,44 @@ class _AddStoryPageState extends State<AddStoryPage> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildAddStoryFromMap({
+    required BuildContext context,
+    required bool isPaidVersion,
+  }) {
+    if (!isPaidVersion) return const Gap(0);
+
+    return Column(
+      children: [
+        const Divider(height: 32),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(width: MediaQuery.of(context).size.width),
+              Text(
+                '${_appLocalizations!.addLocation}:',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.onSurface,
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const Gap(8),
+              Align(
+                alignment: Alignment.center,
+                child: ElevatedButton(
+                  onPressed: () {},
+                  child: Text(_appLocalizations!.addLocation),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 
