@@ -185,8 +185,20 @@
   "@descriptionFormError": {
     "description": "pesan error ketika pengguna belum mengisi form deskripsi"
   },
+  "cameraError": "Fitur kamera belum tersedia untuk platform ini",
+  "@cameraError": {
+    "description": "pesan error ketika pengguna menekan tombol kamera menggunakan platform tertentu"
+  },
   "addLocation": "Tambah Lokasi",
   "@addLocation": {
     "description": "text 'Tambah Lokasi'"
+  },
+  "addLocationError": "Fitur tambah lokasi belum tersedia untuk platform ini",
+  "@addLocationError": {
+    "description": "pesan error ketika pengguna menekan tombol tambah lokasi menggunakan platform tertentu"
+  },
+  "locationSelect": "Pilih Lokasi",
+  "@locationSelect": {
+    "description": "text 'Pilih Lokasi'"
   }
 }

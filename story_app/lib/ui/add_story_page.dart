@@ -16,6 +16,7 @@ import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
 import 'package:story_app/ui/list_story_page.dart';
+import 'package:story_app/ui/map_page.dart';
 import 'package:story_app/widget/text_with_red_star.dart';
 
 class AddStoryPage extends StatefulWidget {
@@ -230,7 +231,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
               Align(
                 alignment: Alignment.center,
                 child: ElevatedButton(
-                  onPressed: () {},
+                  onPressed: () => _onAddLocation(context),
                   child: Text(_appLocalizations!.addLocation),
                 ),
               ),
@@ -287,7 +288,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
-  /// loading button for upload image process
   IconButton _buildIconButtonLoading() {
     return IconButton(
       onPressed: () {},
@@ -295,7 +295,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
     );
   }
 
-  SnackBar snackBar(String text) {
+  SnackBar snackBar({String text = '', int seconds = 1}) {
     return SnackBar(
       content: Text(text),
       duration: const Duration(
@@ -311,7 +311,12 @@ class _AddStoryPageState extends State<AddStoryPage> {
     final isIos = defaultTargetPlatform == TargetPlatform.iOS;
     final isNotMobile = !(isAndroid || isIos);
 
-    if (isNotMobile) return;
+    if (isNotMobile) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        snackBar(text: _appLocalizations!.cameraError),
+      );
+      return;
+    }
 
     final ImagePicker picker = ImagePicker();
 
@@ -364,6 +369,21 @@ class _AddStoryPageState extends State<AddStoryPage> {
     }
   }
 
+  void _onAddLocation(BuildContext context) {
+    final isAndroid = defaultTargetPlatform == TargetPlatform.android;
+    final isIos = defaultTargetPlatform == TargetPlatform.iOS;
+    const isWeb = kIsWeb;
+    final isNotCompatible = !(isAndroid || isIos || isWeb);
+
+    if (isNotCompatible) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        snackBar(text: _appLocalizations!.addLocationError),
+      );
+    }
+
+    context.go('/${AddStoryPage.goRoutePath}/${MapPage.goRoutePath}');
+  }
+
   void _onUpload({
     required BuildContext context,
     required String description,
@@ -374,14 +394,14 @@ class _AddStoryPageState extends State<AddStoryPage> {
 
     if (imagePath == null || imageFile == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        snackBar(_appLocalizations!.imageSelectError),
+        snackBar(text: _appLocalizations!.imageSelectError),
       );
       return;
     }
 
     if (description.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        snackBar(_appLocalizations!.descriptionFormError),
+        snackBar(text: _appLocalizations!.descriptionFormError),
       );
       return;
     }

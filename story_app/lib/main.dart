@@ -25,6 +25,7 @@ import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/loading_page.dart';
 import 'package:story_app/ui/login_page.dart';
+import 'package:story_app/ui/map_page.dart';
 import 'package:story_app/ui/settings_page.dart';
 import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/future_helper.dart';
@@ -233,6 +234,13 @@ class _MyAppState extends State<MyApp> {
                 ListStoryPage.isShowDialogTrue = true;
                 return _listStoryPageRefresh(context);
               },
+              routes: [
+                GoRoute(
+                  path: MapPage.goRoutePath,
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (_, __) => const MapPage(),
+                ),
+              ],
             ),
           ],
         ),

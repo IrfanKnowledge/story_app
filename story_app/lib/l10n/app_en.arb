@@ -43,5 +43,8 @@
   "detailStory": "Detail Story",
   "imageSelectError": "Photo/Image has not been selected",
   "descriptionFormError": "Description cannot be empty",
-  "addLocation": "Add Location"
+  "addLocation": "Add Location",
+  "cameraError": "The camera feature is not yet available for this platform",
+  "addLocationError": "The add location feature is not yet available for this platform",
+  "locationSelect": "Select Location"
 }
