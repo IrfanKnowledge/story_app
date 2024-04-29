@@ -46,5 +46,13 @@
   "addLocation": "Add Location",
   "cameraError": "The camera feature is not yet available for this platform",
   "addLocationError": "The add location feature is not yet available for this platform",
-  "locationSelect": "Select Location"
+  "locationSelect": "Select Location",
+  "locationServiceEnabled": "Location services is not available",
+  "locationPermission": "Location permission is denied",
+  "location": "Location",
+  "seeLocationOnMap": "Seet location on map",
+  "more": "More",
+  "less": "Less",
+  "accountTypeInfoPaid": "Your account is already Paid!",
+  "accountTypeInfoFreeOfCharge": "Your account is still Free of Charge!"
 }

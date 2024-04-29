@@ -10,12 +10,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
+import 'package:story_app/data/model/location_model.dart';
 import 'package:story_app/flavor_config.dart';
 import 'package:story_app/provider/add_story_provider.dart';
+import 'package:story_app/provider/location_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/provider/upload_image_story_provider.dart';
-import 'package:story_app/ui/list_story_page.dart';
 import 'package:story_app/ui/map_page.dart';
 import 'package:story_app/widget/text_with_red_star.dart';
 
@@ -32,6 +33,17 @@ class _AddStoryPageState extends State<AddStoryPage> {
   final TextEditingController _controllerDescription = TextEditingController();
 
   AppLocalizations? _appLocalizations;
+
+  @override
+  void initState() {
+    final providerLocation = context.read<LocationProvider>();
+
+    Future.microtask(() {
+      providerLocation.locationModel = null;
+    });
+
+    super.initState();
+  }
 
   AppBar _buildAppBar(BuildContext context) {
     final colorSchemeCustom =
@@ -210,15 +222,17 @@ class _AddStoryPageState extends State<AddStoryPage> {
   }) {
     if (!isPaidVersion) return const Gap(0);
 
+    final providerLocation = context.watch<LocationProvider>();
+    final locationModel = providerLocation.locationModel;
+
     return Column(
       children: [
         const Divider(height: 32),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              SizedBox(width: MediaQuery.of(context).size.width),
               Text(
                 '${_appLocalizations!.addLocation}:',
                 style: TextStyle(
@@ -228,6 +242,12 @@ class _AddStoryPageState extends State<AddStoryPage> {
                 ),
               ),
               const Gap(8),
+              locationModel != null
+                  ? _buildLocationInformation(
+                      context,
+                      locationModel,
+                    )
+                  : const Gap(0),
               Align(
                 alignment: Alignment.center,
                 child: ElevatedButton(
@@ -238,6 +258,48 @@ class _AddStoryPageState extends State<AddStoryPage> {
             ],
           ),
         ),
+      ],
+    );
+  }
+
+  Column _buildLocationInformation(
+    BuildContext context,
+    LocationModel locationModel,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(
+          "Latitude: ${locationModel.latLng.latitude}",
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          "Longitude: ${locationModel.latLng.longitude}",
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          locationModel.street,
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 14,
+          ),
+        ),
+        Text(
+          locationModel.address,
+          style: TextStyle(
+            color: colorScheme.onSurface,
+            fontSize: 12,
+          ),
+        ),
+        const Gap(8),
       ],
     );
   }
@@ -389,6 +451,10 @@ class _AddStoryPageState extends State<AddStoryPage> {
     required String description,
   }) async {
     final addStoryProvider = context.read<AddStoryProvider>();
+    final providerPref = context.read<PreferencesProvider>();
+    final readUploadProvider = context.read<UploadImageStoryProvider>();
+    final providerLocation = context.read<LocationProvider>();
+
     final imagePath = addStoryProvider.imagePath;
     final imageFile = addStoryProvider.imageFile;
 
@@ -406,9 +472,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
       return;
     }
 
-    final providerPref = context.read<PreferencesProvider>();
     final stateToken = providerPref.stateToken;
-
     final token = stateToken.maybeWhen(
       loaded: (data) => data,
       orElse: () => '',
@@ -417,17 +481,19 @@ class _AddStoryPageState extends State<AddStoryPage> {
     print('upload token: $token');
 
     final fileName = imageFile.name;
-
-    final readUploadProvider = context.read<UploadImageStoryProvider>();
     final photoBytes = await imageFile.readAsBytes();
 
     final compressedPhotoBytes =
         await readUploadProvider.compressImage(photoBytes);
 
+    final latLng = providerLocation.locationModel?.latLng;
+
     readUploadProvider.upload(
       photoBytes: compressedPhotoBytes,
       fileName: fileName,
       description: description,
+      lat: latLng?.latitude,
+      lon: latLng?.longitude,
       token: token,
     );
   }

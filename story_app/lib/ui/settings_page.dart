@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/string/string_data.dart';
+import 'package:story_app/flavor_config.dart';
 import 'package:story_app/provider/localizations_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
@@ -92,7 +93,7 @@ class _SettingsPageState extends State<SettingsPage> {
       child: Column(
         children: [
           const Gap(8),
-          _buildAccountSettings(),
+          _buildAccountSettings(context),
           const Divider(height: 16),
           _buildThemeAndLanguage(context),
           const Divider(height: 16),
@@ -102,7 +103,7 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildAccountSettings() {
+  Widget _buildAccountSettings(BuildContext context) {
     const paddingHorizontal = 16.0;
 
     return Column(
@@ -117,7 +118,21 @@ class _SettingsPageState extends State<SettingsPage> {
         ),
         const Gap(8),
         InkWell(
-          onTap: () {},
+          onTap: () {
+            String text = '';
+            if (FlavorConfig.instance.flavorValues.isPaidVersion) {
+              text = _appLocalizations!.accountTypeInfoPaid;
+            } else {
+              text = _appLocalizations!.accountTypeInfoFreeOfCharge;
+            }
+
+            SnackBar snackBar = SnackBar(
+              content: Text(text),
+              duration: const Duration(seconds: 1),
+            );
+
+            ScaffoldMessenger.of(context).showSnackBar(snackBar);
+          },
           child: Padding(
             padding: const EdgeInsets.symmetric(
               horizontal: paddingHorizontal,
@@ -131,7 +146,10 @@ class _SettingsPageState extends State<SettingsPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(_appLocalizations!.account),
-                    Text(_appLocalizations!.freeOfCharge),
+                    if (FlavorConfig.instance.flavorValues.isPaidVersion)
+                      Text(_appLocalizations!.paid)
+                    else
+                      Text(_appLocalizations!.freeOfCharge),
                   ],
                 ),
               ],

@@ -29,8 +29,8 @@ class Story with _$Story {
     required final String description,
     required final String photoUrl,
     required final DateTime createdAt,
-    required final dynamic lat,
-    required final dynamic lon,
+    required final double? lat,
+    required final double? lon,
   }) = _Story;
 
   factory Story.fromRawJson(String str) => Story.fromJson(json.decode(str));

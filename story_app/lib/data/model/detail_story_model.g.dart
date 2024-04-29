@@ -28,8 +28,8 @@ _$StoryImpl _$$StoryImplFromJson(Map<String, dynamic> json) => _$StoryImpl(
       description: json['description'] as String,
       photoUrl: json['photoUrl'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
-      lat: json['lat'],
-      lon: json['lon'],
+      lat: (json['lat'] as num?)?.toDouble(),
+      lon: (json['lon'] as num?)?.toDouble(),
     );
 
 Map<String, dynamic> _$$StoryImplToJson(_$StoryImpl instance) =>

@@ -53,6 +53,8 @@ class UploadImageStoryProvider extends ChangeNotifier {
     required List<int> photoBytes,
     required String fileName,
     required String description,
+    double? lat,
+    double? lon,
     String token = '',
   }) async {
     try {
@@ -63,6 +65,8 @@ class UploadImageStoryProvider extends ChangeNotifier {
         photoBytes: photoBytes,
         fileName: fileName,
         description: description,
+        lat: lat,
+        lon: lon,
         token: token,
       );
 

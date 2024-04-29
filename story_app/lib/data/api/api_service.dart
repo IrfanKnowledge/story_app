@@ -106,6 +106,8 @@ class ApiService {
     required List<int> photoBytes,
     required String fileName,
     required String description,
+    double? lat,
+    double? lon,
     String token = '',
   }) async {
     final endPoint = token.isEmpty
@@ -130,6 +132,13 @@ class ApiService {
     final Map<String, String> fields = {
       'description': description,
     };
+
+    if (lat != null && lon != null) {
+      fields.addAll({
+        'lat': lat.toString(),
+        'lon': lon.toString(),
+      });
+    }
 
     // fileName is a must, if not it will fail
     final multiPartFile = http.MultipartFile.fromBytes(

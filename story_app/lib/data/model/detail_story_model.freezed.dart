@@ -211,8 +211,8 @@ mixin _$Story {
   String get description => throw _privateConstructorUsedError;
   String get photoUrl => throw _privateConstructorUsedError;
   DateTime get createdAt => throw _privateConstructorUsedError;
-  dynamic get lat => throw _privateConstructorUsedError;
-  dynamic get lon => throw _privateConstructorUsedError;
+  double? get lat => throw _privateConstructorUsedError;
+  double? get lon => throw _privateConstructorUsedError;
 
   Map<String, dynamic> toJson() => throw _privateConstructorUsedError;
   @JsonKey(ignore: true)
@@ -230,8 +230,8 @@ abstract class $StoryCopyWith<$Res> {
       String description,
       String photoUrl,
       DateTime createdAt,
-      dynamic lat,
-      dynamic lon});
+      double? lat,
+      double? lon});
 }
 
 /// @nodoc
@@ -279,11 +279,11 @@ class _$StoryCopyWithImpl<$Res, $Val extends Story>
       lat: freezed == lat
           ? _value.lat
           : lat // ignore: cast_nullable_to_non_nullable
-              as dynamic,
+              as double?,
       lon: freezed == lon
           ? _value.lon
           : lon // ignore: cast_nullable_to_non_nullable
-              as dynamic,
+              as double?,
     ) as $Val);
   }
 }
@@ -301,8 +301,8 @@ abstract class _$$StoryImplCopyWith<$Res> implements $StoryCopyWith<$Res> {
       String description,
       String photoUrl,
       DateTime createdAt,
-      dynamic lat,
-      dynamic lon});
+      double? lat,
+      double? lon});
 }
 
 /// @nodoc
@@ -348,11 +348,11 @@ class __$$StoryImplCopyWithImpl<$Res>
       lat: freezed == lat
           ? _value.lat
           : lat // ignore: cast_nullable_to_non_nullable
-              as dynamic,
+              as double?,
       lon: freezed == lon
           ? _value.lon
           : lon // ignore: cast_nullable_to_non_nullable
-              as dynamic,
+              as double?,
     ));
   }
 }
@@ -383,9 +383,9 @@ class _$StoryImpl implements _Story {
   @override
   final DateTime createdAt;
   @override
-  final dynamic lat;
+  final double? lat;
   @override
-  final dynamic lon;
+  final double? lon;
 
   @override
   String toString() {
@@ -405,21 +405,14 @@ class _$StoryImpl implements _Story {
                 other.photoUrl == photoUrl) &&
             (identical(other.createdAt, createdAt) ||
                 other.createdAt == createdAt) &&
-            const DeepCollectionEquality().equals(other.lat, lat) &&
-            const DeepCollectionEquality().equals(other.lon, lon));
+            (identical(other.lat, lat) || other.lat == lat) &&
+            (identical(other.lon, lon) || other.lon == lon));
   }
 
   @JsonKey(ignore: true)
   @override
   int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      name,
-      description,
-      photoUrl,
-      createdAt,
-      const DeepCollectionEquality().hash(lat),
-      const DeepCollectionEquality().hash(lon));
+      runtimeType, id, name, description, photoUrl, createdAt, lat, lon);
 
   @JsonKey(ignore: true)
   @override
@@ -442,8 +435,8 @@ abstract class _Story implements Story {
       required final String description,
       required final String photoUrl,
       required final DateTime createdAt,
-      required final dynamic lat,
-      required final dynamic lon}) = _$StoryImpl;
+      required final double? lat,
+      required final double? lon}) = _$StoryImpl;
 
   factory _Story.fromJson(Map<String, dynamic> json) = _$StoryImpl.fromJson;
 
@@ -458,9 +451,9 @@ abstract class _Story implements Story {
   @override
   DateTime get createdAt;
   @override
-  dynamic get lat;
+  double? get lat;
   @override
-  dynamic get lon;
+  double? get lon;
   @override
   @JsonKey(ignore: true)
   _$$StoryImplCopyWith<_$StoryImpl> get copyWith =>

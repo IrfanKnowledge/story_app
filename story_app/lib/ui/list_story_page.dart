@@ -8,6 +8,7 @@ import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/widget/card_story.dart';
 import 'package:story_app/widget/center_loading.dart';
+import 'package:story_app/widget/scrollable_center_text.dart';
 
 class ListStoryPage extends StatefulWidget {
   static const String goRoutePath = '/';
@@ -200,34 +201,14 @@ class _ListStoryPageState extends State<ListStoryPage> {
           loading: () => const CenterLoading(),
           loaded: (data) {
             if (data.listStory.isEmpty) {
-              return _buildScrollableCenterText(StringData.emptyData);
+              return const ScrollableCenterText(text: StringData.emptyData);
             }
             return builder(context);
           },
-          error: (message) => _buildScrollableCenterText(message),
+          error: (message) => ScrollableCenterText(text: message),
         );
 
         return result;
-      },
-    );
-  }
-
-  ///
-  /// Berfungsi agar penggunaan [RefreshIndicator] bisa tetap berjalan dengan baik.
-  /// Walaupun list sedang kosong.
-  ///
-  LayoutBuilder _buildScrollableCenterText(String text) {
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        return SingleChildScrollView(
-          physics: const AlwaysScrollableScrollPhysics(),
-          child: ConstrainedBox(
-            constraints: BoxConstraints(
-              minHeight: constraints.maxHeight,
-            ),
-            child: Center(child: Text(text)),
-          ),
-        );
       },
     );
   }

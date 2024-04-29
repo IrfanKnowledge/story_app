@@ -5,6 +5,7 @@ import 'dart:ui';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/color_scheme/theme.dart';
@@ -17,6 +18,7 @@ import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/flavor_config.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/localizations_provider.dart';
+import 'package:story_app/provider/location_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/add_story_page.dart';
@@ -224,6 +226,18 @@ class _MyAppState extends State<MyApp> {
               },
               redirect: (context, __) => _redirectIfIsNotLogin(context),
               onExit: (context) => _listStoryPageRefresh(context),
+              routes: [
+                GoRoute(
+                  path: MapPage.goRoutePath,
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (_, state) {
+                    final data = state.extra as LatLng;
+                    return MapPage(
+                      latLng: data,
+                    );
+                  },
+                ),
+              ],
             ),
             GoRoute(
               path: AddStoryPage.goRoutePath,
@@ -238,7 +252,9 @@ class _MyAppState extends State<MyApp> {
                 GoRoute(
                   path: MapPage.goRoutePath,
                   parentNavigatorKey: _rootNavigatorKey,
-                  builder: (_, __) => const MapPage(),
+                  builder: (_, __) => const MapPage(
+                    latLng: null,
+                  ),
                 ),
               ],
             ),
@@ -416,6 +432,9 @@ class _MyAppState extends State<MyApp> {
             );
           },
         ),
+        ChangeNotifierProvider(
+          create: (_) => LocationProvider(),
+        )
       ],
       builder: (context, _) => builder(context),
     );

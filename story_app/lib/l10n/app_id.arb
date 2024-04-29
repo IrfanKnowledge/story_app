@@ -200,5 +200,37 @@
   "locationSelect": "Pilih Lokasi",
   "@locationSelect": {
     "description": "text 'Pilih Lokasi'"
+  },
+  "locationServiceEnabled": "Layanan lokasi tidak tersedia",
+  "@locationServiceEnabled": {
+    "description": "pesan error ketika fitur GPS belum diaktifkan"
+  },
+  "locationPermission": "Izin lokasi ditolak",
+  "@locationPermission": {
+    "description": "pesan error ketika izin akses lokasi ditolak"
+  },
+  "location": "Lokasi:",
+  "@location": {
+    "description": "text 'Lokasi'"
+  },
+  "seeLocationOnMap": "Lihat lokasi pada peta",
+  "@seeLocationOnMap": {
+    "description": "Digunakan untuk TextButton yang berfungsi melihat peta"
+  },
+  "more": "Selengkapnya",
+  "@more": {
+    "description": "text 'Selengkapnya'"
+  },
+  "less": "Lebih Sedikit",
+  "@less": {
+    "description": "text 'Lebih Sedikit'"
+  },
+  "accountTypeInfoPaid": "Akun Anda sudah berjenis Berbayar!",
+  "@accountTypeInfoPaid": {
+    "description": "text 'Akun Anda sudah berjenis Berbayar!'"
+  },
+  "accountTypeInfoFreeOfCharge": "Akun Anda masih berjenis Gratis!",
+  "@accountTypeInfoFreeOfCharge": {
+    "description": "text 'Akun Anda masih berjenis Gratis!'"
   }
 }
