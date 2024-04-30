@@ -14,6 +14,7 @@ import 'package:story_app/provider/detail_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/map_page.dart';
+import 'package:story_app/utils/widget_helper.dart';
 import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/scrollable_center_text.dart';
 
@@ -31,19 +32,43 @@ class DetailStoryPage extends StatefulWidget {
   State<DetailStoryPage> createState() => _DetailStoryPageState();
 }
 
-class _DetailStoryPageState extends State<DetailStoryPage> {
-  final textStyle16 = const TextStyle(
-    fontSize: 16,
-  );
-
-  final textStyle16Bold = const TextStyle(
-    fontSize: 16,
-    fontWeight: FontWeight.bold,
-  );
+class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProviderStateMixin {
+  late AnimationController _loadingController;
+  late Animation<double> _loadingAnimation;
 
   AppLocalizations? _appLocalizations;
   MaterialScheme? _colorSchemeCustom;
   TextTheme? _textTheme;
+
+  void _initLoadingAnimation() {
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _loadingAnimation = Tween<double>(
+      begin: 0.0,
+      end: 15.0,
+    ).animate(CurvedAnimation(
+      parent: _loadingController,
+      curve: Curves.easeInOutExpo,
+    ));
+
+    _loadingController.repeat(reverse: true);
+  }
+
+  @override
+  void initState() {
+    _initLoadingAnimation();
+
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _loadingController.dispose();
+    super.dispose();
+  }
 
   void _initBuild(BuildContext context) {
     final providerMaterialTheme = context.watch<MaterialThemeProvider>();
@@ -97,6 +122,7 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
           );
         },
         child: _getStoryDetail(
+          context: context,
           token: token,
           id: widget.id,
           builder: (context) {
@@ -133,17 +159,32 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
   /// get story detail from API,
   /// required token and id
   Widget _getStoryDetail({
+    required BuildContext context,
     required String token,
     required String id,
     required Widget Function(BuildContext context) builder,
   }) {
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
+
     return Consumer<DetailStoryProvider>(
       builder: (context, provider, _) {
         final state = provider.stateDetailStoryModel;
+        const sizeWidthAndHeight = 30.0;
 
         Widget result = state.when(
-          initial: () => const CenterLoading(),
-          loading: () => const CenterLoading(),
+          initial: () => WidgetHelper.loadingCustom(
+            loadingController: _loadingController,
+            loadingAnimation: _loadingAnimation,
+            colorSchemeCustom: colorSchemeCustom,
+            sizeWidthAndHeight: sizeWidthAndHeight,
+          ),
+          loading: () => WidgetHelper.loadingCustom(
+            loadingController: _loadingController,
+            loadingAnimation: _loadingAnimation,
+            colorSchemeCustom: colorSchemeCustom,
+            sizeWidthAndHeight: sizeWidthAndHeight,
+          ),
           loaded: (_) => builder(context),
           error: (message) => ScrollableCenterText(text: message),
         );
@@ -173,6 +214,7 @@ class _DetailStoryPageState extends State<DetailStoryPage> {
     );
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(),
       child: Container(
         alignment: Alignment.topCenter,
         child: Column(

@@ -1,13 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/detail_story_page.dart';
+import 'package:story_app/utils/widget_helper.dart';
 import 'package:story_app/widget/card_story.dart';
 import 'package:story_app/widget/center_loading.dart';
+import 'package:story_app/widget/loading_custom.dart';
 import 'package:story_app/widget/scrollable_center_text.dart';
 
 class ListStoryPage extends StatefulWidget {
@@ -20,8 +23,29 @@ class ListStoryPage extends StatefulWidget {
   State<ListStoryPage> createState() => _ListStoryPageState();
 }
 
-class _ListStoryPageState extends State<ListStoryPage> {
+class _ListStoryPageState extends State<ListStoryPage>
+    with SingleTickerProviderStateMixin {
   final bool _isUseSliverStyle = true;
+
+  late AnimationController _loadingController;
+  late Animation<double> _loadingAnimation;
+
+  void _initLoadingAnimation() {
+    _loadingController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 1),
+    );
+
+    _loadingAnimation = Tween<double>(
+      begin: 0.0,
+      end: 15.0,
+    ).animate(CurvedAnimation(
+      parent: _loadingController,
+      curve: Curves.easeInOutExpo,
+    ));
+
+    _loadingController.repeat(reverse: true);
+  }
 
   @override
   void initState() {
@@ -43,6 +67,8 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
     ListStoryPage.isShowDialogTrue = true;
 
+    _initLoadingAnimation();
+
     super.initState();
   }
 
@@ -52,6 +78,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
       body: RefreshIndicator(
         onRefresh: () async => _refreshPage(context),
         child: _buildGetStories(
+          context: context,
           builder: (context) {
             return _buildNotificationListener(
               context: context,
@@ -108,6 +135,7 @@ class _ListStoryPageState extends State<ListStoryPage> {
       body: RefreshIndicator(
         onRefresh: () async => _refreshPage(context),
         child: _buildGetStories(
+          context: context,
           builder: (context) {
             return _buildNotificationListener(
               context: context,
@@ -188,17 +216,32 @@ class _ListStoryPageState extends State<ListStoryPage> {
   }
 
   Widget _buildGetStories({
+    required BuildContext context,
     required Widget Function(BuildContext context) builder,
   }) {
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
+
     return Consumer<ListStoryProvider>(
       builder: (context, provider, _) {
         final state = provider.stateListStory;
+        const sizeWidthAndHeight = 30.0;
 
         print('list_story_page, _buildGetStories, state: $state');
 
         Widget result = state.when(
-          initial: () => const CenterLoading(),
-          loading: () => const CenterLoading(),
+          initial: () => WidgetHelper.loadingCustom(
+            loadingController: _loadingController,
+            loadingAnimation: _loadingAnimation,
+            colorSchemeCustom: colorSchemeCustom,
+            sizeWidthAndHeight: sizeWidthAndHeight,
+          ),
+          loading: () => WidgetHelper.loadingCustom(
+            loadingController: _loadingController,
+            loadingAnimation: _loadingAnimation,
+            colorSchemeCustom: colorSchemeCustom,
+            sizeWidthAndHeight: sizeWidthAndHeight,
+          ),
           loaded: (data) {
             if (data.listStory.isEmpty) {
               return const ScrollableCenterText(text: StringData.emptyData);
@@ -223,6 +266,9 @@ class _ListStoryPageState extends State<ListStoryPage> {
 
   Widget _buildListView(BuildContext context) {
     final providerListStory = context.watch<ListStoryProvider>();
+    final colorSchemeCustom =
+        context.watch<MaterialThemeProvider>().currentSelected;
+
     final savedListStory = providerListStory.listStory;
     final int? pageItems = providerListStory.pageItems;
 
@@ -235,10 +281,15 @@ class _ListStoryPageState extends State<ListStoryPage> {
       shrinkWrap: _isUseSliverStyle ? true : false,
       itemBuilder: (context, index) {
         if (index == savedListStory.length && pageItems != null) {
-          return const Center(
+          return Center(
             child: Padding(
-              padding: EdgeInsets.all(8.0),
-              child: CircularProgressIndicator(),
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: WidgetHelper.loadingCustom(
+                loadingController: _loadingController,
+                loadingAnimation: _loadingAnimation,
+                colorSchemeCustom: colorSchemeCustom,
+                sizeWidthAndHeight: 10,
+              ),
             ),
           );
         }
