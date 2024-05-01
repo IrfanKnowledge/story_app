@@ -50,7 +50,7 @@
   "locationServiceEnabled": "Location services is not available",
   "locationPermission": "Location permission is denied",
   "location": "Location",
-  "seeLocationOnMap": "Seet location on map",
+  "seeLocationOnMap": "See location on map",
   "more": "More",
   "less": "Less",
   "accountTypeInfoPaid": "Your account is already Paid!",

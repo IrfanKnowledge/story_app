@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/flavor_config.dart';
@@ -22,10 +23,12 @@ class SettingsPage extends StatefulWidget {
 }
 
 class _SettingsPageState extends State<SettingsPage> {
-  final TextStyle _textStyleSubTitle =
-      const TextStyle(fontWeight: FontWeight.bold);
+  TextStyle? _textStyleSubTitle;
+  TextStyle? _textStyleBody;
 
   AppLocalizations? _appLocalizations;
+  MaterialScheme? _colorSchemeCustom;
+  TextTheme? _textTheme;
 
   final List<String> _listThemeModeLabel = [];
   ThemeMode _themeMode = ThemeMode.system;
@@ -43,6 +46,43 @@ class _SettingsPageState extends State<SettingsPage> {
       ...AppLocalizations.supportedLocales,
     ];
     super.initState();
+  }
+
+  void _initTheme(BuildContext context) {
+    _listThemeModeLabel.clear();
+    _listThemeModeLabel.addAll([
+      _appLocalizations!.system,
+      _appLocalizations!.light,
+      _appLocalizations!.dark,
+    ]);
+
+    final providerTheme = context.watch<MaterialThemeProvider>();
+    final themeMode = providerTheme.themeMode;
+    _themeMode = themeMode;
+  }
+
+  void _initLocale(BuildContext context) {
+    _listLocaleSupportedLabel.clear();
+    _listLocaleSupportedLabel.addAll([
+      _appLocalizations!.system,
+      StringData.langEnglish,
+      StringData.langBahasaIndonesia,
+    ]);
+
+    final providerLocalizations = context.watch<LocalizationsProvider>();
+    final locale = providerLocalizations.locale;
+    print('settings, _initLocale, locale: $locale');
+    _locale = locale;
+  }
+
+  void _initStyle(BuildContext context) {
+    _textStyleSubTitle = _textTheme!.titleMedium?.copyWith(
+      color: _colorSchemeCustom!.onSurface,
+      fontWeight: FontWeight.bold,
+    );
+    _textStyleBody = _textTheme!.bodyMedium?.copyWith(
+      color: _colorSchemeCustom!.onSurface,
+    );
   }
 
   Scaffold _buildScaffold(BuildContext context) {
@@ -66,10 +106,15 @@ class _SettingsPageState extends State<SettingsPage> {
 
   AppBar _buildAppBar(BuildContext context) {
     final colorSchemeCustom =
-        context.watch<MaterialThemeProvider>().currentSelected;
+        context.read<MaterialThemeProvider>().currentSelected;
 
     return AppBar(
-      title: Text(_appLocalizations!.settings),
+      title: Text(
+        _appLocalizations!.settings,
+        style: _textTheme!.titleLarge?.copyWith(
+          color: colorSchemeCustom.onSurface,
+        ),
+      ),
       backgroundColor: colorSchemeCustom.surfaceContainer,
       surfaceTintColor: colorSchemeCustom.surfaceContainer,
       bottom: PreferredSize(
@@ -88,29 +133,29 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildBodyContainer(BuildContext context) {
+    const paddingHorizontal = 16.0;
+
     return Container(
       alignment: Alignment.topCenter,
       child: Column(
         children: [
           const Gap(8),
-          _buildAccountSettings(context),
+          _buildAccountSettings(context, paddingHorizontal),
           const Divider(height: 16),
-          _buildThemeAndLanguage(context),
+          _buildThemeAndLanguage(context, paddingHorizontal),
           const Divider(height: 16),
-          _buildOtherSettings(context),
+          _buildOtherSettings(context, paddingHorizontal),
         ],
       ),
     );
   }
 
-  Widget _buildAccountSettings(BuildContext context) {
-    const paddingHorizontal = 16.0;
-
+  Widget _buildAccountSettings(BuildContext context, double paddingHorizontal) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: paddingHorizontal),
+          padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
           child: Text(
             _appLocalizations!.account,
             style: _textStyleSubTitle,
@@ -134,7 +179,7 @@ class _SettingsPageState extends State<SettingsPage> {
             ScaffoldMessenger.of(context).showSnackBar(snackBar);
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: paddingHorizontal,
               vertical: 8,
             ),
@@ -145,11 +190,14 @@ class _SettingsPageState extends State<SettingsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_appLocalizations!.account),
+                    Text(_appLocalizations!.account, style: _textStyleBody),
                     if (FlavorConfig.instance.flavorValues.isPaidVersion)
-                      Text(_appLocalizations!.paid)
+                      Text(_appLocalizations!.paid, style: _textStyleBody)
                     else
-                      Text(_appLocalizations!.freeOfCharge),
+                      Text(
+                        _appLocalizations!.freeOfCharge,
+                        style: _textStyleBody,
+                      ),
                   ],
                 ),
               ],
@@ -160,9 +208,8 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildThemeAndLanguage(BuildContext context) {
-    const paddingHorizontal = 16.0;
-
+  Widget _buildThemeAndLanguage(
+      BuildContext context, double paddingHorizontal) {
     String themePickName() {
       switch (_themeMode) {
         case ThemeMode.system:
@@ -191,7 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: paddingHorizontal),
+          padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
           child: Text(
             _appLocalizations!.themeAndLanguage,
             style: _textStyleSubTitle,
@@ -224,7 +271,7 @@ class _SettingsPageState extends State<SettingsPage> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: paddingHorizontal,
               vertical: 8,
             ),
@@ -235,8 +282,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_appLocalizations!.theme),
-                    Text(themePickName()),
+                    Text(_appLocalizations!.theme, style:  _textStyleBody),
+                    Text(themePickName(), style: _textStyleBody),
                   ],
                 ),
               ],
@@ -271,7 +318,7 @@ class _SettingsPageState extends State<SettingsPage> {
             );
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: paddingHorizontal,
               vertical: 8,
             ),
@@ -282,8 +329,8 @@ class _SettingsPageState extends State<SettingsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_appLocalizations!.language),
-                    Text(langPickName()),
+                    Text(_appLocalizations!.language, style: _textStyleBody),
+                    Text(langPickName(), style: _textStyleBody),
                   ],
                 ),
               ],
@@ -294,14 +341,12 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  Widget _buildOtherSettings(BuildContext context) {
-    const paddingHorizontal = 16.0;
-
+  Widget _buildOtherSettings(BuildContext context, double paddingHorizontal) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: paddingHorizontal),
+          padding: EdgeInsets.symmetric(horizontal: paddingHorizontal),
           child: Text(
             _appLocalizations!.other,
             style: _textStyleSubTitle,
@@ -319,7 +364,7 @@ class _SettingsPageState extends State<SettingsPage> {
             context.go('/${LoginPage.goRoutePath}');
           },
           child: Padding(
-            padding: const EdgeInsets.symmetric(
+            padding: EdgeInsets.symmetric(
               horizontal: paddingHorizontal,
               vertical: 8,
             ),
@@ -330,7 +375,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(_appLocalizations!.signOut),
+                    Text(_appLocalizations!.signOut, style: _textStyleBody),
                   ],
                 ),
               ],
@@ -341,40 +386,15 @@ class _SettingsPageState extends State<SettingsPage> {
     );
   }
 
-  void _initTheme(BuildContext context) {
-    _listThemeModeLabel.clear();
-    _listThemeModeLabel.addAll([
-      _appLocalizations!.system,
-      _appLocalizations!.light,
-      _appLocalizations!.dark,
-    ]);
-
-    final providerTheme = context.watch<MaterialThemeProvider>();
-    final themeMode = providerTheme.themeMode;
-    _themeMode = themeMode;
-  }
-
-  void _initLocale(BuildContext context) {
-    _listLocaleSupportedLabel.clear();
-    _listLocaleSupportedLabel.addAll([
-      _appLocalizations!.system,
-      StringData.langEnglish,
-      StringData.langBahasaIndonesia,
-    ]);
-
-    final providerLocalizations = context.watch<LocalizationsProvider>();
-    final locale = providerLocalizations.locale;
-    print('settings, _initLocale, locale: $locale');
-    _locale = locale;
-  }
-
   @override
   Widget build(BuildContext context) {
     _appLocalizations = AppLocalizations.of(context);
+    _colorSchemeCustom = context.read<MaterialThemeProvider>().currentSelected;
+    _textTheme = Theme.of(context).textTheme;
 
     _initTheme(context);
-
     _initLocale(context);
+    _initStyle(context);
 
     return _buildScaffold(context);
   }

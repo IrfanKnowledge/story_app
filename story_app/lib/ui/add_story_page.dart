@@ -8,6 +8,7 @@ import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/location_model.dart';
@@ -32,7 +33,13 @@ class AddStoryPage extends StatefulWidget {
 class _AddStoryPageState extends State<AddStoryPage> {
   final TextEditingController _controllerDescription = TextEditingController();
 
+  TextStyle? _textStyleSubTitle;
+  TextStyle? _textStyleBody;
+
   AppLocalizations? _appLocalizations;
+
+  MaterialScheme? _colorSchemeCustom;
+  TextTheme? _textTheme;
 
   @override
   void initState() {
@@ -45,21 +52,52 @@ class _AddStoryPageState extends State<AddStoryPage> {
     super.initState();
   }
 
-  AppBar _buildAppBar(BuildContext context) {
-    final colorSchemeCustom =
-        context.watch<MaterialThemeProvider>().currentSelected;
+  @override
+  void dispose() {
+    _controllerDescription.dispose();
+    super.dispose();
+  }
 
+  void _initStyle(BuildContext context) {
+    _textStyleSubTitle = _textTheme!.titleSmall?.copyWith(
+      color: _colorSchemeCustom!.onSurface,
+      fontWeight: FontWeight.bold,
+    );
+    _textStyleBody = _textTheme!.bodyMedium?.copyWith(
+      color: _colorSchemeCustom!.onSurface,
+    );
+  }
+
+  Widget _buildScaffold(BuildContext context) {
+    return Scaffold(
+      appBar: _buildAppBar(context),
+      body: SingleChildScrollView(
+        child: _buildMultiProvider(
+          builder: (context) {
+            return _buildContainer(context);
+          },
+        ),
+      ),
+    );
+  }
+
+  AppBar _buildAppBar(BuildContext context) {
     return AppBar(
-      title: Text(_appLocalizations!.newStory),
-      backgroundColor: colorSchemeCustom.surfaceContainer,
-      surfaceTintColor: colorSchemeCustom.surfaceContainer,
+      title: Text(
+        _appLocalizations!.newStory,
+        style: _textTheme!.titleLarge?.copyWith(
+          color: _colorSchemeCustom!.onSurface,
+        ),
+      ),
+      backgroundColor: _colorSchemeCustom!.surfaceContainer,
+      surfaceTintColor: _colorSchemeCustom!.surfaceContainer,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: _colorSchemeCustom!.outlineVariant,
               ),
             ),
           ),
@@ -163,10 +201,12 @@ class _AddStoryPageState extends State<AddStoryPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          SizedBox(width: MediaQuery.of(context).size.width),
-          TextWithRedStar(value: '${_appLocalizations!.description}:'),
+          TextWithRedStar(
+            value: '${_appLocalizations!.description}:',
+            textStyle: _textStyleSubTitle!,
+          ),
           const Gap(8),
           TextField(
             controller: _controllerDescription,
@@ -200,7 +240,10 @@ class _AddStoryPageState extends State<AddStoryPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(width: MediaQuery.of(context).size.width),
-          TextWithRedStar(value: '${_appLocalizations!.description}:'),
+          TextWithRedStar(
+            value: '${_appLocalizations!.description}:',
+            textStyle: _textStyleSubTitle!,
+          ),
           const Gap(8),
           const Text('-'),
           const Gap(16),
@@ -235,11 +278,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
             children: [
               Text(
                 '${_appLocalizations!.addLocation}:',
-                style: TextStyle(
-                  color: Theme.of(context).colorScheme.onSurface,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: _textStyleSubTitle,
               ),
               const Gap(8),
               locationModel != null
@@ -266,38 +305,25 @@ class _AddStoryPageState extends State<AddStoryPage> {
     BuildContext context,
     LocationModel locationModel,
   ) {
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(
           "Latitude: ${locationModel.latLng.latitude}",
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 14,
-          ),
+          style: _textStyleBody,
         ),
         Text(
           "Longitude: ${locationModel.latLng.longitude}",
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 14,
-          ),
+          style: _textStyleBody,
         ),
         Text(
           locationModel.street,
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 14,
-          ),
+          style: _textStyleBody,
         ),
         Text(
           locationModel.address,
-          style: TextStyle(
-            color: colorScheme.onSurface,
-            fontSize: 12,
-          ),
+          style: _textStyleBody,
         ),
         const Gap(8),
       ],
@@ -412,6 +438,9 @@ class _AddStoryPageState extends State<AddStoryPage> {
       sourcePath: pickedFile.path,
       aspectRatio: const CropAspectRatio(ratioX: 4, ratioY: 3),
       compressQuality: 70,
+      uiSettings: [
+        WebUiSettings(context: context),
+      ],
     );
 
     if (croppedFile != null) {
@@ -434,13 +463,13 @@ class _AddStoryPageState extends State<AddStoryPage> {
   void _onAddLocation(BuildContext context) {
     final isAndroid = defaultTargetPlatform == TargetPlatform.android;
     final isIos = defaultTargetPlatform == TargetPlatform.iOS;
-    const isWeb = kIsWeb;
-    final isNotCompatible = !(isAndroid || isIos || isWeb);
+    final isNotCompatible = !(isAndroid || isIos);
 
     if (isNotCompatible) {
       ScaffoldMessenger.of(context).showSnackBar(
         snackBar(text: _appLocalizations!.addLocationError),
       );
+      return;
     }
 
     context.go('/${AddStoryPage.goRoutePath}/${MapPage.goRoutePath}');
@@ -501,16 +530,11 @@ class _AddStoryPageState extends State<AddStoryPage> {
   @override
   Widget build(BuildContext context) {
     _appLocalizations = AppLocalizations.of(context);
+    _colorSchemeCustom = context.read<MaterialThemeProvider>().currentSelected;
+    _textTheme = Theme.of(context).textTheme;
 
-    return Scaffold(
-      appBar: _buildAppBar(context),
-      body: SingleChildScrollView(
-        child: _buildMultiProvider(
-          builder: (context) {
-            return _buildContainer(context);
-          },
-        ),
-      ),
-    );
+    _initStyle(context);
+
+    return _buildScaffold(context);
   }
 }

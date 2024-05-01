@@ -38,10 +38,8 @@ class BottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final colorSchemeCustom =
-        context.watch<MaterialThemeProvider>().currentSelected;
-    final colorScheme = Theme.of(context).colorScheme;
-
+    final colorSchemeCustom = context.read<MaterialThemeProvider>().currentSelected;
+    final textTheme = Theme.of(context).textTheme;
     final AppLocalizations? appLocalizations = AppLocalizations.of(context);
 
     return Scaffold(
@@ -50,7 +48,7 @@ class BottomNavBar extends StatelessWidget {
         decoration: BoxDecoration(
           border: Border(
             top: BorderSide(
-              color: colorScheme.outlineVariant,
+              color: colorSchemeCustom.outlineVariant,
             ),
           ),
         ),
@@ -70,9 +68,10 @@ class BottomNavBar extends StatelessWidget {
             ),
           ],
           backgroundColor: colorSchemeCustom.surfaceContainer,
+          selectedItemColor: colorSchemeCustom.secondary,
           unselectedItemColor: colorSchemeCustom.onSurfaceVariant,
-          selectedItemColor: colorScheme.secondary,
           currentIndex: _calculateSelectedIndex(context),
+          selectedFontSize: textTheme.labelMedium!.fontSize!,
           onTap: (index) => _onItemTapped(index, context),
         ),
       ),

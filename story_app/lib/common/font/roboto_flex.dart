@@ -1,15 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+///
+/// Konversi height dari material design
+/// dapat menggunakan rumus (fontSize) * (ratio) = (angka yang mendekati nilai pada material design)
+/// Contoh:
+///   - Dalam material design terdapat font dengan size = 57,0 dan height = 64,0.
+///       Hasil dari 1,122 x 57 = 63,384 (mendekati angka 64,0)
+///     Maka font height dalam flutter = 1,122 atau 1.122
+///   - Dalam material design terdapat font dengan size = 45,0 dan height = 52,0.
+///       Hasil dari 1,155 x 45 = 51,975 (mendekati angka 52,0)
+///     Maka font height dalam flutter = 1,122 atau 1.122
+///
 class RobotoFlex {
   static final textTheme = TextTheme(
-    // height: 64.0 -> 1.122 (1.122 * 57 = 63.384, mendekati angka 64.0)
+    // height: 64.0
     displayLarge: GoogleFonts.robotoFlex(
       fontSize: 57.0,
       height: 1.122,
       letterSpacing: -0.25,
     ),
-    // height: 52.0 -> 1.155,
+    // height: 52.0
     displayMedium: GoogleFonts.robotoFlex(
       fontSize: 45.0,
       height: 1.155,

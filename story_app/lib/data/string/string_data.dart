@@ -1,5 +1,6 @@
 class StringData {
   static const titleApp = 'Story App';
+  static const titleAppFree = 'Story App [Free]';
   static const langBahasaIndonesia = 'Bahasa Indonesia';
   static const langEnglish = 'English';
   static const emptyData = 'Data kosong (tidak ada data)';

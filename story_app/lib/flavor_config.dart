@@ -1,3 +1,5 @@
+import 'package:story_app/data/string/string_data.dart';
+
 enum FlavorType {
   free,
   paid,
@@ -5,9 +7,11 @@ enum FlavorType {
 
 class FlavorValues {
   final bool isPaidVersion;
+  final String titleApp;
 
   const FlavorValues({
     this.isPaidVersion = false,
+    this.titleApp = StringData.titleAppFree,
   });
 }
 

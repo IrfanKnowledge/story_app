@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
@@ -28,6 +29,11 @@ class _SignupPageState extends State<SignupPage> {
   final TextEditingController _controllerEmail = TextEditingController();
   final TextEditingController _controllerPassword = TextEditingController();
 
+  TextStyle? _textStyleSubTitle;
+
+  MaterialScheme? _colorSchemeCustom;
+  TextTheme? _textTheme;
+
   bool _isPasswordHide = true;
   bool _isErrorMaybeShow = false;
 
@@ -40,6 +46,14 @@ class _SignupPageState extends State<SignupPage> {
     _controllerPassword.dispose();
     super.dispose();
   }
+
+  void _initStyle(BuildContext context) {
+    _textStyleSubTitle = _textTheme!.titleSmall?.copyWith(
+      color: _colorSchemeCustom!.onSurface,
+      fontWeight: FontWeight.bold,
+    );
+  }
+
 
   @override
   void initState() {
@@ -133,6 +147,7 @@ class _SignupPageState extends State<SignupPage> {
         value: _appLocalizations!.fillInYourXForm(
           _appLocalizations!.name.toLowerCase(),
         ),
+        textStyle: _textStyleSubTitle!,
       ),
       const Gap(10),
       TextFormField(
@@ -153,6 +168,7 @@ class _SignupPageState extends State<SignupPage> {
         value: _appLocalizations!.fillInYourXForm(
           _appLocalizations!.email.toLowerCase(),
         ),
+        textStyle: _textStyleSubTitle!,
       ),
       const Gap(10),
       TextFormField(
@@ -175,6 +191,7 @@ class _SignupPageState extends State<SignupPage> {
         value: _appLocalizations!.fillInYourXForm(
           _appLocalizations!.password.toLowerCase(),
         ),
+        textStyle: _textStyleSubTitle!,
       ),
       const Gap(10),
       TextFormField(
@@ -296,6 +313,11 @@ class _SignupPageState extends State<SignupPage> {
 
   @override
   Widget build(BuildContext context) {
+    _colorSchemeCustom = context.read<MaterialThemeProvider>().currentSelected;
+    _textTheme = Theme.of(context).textTheme;
+
+    _initStyle(context);
+
     return _buildMultiProvider(
       builder: (context) {
         _appLocalizations = AppLocalizations.of(context);

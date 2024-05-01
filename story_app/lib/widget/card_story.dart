@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:gap/gap.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 
@@ -20,7 +21,6 @@ class CardStory extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorSchemeCustom =
         context.read<MaterialThemeProvider>().currentSelected;
-    final colorScheme = Theme.of(context).colorScheme;
     final textTheme = Theme.of(context).textTheme;
 
     return Stack(
@@ -79,7 +79,7 @@ class CardStory extends StatelessWidget {
                         color: colorSchemeCustom.onSurface,
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const Gap(4),
                     Text(
                       description,
                       style: textTheme.bodyMedium!.copyWith(
@@ -101,8 +101,8 @@ class CardStory extends StatelessWidget {
             surfaceTintColor: Colors.transparent,
             elevation: 0,
             child: InkWell(
-              splashColor: colorScheme.primary.withOpacity(0.10),
-              highlightColor: colorScheme.primary.withOpacity(0.10),
+              splashColor: colorSchemeCustom.primary.withOpacity(0.10),
+              highlightColor: colorSchemeCustom.primary.withOpacity(0.10),
               onTap: onTap,
             ),
           ),

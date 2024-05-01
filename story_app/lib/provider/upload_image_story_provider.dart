@@ -26,7 +26,7 @@ class UploadImageStoryProvider extends ChangeNotifier {
     // maka tidak perlu dilakukan compress
     if (imageLength < maxBytes) return bytes;
 
-    // img.decodeImage will using UI thread,
+    // icon.decodeImage will using UI thread,
     // so highly recommend don't use this
     final img.Image image = img.decodeImage(bytes as Uint8List)!;
     int compressQuality = 90;
@@ -36,7 +36,7 @@ class UploadImageStoryProvider extends ChangeNotifier {
     do {
       compressQuality -= 10;
 
-      // img.encodeJpg will using UI thread,
+      // icon.encodeJpg will using UI thread,
       // so highly recommend don't use this
       newByte = img.encodeJpg(
         image,

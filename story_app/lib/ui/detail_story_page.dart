@@ -1,4 +1,5 @@
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
@@ -10,11 +11,13 @@ import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/api/api_service.dart';
 import 'package:story_app/data/model/detail_story_model.dart';
+import 'package:story_app/data/model/location_model.dart';
 import 'package:story_app/provider/detail_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/map_page.dart';
 import 'package:story_app/utils/widget_helper.dart';
+import 'package:story_app/widget/center_error.dart';
 import 'package:story_app/widget/center_loading.dart';
 import 'package:story_app/widget/scrollable_center_text.dart';
 
@@ -32,13 +35,16 @@ class DetailStoryPage extends StatefulWidget {
   State<DetailStoryPage> createState() => _DetailStoryPageState();
 }
 
-class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProviderStateMixin {
+class _DetailStoryPageState extends State<DetailStoryPage>
+    with SingleTickerProviderStateMixin {
   late AnimationController _loadingController;
   late Animation<double> _loadingAnimation;
 
   AppLocalizations? _appLocalizations;
   MaterialScheme? _colorSchemeCustom;
   TextTheme? _textTheme;
+
+  bool _isLocationModelFetch = true;
 
   void _initLoadingAnimation() {
     _loadingController = AnimationController(
@@ -116,6 +122,7 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
       appBar: _buildAppBar(context),
       body: RefreshIndicator(
         onRefresh: () async {
+          _isLocationModelFetch = true;
           providerDetail.fetchStoryDetail(
             token: token,
             id: widget.id,
@@ -138,7 +145,12 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
         context.watch<MaterialThemeProvider>().currentSelected;
 
     return AppBar(
-      title: Text(_appLocalizations!.detailStory),
+      title: Text(
+        _appLocalizations!.detailStory,
+        style: _textTheme!.titleLarge?.copyWith(
+          color: _colorSchemeCustom!.onSurface,
+        ),
+      ),
       backgroundColor: colorSchemeCustom.surfaceContainer,
       surfaceTintColor: colorSchemeCustom.surfaceContainer,
       bottom: PreferredSize(
@@ -156,8 +168,6 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
     );
   }
 
-  /// get story detail from API,
-  /// required token and id
   Widget _getStoryDetail({
     required BuildContext context,
     required String token,
@@ -185,7 +195,19 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
             colorSchemeCustom: colorSchemeCustom,
             sizeWidthAndHeight: sizeWidthAndHeight,
           ),
-          loaded: (_) => builder(context),
+          loaded: (data) {
+            if (_isLocationModelFetch) {
+              _isLocationModelFetch = false;
+              if (data.story.lat != null && data.story.lon != null) {
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  final latLng = LatLng(data.story.lat!, data.story.lon!);
+                  provider.fetchPlaceMark(latLng);
+                });
+              }
+            }
+
+            return builder(context);
+          },
           error: (message) => ScrollableCenterText(text: message),
         );
 
@@ -205,13 +227,6 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
 
     final double? latitude = story!.lat;
     final double? longitude = story.lon;
-    final description = story.description;
-
-    var textStyle14BoldColor = TextStyle(
-      color: Theme.of(context).colorScheme.primary,
-      fontSize: 14,
-      fontWeight: FontWeight.bold,
-    );
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -339,7 +354,53 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
     required double latitude,
     required double longitude,
   }) {
+    final providerDetail = context.watch<DetailStoryProvider>();
+    final colorSchemeCustom =
+        context.read<MaterialThemeProvider>().currentSelected;
+
     final latLng = LatLng(latitude, longitude);
+
+    late final LocationModel? locationModel;
+    if (!kIsWeb) {
+      final state = providerDetail.stateLocationModel;
+      const paddingVertical = 24.0;
+      const sizeWidthAndHeight = 10.0;
+
+      Widget? block = state.when(
+        initial: () => Padding(
+          padding: const EdgeInsets.symmetric(vertical: paddingVertical),
+          child: WidgetHelper.loadingCustom(
+            loadingController: _loadingController,
+            loadingAnimation: _loadingAnimation,
+            colorSchemeCustom: colorSchemeCustom,
+            sizeWidthAndHeight: sizeWidthAndHeight,
+          ),
+        ),
+        loading: () => Padding(
+          padding: const EdgeInsets.symmetric(vertical: paddingVertical),
+          child: WidgetHelper.loadingCustom(
+            loadingController: _loadingController,
+            loadingAnimation: _loadingAnimation,
+            colorSchemeCustom: colorSchemeCustom,
+            sizeWidthAndHeight: sizeWidthAndHeight,
+          ),
+        ),
+        loaded: (data) {
+          locationModel = data;
+          return null;
+        },
+        error: (message) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: paddingVertical),
+            child: CenterError(description: message),
+          );
+        },
+      );
+
+      if (block != null) return block;
+    } else {
+      locationModel = null;
+    }
 
     return Row(
       children: [
@@ -348,8 +409,8 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                '${_appLocalizations!.description}:',
-                style: _textTheme!.labelLarge?.copyWith(
+                '${_appLocalizations!.location}:',
+                style: _textTheme!.titleSmall?.copyWith(
                   fontWeight: FontWeight.bold,
                 ),
               ),
@@ -362,28 +423,60 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
                 'Longitude: ${longitude.toString()}',
                 style: _textTheme!.bodyMedium,
               ),
-              const Gap(8),
-              TextButton(
-                style: TextButton.styleFrom(
-                    padding: const EdgeInsets.all(4.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    )),
-                onPressed: () {
-                  context.go(
-                    '/${DetailStoryPage.goRoutePath}/${MapPage.goRoutePath}',
-                    extra: latLng,
-                  );
-                },
-                child: Text(_appLocalizations!.seeLocationOnMap),
-              ),
-              const Gap(8),
+              _buildStreetAndAddress(locationModel),
+              _buildMapButton(latLng),
             ],
           ),
         ),
       ],
     );
   }
+
+  Widget _buildStreetAndAddress(LocationModel? locationModel) {
+    if (locationModel == null) return const Gap(0);
+
+    return Column(
+      children: [
+        Text(
+          locationModel.street,
+          style: _textTheme!.bodyMedium,
+        ),
+        Text(
+          locationModel.address,
+          style: _textTheme!.bodyMedium,
+        ),
+        const Gap(8),
+      ],
+    );
+  }
+
+  Widget _buildMapButton(LatLng latLng) {
+    if (kIsWeb) return const Gap(8);
+
+    return Column(
+      children: [
+        TextButton(
+          style: TextButton.styleFrom(
+            padding: const EdgeInsets.all(4.0),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          onPressed: () {
+            context.go(
+              '/${DetailStoryPage.goRoutePath}/${MapPage.goRoutePath}',
+              extra: latLng,
+            );
+          },
+          child: Text(
+            _appLocalizations!.seeLocationOnMap,
+          ),
+        ),
+        const Gap(8),
+      ],
+    );
+  }
+
 
   Widget _buildDetailDescription(Story story) {
     final description = story.description;
@@ -412,7 +505,7 @@ class _DetailStoryPageState extends State<DetailStoryPage> with SingleTickerProv
           trimExpandedText: _appLocalizations!.less,
           moreStyle: textStyle,
           lessStyle: textStyle,
-        )
+        ),
       ],
     );
   }

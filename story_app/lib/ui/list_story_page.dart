@@ -3,14 +3,13 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/data/string/string_data.dart';
+import 'package:story_app/flavor_config.dart';
 import 'package:story_app/provider/list_story_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:story_app/provider/preferences_provider.dart';
 import 'package:story_app/ui/detail_story_page.dart';
 import 'package:story_app/utils/widget_helper.dart';
 import 'package:story_app/widget/card_story.dart';
-import 'package:story_app/widget/center_loading.dart';
-import 'package:story_app/widget/loading_custom.dart';
 import 'package:story_app/widget/scrollable_center_text.dart';
 
 class ListStoryPage extends StatefulWidget {
@@ -29,6 +28,9 @@ class _ListStoryPageState extends State<ListStoryPage>
 
   late AnimationController _loadingController;
   late Animation<double> _loadingAnimation;
+
+  MaterialScheme? _colorSchemeCustom;
+  TextTheme? _textTheme;
 
   void _initLoadingAnimation() {
     _loadingController = AnimationController(
@@ -72,6 +74,12 @@ class _ListStoryPageState extends State<ListStoryPage>
     super.initState();
   }
 
+  @override
+  void dispose() {
+    _loadingController.dispose();
+    super.dispose();
+  }
+
   Scaffold _buildScaffold(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(context),
@@ -91,20 +99,24 @@ class _ListStoryPageState extends State<ListStoryPage>
   }
 
   AppBar _buildAppBar(BuildContext context) {
-    final colorSchemeCustom =
-        context.watch<MaterialThemeProvider>().currentSelected;
+    final titleApp = FlavorConfig.instance.flavorValues.titleApp;
 
     return AppBar(
-      title: const Text(StringData.titleApp),
-      backgroundColor: colorSchemeCustom.surfaceContainer,
-      surfaceTintColor: colorSchemeCustom.surfaceContainer,
+      title: Text(
+        titleApp,
+        style: _textTheme!.titleLarge?.copyWith(
+          color: _colorSchemeCustom!.onSurface,
+        ),
+      ),
+      backgroundColor: _colorSchemeCustom!.surfaceContainer,
+      surfaceTintColor: _colorSchemeCustom!.surfaceContainer,
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: _colorSchemeCustom!.outlineVariant,
               ),
             ),
           ),
@@ -158,25 +170,28 @@ class _ListStoryPageState extends State<ListStoryPage>
     required BuildContext context,
     required bool innerBoxIsScrolled,
   }) {
-    final providerMaterial = context.watch<MaterialThemeProvider>();
-    final colorSchemeCustom = providerMaterial.currentSelected;
-    final textTheme = Theme.of(context).textTheme;
+    final titleApp = FlavorConfig.instance.flavorValues.titleApp;
 
     return SliverAppBar(
       pinned: false,
       snap: true,
       floating: true,
       forceElevated: innerBoxIsScrolled,
-      backgroundColor: colorSchemeCustom.surfaceContainer,
-      surfaceTintColor: colorSchemeCustom.surfaceContainer,
-      title: Text(StringData.titleApp, style: textTheme.titleLarge),
+      backgroundColor: _colorSchemeCustom!.surfaceContainer,
+      surfaceTintColor: _colorSchemeCustom!.surfaceContainer,
+      title: Text(
+        titleApp,
+        style: _textTheme!.titleLarge?.copyWith(
+          color: _colorSchemeCustom!.onSurface,
+        ),
+      ),
       bottom: PreferredSize(
         preferredSize: const Size.fromHeight(1),
         child: Container(
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
-                color: Theme.of(context).colorScheme.outlineVariant,
+                color: _colorSchemeCustom!.outlineVariant,
               ),
             ),
           ),
@@ -190,9 +205,9 @@ class _ListStoryPageState extends State<ListStoryPage>
     required Widget child,
   }) {
     final providerListStory = context.watch<ListStoryProvider>();
-    final int? pageItems = providerListStory.pageItems;
-
     final providerPref = context.read<PreferencesProvider>();
+
+    final int? pageItems = providerListStory.pageItems;
     final token = providerPref.stateToken.maybeWhen(
       loaded: (data) => data,
       orElse: () => '',
@@ -219,27 +234,22 @@ class _ListStoryPageState extends State<ListStoryPage>
     required BuildContext context,
     required Widget Function(BuildContext context) builder,
   }) {
-    final colorSchemeCustom =
-        context.watch<MaterialThemeProvider>().currentSelected;
-
     return Consumer<ListStoryProvider>(
       builder: (context, provider, _) {
         final state = provider.stateListStory;
         const sizeWidthAndHeight = 30.0;
 
-        print('list_story_page, _buildGetStories, state: $state');
-
         Widget result = state.when(
           initial: () => WidgetHelper.loadingCustom(
             loadingController: _loadingController,
             loadingAnimation: _loadingAnimation,
-            colorSchemeCustom: colorSchemeCustom,
+            colorSchemeCustom: _colorSchemeCustom!,
             sizeWidthAndHeight: sizeWidthAndHeight,
           ),
           loading: () => WidgetHelper.loadingCustom(
             loadingController: _loadingController,
             loadingAnimation: _loadingAnimation,
-            colorSchemeCustom: colorSchemeCustom,
+            colorSchemeCustom: _colorSchemeCustom!,
             sizeWidthAndHeight: sizeWidthAndHeight,
           ),
           loaded: (data) {
@@ -266,13 +276,9 @@ class _ListStoryPageState extends State<ListStoryPage>
 
   Widget _buildListView(BuildContext context) {
     final providerListStory = context.watch<ListStoryProvider>();
-    final colorSchemeCustom =
-        context.watch<MaterialThemeProvider>().currentSelected;
 
     final savedListStory = providerListStory.listStory;
     final int? pageItems = providerListStory.pageItems;
-
-    print('savedListStory = $savedListStory');
 
     return ListView.builder(
       physics: _isUseSliverStyle
@@ -287,7 +293,7 @@ class _ListStoryPageState extends State<ListStoryPage>
               child: WidgetHelper.loadingCustom(
                 loadingController: _loadingController,
                 loadingAnimation: _loadingAnimation,
-                colorSchemeCustom: colorSchemeCustom,
+                colorSchemeCustom: _colorSchemeCustom!,
                 sizeWidthAndHeight: 10,
               ),
             ),
@@ -314,8 +320,8 @@ class _ListStoryPageState extends State<ListStoryPage>
 
   void _refreshPage(BuildContext context) {
     final provListStory = context.read<ListStoryProvider>();
-
     final providerPref = context.read<PreferencesProvider>();
+
     final stateToken = providerPref.stateToken;
     final token = stateToken.maybeWhen(
       loaded: (data) => data,
@@ -328,6 +334,9 @@ class _ListStoryPageState extends State<ListStoryPage>
 
   @override
   Widget build(BuildContext context) {
+    _colorSchemeCustom = context.read<MaterialThemeProvider>().currentSelected;
+    _textTheme = Theme.of(context).textTheme;
+
     return _isUseSliverStyle
         ? _buildScaffoldSliver(context)
         : _buildScaffold(context);

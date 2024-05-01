@@ -5,6 +5,7 @@ import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/model/location_model.dart';
 import 'package:story_app/provider/location_provider.dart';
+import 'package:story_app/provider/map_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart' as geo;
@@ -118,7 +119,6 @@ class _MapPageState extends State<MapPage> {
       mapToolbarEnabled: false,
       myLocationEnabled: true,
       onMapCreated: (controller) async {
-
         setState(() {
           _googleMapController = controller;
         });

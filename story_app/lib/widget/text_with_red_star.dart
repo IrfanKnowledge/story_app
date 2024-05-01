@@ -6,24 +6,23 @@ import 'package:flutter/material.dart';
 ///
 class TextWithRedStar extends StatelessWidget {
   final String value;
+  final TextStyle textStyle;
 
   const TextWithRedStar({
     super.key,
     required this.value,
+    required this.textStyle,
   });
 
   @override
   Widget build(BuildContext context) {
     return RichText(
       text: TextSpan(
-        style: TextStyle(
-          color: Theme.of(context).colorScheme.onSurface,
-          fontSize: 14,
-        ),
+        style: textStyle,
         children: <TextSpan>[
           TextSpan(
             text: value,
-            style: const TextStyle(fontWeight: FontWeight.bold),
+            style: textStyle,
           ),
           const TextSpan(
             text: ' *',

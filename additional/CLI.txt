@@ -15,3 +15,10 @@ flutter pub run build_runner build
 flutter clean
 flutter pub get
 flutter pub run build_runner build --delete-conflicting-outputs
+
+[Penggunaan flutter_launcher_icon]
+flutter pub run flutter_launcher_icons
+flutter pub run flutter_launcher_icons -f <your config file name here>
+
+[Penggunaan flutter_native_splash]
+dart run flutter_native_splash:create --path=flutter_native_splash.yaml

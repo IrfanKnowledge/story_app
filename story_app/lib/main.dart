@@ -4,6 +4,7 @@ import 'dart:ui';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
@@ -33,12 +34,28 @@ import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/future_helper.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
   usePathUrlStrategy();
+
+  HttpOverrides.global = MyHttpOverrides();
+
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+
+  LicenseRegistry.addLicense(() async* {
+    final license =
+        await rootBundle.loadString('assets/license/font/OFL_roboto_flex.txt');
+    yield LicenseEntryWithLineBreaks(['google_fonts'], license);
+  });
 
   FlavorConfig(
     flavorType: FlavorType.free,
     flavorValues: const FlavorValues(
       isPaidVersion: false,
+      titleApp: StringData.titleAppFree,
     ),
   );
 
@@ -68,61 +85,130 @@ class _MyAppState extends State<MyApp> {
   late final ThemeData _darkTheme;
   late final MaterialScheme _materialSchemeLight;
   late final MaterialScheme _materialSchemeDark;
-  late final Brightness _brightness;
+  late Brightness _brightness;
   late final Locale _locale;
+
+  final PageStorageBucket _bucket = PageStorageBucket();
 
   final GlobalKey<NavigatorState> _rootNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'root');
   final GlobalKey<NavigatorState> _shellNavigatorKey =
       GlobalKey<NavigatorState>(debugLabel: 'shell');
 
-  String? _redirectIfIsLogin(BuildContext context) {
-    final state = context.read<PreferencesProvider>().stateIsLogin;
+  final PageStorageKey<String> _keyListStoryPage =
+      const PageStorageKey('listStoryPage');
 
-    final isLogin = state.maybeWhen(
-      loaded: (data) => data,
-      orElse: () => false,
-    );
+  late final _router = GoRouter(
+    navigatorKey: _rootNavigatorKey,
+    initialLocation: '/',
+    debugLogDiagnostics: true,
+    redirect: redirect,
+    routes: _routes,
+  );
 
-    if (isLogin) {
-      return ListStoryPage.goRoutePath;
-    } else {
-      return null;
-    }
-  }
+  late final _routes = <RouteBase>[
+    ShellRoute(
+      navigatorKey: _shellNavigatorKey,
+      builder: (BuildContext context, GoRouterState state, Widget child) {
+        return BottomNavBar(child: child);
+      },
+      routes: [
+        GoRoute(
+          path: '/',
+          builder: (_, state) {
+            return ListStoryPage(
+              key: _keyListStoryPage,
+            );
+          },
+          onExit: (context) async {
+            final bool? result;
 
-  String? _redirectIfIsNotLogin(BuildContext context) {
-    final state = context.read<PreferencesProvider>().stateIsLogin;
+            if (ListStoryPage.isShowDialogTrue) {
+              result =
+                  await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+                context: context,
+                onFalsePressed: () => context.pop(false),
+                onTruePressed: () => context.pop(true),
+              );
+            } else {
+              ListStoryPage.isShowDialogTrue = true;
+              result = true;
+            }
 
-    final isLogin = state.maybeWhen(
-      loaded: (data) => data,
-      orElse: () => false,
-    );
+            return result ?? false;
+          },
+          routes: [
+            GoRoute(
+              path: DetailStoryPage.goRoutePath,
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (_, state) {
+                return DetailStoryPage(
+                  id: state.pathParameters['id'] ?? '',
+                );
+              },
+              redirect: (context, __) => _redirectIfIsNotLogin(context),
+              routes: [
+                GoRoute(
+                  path: MapPage.goRoutePath,
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (_, state) {
+                    final data = state.extra as LatLng;
+                    return MapPage(
+                      latLng: data,
+                    );
+                  },
+                ),
+              ],
+            ),
+            GoRoute(
+              path: AddStoryPage.goRoutePath,
+              parentNavigatorKey: _rootNavigatorKey,
+              builder: (_, __) => const AddStoryPage(),
+              redirect: (context, __) => _redirectIfIsNotLogin(context),
+              onExit: (context) {
+                ListStoryPage.isShowDialogTrue = true;
+                return _listStoryPageRefresh(context);
+              },
+              routes: [
+                GoRoute(
+                  path: MapPage.goRoutePath,
+                  parentNavigatorKey: _rootNavigatorKey,
+                  builder: (_, __) => const MapPage(
+                    latLng: null,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+        GoRoute(
+          path: '/${SettingsPage.goRouteName}',
+          builder: (_, __) => const SettingsPage(),
+          onExit: (context) async {
+            late final bool? result;
 
-    print('_redirectIfIsNotLogin, isLogin: $isLogin');
+            if (SettingsPage.isShowDialogTrue) {
+              result =
+                  await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
+                context: context,
+                onFalsePressed: () => context.pop(false),
+                onTruePressed: () => context.pop(true),
+              );
+            } else {
+              SettingsPage.isShowDialogTrue = true;
+              result = true;
+            }
 
-    if (!isLogin) {
-      return '/${LoginPage.goRoutePath}';
-    } else {
-      return null;
-    }
-  }
-
-  bool _listStoryPageRefresh(BuildContext context) {
-    final listStoryProv = context.read<ListStoryProvider>();
-    final stateToken = context.read<PreferencesProvider>().stateToken;
-    final token = stateToken.maybeWhen(
-      loaded: (data) => data,
-      orElse: () => '',
-    );
-
-    listStoryProv.setAllValueToDefault();
-    listStoryProv.fetchAllStoriesWithPagination(token: token);
-    return true;
-  }
+            return result ?? false;
+          },
+        ),
+      ],
+    ),
+    ..._routesLoginAndLoading,
+  ];
 
   /// Posisikan penggunaan [_routesLoginAndLoading] di bagian terluar
-  /// list RouteBase, sebab perlu mengakses status login terlebih dahulu
+  /// list RouteBase [_routes], sebab perlu mengakses status login terlebih dahulu
   /// sebelum masuk ke path '/'. Jika diposisikan di bawah '/', ketika
   /// terjadi redirect atau go('/') maka yang terjadi adalah aksi pop,
   /// bukan push ataupun pushReplacement.
@@ -188,116 +274,10 @@ class _MyAppState extends State<MyApp> {
     ),
   ];
 
-  late final _routes = <RouteBase>[
-    ShellRoute(
-      navigatorKey: _shellNavigatorKey,
-      builder: (BuildContext context, GoRouterState state, Widget child) {
-        return BottomNavBar(child: child);
-      },
-      routes: [
-        GoRoute(
-          path: '/',
-          builder: (_, state) => const ListStoryPage(),
-          onExit: (context) async {
-            final bool? result;
-
-            if (ListStoryPage.isShowDialogTrue) {
-              result =
-                  await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
-                context: context,
-                onFalsePressed: () => context.pop(false),
-                onTruePressed: () => context.pop(true),
-              );
-            } else {
-              ListStoryPage.isShowDialogTrue = true;
-              result = true;
-            }
-
-            return result ?? false;
-          },
-          routes: [
-            GoRoute(
-              path: DetailStoryPage.goRoutePath,
-              parentNavigatorKey: _rootNavigatorKey,
-              builder: (_, state) {
-                return DetailStoryPage(
-                  id: state.pathParameters['id'] ?? '',
-                );
-              },
-              redirect: (context, __) => _redirectIfIsNotLogin(context),
-              onExit: (context) => _listStoryPageRefresh(context),
-              routes: [
-                GoRoute(
-                  path: MapPage.goRoutePath,
-                  parentNavigatorKey: _rootNavigatorKey,
-                  builder: (_, state) {
-                    final data = state.extra as LatLng;
-                    return MapPage(
-                      latLng: data,
-                    );
-                  },
-                ),
-              ],
-            ),
-            GoRoute(
-              path: AddStoryPage.goRoutePath,
-              parentNavigatorKey: _rootNavigatorKey,
-              builder: (_, __) => const AddStoryPage(),
-              redirect: (context, __) => _redirectIfIsNotLogin(context),
-              onExit: (context) {
-                ListStoryPage.isShowDialogTrue = true;
-                return _listStoryPageRefresh(context);
-              },
-              routes: [
-                GoRoute(
-                  path: MapPage.goRoutePath,
-                  parentNavigatorKey: _rootNavigatorKey,
-                  builder: (_, __) => const MapPage(
-                    latLng: null,
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-        GoRoute(
-          path: '/${SettingsPage.goRouteName}',
-          builder: (_, __) => const SettingsPage(),
-          onExit: (context) async {
-            late final bool? result;
-
-            if (SettingsPage.isShowDialogTrue) {
-              result =
-                  await FutureHelper.buildShowAlertDialogTextForExitApp<bool>(
-                context: context,
-                onFalsePressed: () => context.pop(false),
-                onTruePressed: () => context.pop(true),
-              );
-            } else {
-              SettingsPage.isShowDialogTrue = true;
-              result = true;
-            }
-
-            return result ?? false;
-          },
-        ),
-      ],
-    ),
-    ..._routesLoginAndLoading,
-  ];
-
-  late final _router = GoRouter(
-    navigatorKey: _rootNavigatorKey,
-    initialLocation: '/',
-    debugLogDiagnostics: true,
-    redirect: redirect,
-    routes: _routes,
-  );
-
   FutureOr<String?> redirect(BuildContext context, GoRouterState state) {
     print('GoRouterState: ${state.matchedLocation}');
-
     final providerPref = context.read<PreferencesProvider>();
+
     final stateToken = providerPref.stateToken;
     final stateThemeMode = providerPref.stateThemeMode;
     final stateLangCode = providerPref.stateLangCode;
@@ -362,6 +342,51 @@ class _MyAppState extends State<MyApp> {
     return null;
   }
 
+  String? _redirectIfIsLogin(BuildContext context) {
+    final state = context.read<PreferencesProvider>().stateIsLogin;
+
+    final isLogin = state.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => false,
+    );
+
+    if (isLogin) {
+      return ListStoryPage.goRoutePath;
+    } else {
+      return null;
+    }
+  }
+
+  String? _redirectIfIsNotLogin(BuildContext context) {
+    final state = context.read<PreferencesProvider>().stateIsLogin;
+
+    final isLogin = state.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => false,
+    );
+
+    print('_redirectIfIsNotLogin, isLogin: $isLogin');
+
+    if (!isLogin) {
+      return '/${LoginPage.goRoutePath}';
+    } else {
+      return null;
+    }
+  }
+
+  bool _listStoryPageRefresh(BuildContext context) {
+    final listStoryProv = context.read<ListStoryProvider>();
+    final stateToken = context.read<PreferencesProvider>().stateToken;
+    final token = stateToken.maybeWhen(
+      loaded: (data) => data,
+      orElse: () => '',
+    );
+
+    listStoryProv.setAllValueToDefault();
+    listStoryProv.fetchAllStoriesWithPagination(token: token);
+    return true;
+  }
+
   @override
   void initState() {
     _materialTheme = MaterialTheme(RobotoFlex.textTheme);
@@ -375,9 +400,6 @@ class _MyAppState extends State<MyApp> {
     final localeSystemName = !kIsWeb
         ? Platform.localeName
         : PlatformDispatcher.instance.locale.languageCode;
-
-    print(
-        'PlatformDispatcher.instance.locale.languageCode;; initState: ${PlatformDispatcher.instance.locale.languageCode}');
 
     String localeSystemNameSplitFirst = localeSystemName.split('_').first;
     if (localeSystemNameSplitFirst.isEmpty) {
@@ -444,12 +466,11 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     return _buildMultiProvider(
       builder: (context) {
-        const titleApp = StringData.titleApp;
-
         final providerMaterialTheme = context.watch<MaterialThemeProvider>();
-        final themeMode = providerMaterialTheme.themeMode;
-
         final providerLocalizations = context.watch<LocalizationsProvider>();
+
+        final titleApp = FlavorConfig.instance.flavorValues.titleApp;
+        final themeMode = providerMaterialTheme.themeMode;
 
         final Locale? locale;
         if (providerLocalizations.locale.languageCode ==
@@ -459,17 +480,35 @@ class _MyAppState extends State<MyApp> {
           locale = providerLocalizations.locale;
         }
 
-        return MaterialApp.router(
-          routerConfig: _router,
-          title: titleApp,
-          themeMode: themeMode,
-          theme: _theme,
-          darkTheme: _darkTheme,
-          locale: locale,
-          localizationsDelegates: AppLocalizations.localizationsDelegates,
-          supportedLocales: AppLocalizations.supportedLocales,
+        return PageStorage(
+          bucket: _bucket,
+          child: MaterialApp.router(
+            routerConfig: _router,
+            title: titleApp,
+            themeMode: themeMode,
+            theme: _theme,
+            darkTheme: _darkTheme,
+            locale: locale,
+            localizationsDelegates: AppLocalizations.localizationsDelegates,
+            supportedLocales: AppLocalizations.supportedLocales,
+          ),
         );
       },
     );
+  }
+}
+
+///
+/// Penggunaan sementara agar terhindar dari
+/// pembatasan sertifikat protokol client yang buruk.
+/// Ketika aplikasi akan rilis ke play store, harus diberikan solusi khusus
+/// agar tidak menyebabkan masalah keamanan
+///
+class MyHttpOverrides extends HttpOverrides {
+  @override
+  HttpClient createHttpClient(SecurityContext? context) {
+    return super.createHttpClient(context)
+      ..badCertificateCallback =
+          (X509Certificate cert, String host, int port) => true;
   }
 }
