@@ -6,7 +6,6 @@ import 'package:gap/gap.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_cropper/image_cropper.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/color_scheme/theme.dart';
 import 'package:story_app/common/common.dart';
@@ -32,6 +31,7 @@ class AddStoryPage extends StatefulWidget {
 
 class _AddStoryPageState extends State<AddStoryPage> {
   final TextEditingController _controllerDescription = TextEditingController();
+  final FocusNode _focusNodeDescription = FocusNode();
 
   TextStyle? _textStyleSubTitle;
   TextStyle? _textStyleBody;
@@ -198,37 +198,43 @@ class _AddStoryPageState extends State<AddStoryPage> {
   }
 
   Widget _buildDescription1(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          TextWithRedStar(
-            value: '${_appLocalizations!.description}:',
-            textStyle: _textStyleSubTitle!,
-          ),
-          const Gap(8),
-          TextField(
-            controller: _controllerDescription,
-            keyboardType: TextInputType.multiline,
-            minLines: 3,
-            maxLines: 6,
-            maxLength: 50,
-            buildCounter: (
-              context, {
-              required currentLength,
-              required isFocused,
-              maxLength,
-            }) {
-              return Text('$currentLength / $maxLength');
-            },
-            decoration: InputDecoration(
-              hintText: _appLocalizations!.description,
-              border: const OutlineInputBorder(),
-              filled: true,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: 700,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            TextWithRedStar(
+              value: '${_appLocalizations!.description}:',
+              textStyle: _textStyleSubTitle!,
             ),
-          ),
-        ],
+            const Gap(8),
+            TextField(
+              controller: _controllerDescription,
+              focusNode: _focusNodeDescription,
+              keyboardType: TextInputType.multiline,
+              minLines: 3,
+              maxLines: 6,
+              maxLength: 150,
+              buildCounter: (
+                context, {
+                required currentLength,
+                required isFocused,
+                maxLength,
+              }) {
+                return Text('$currentLength / $maxLength');
+              },
+              decoration: InputDecoration(
+                hintText: _appLocalizations!.description,
+                border: const OutlineInputBorder(),
+                filled: true,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -271,30 +277,35 @@ class _AddStoryPageState extends State<AddStoryPage> {
     return Column(
       children: [
         const Divider(height: 32),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                '${_appLocalizations!.addLocation}:',
-                style: _textStyleSubTitle,
-              ),
-              const Gap(8),
-              locationModel != null
-                  ? _buildLocationInformation(
-                      context,
-                      locationModel,
-                    )
-                  : const Gap(0),
-              Align(
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  onPressed: () => _onAddLocation(context),
-                  child: Text(_appLocalizations!.addLocation),
+        ConstrainedBox(
+          constraints: const BoxConstraints(
+            maxWidth: 700,
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  '${_appLocalizations!.addLocation}:',
+                  style: _textStyleSubTitle,
                 ),
-              ),
-            ],
+                const Gap(8),
+                locationModel != null
+                    ? _buildLocationInformation(
+                        context,
+                        locationModel,
+                      )
+                    : const Gap(0),
+                Align(
+                  alignment: Alignment.center,
+                  child: ElevatedButton(
+                    onPressed: () => _onAddLocation(context),
+                    child: Text(_appLocalizations!.addLocation),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ],
@@ -305,7 +316,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
     BuildContext context,
     LocationModel locationModel,
   ) {
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -358,21 +368,26 @@ class _AddStoryPageState extends State<AddStoryPage> {
   }
 
   /// button for upload image
-  FilledButton _buildFilledButtonUpload(BuildContext context) {
-    return FilledButton(
-      style: FilledButton.styleFrom(
-        minimumSize: const Size(
-          double.infinity,
-          40,
-        ),
+  Widget _buildFilledButtonUpload(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: 700,
       ),
-      onPressed: () {
-        _onUpload(
-          context: context,
-          description: _controllerDescription.text,
-        );
-      },
-      child: Text(_appLocalizations!.upload),
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(
+            double.infinity,
+            40,
+          ),
+        ),
+        onPressed: () {
+          _onUpload(
+            context: context,
+            description: _controllerDescription.text,
+          );
+        },
+        child: Text(_appLocalizations!.upload),
+      ),
     );
   }
 
@@ -450,11 +465,6 @@ class _AddStoryPageState extends State<AddStoryPage> {
         path: croppedFile.path,
       );
 
-      final directory = await getExternalStorageDirectory();
-      final file = File('${directory!.path}/${pickedFile.name}');
-
-      await file.writeAsBytes(Uint8List.fromList(bytes));
-
       provider.imageFile = pickedFile;
       provider.imagePath = pickedFile.path;
     }
@@ -472,6 +482,7 @@ class _AddStoryPageState extends State<AddStoryPage> {
       return;
     }
 
+    _focusNodeDescription.unfocus();
     context.go('/${AddStoryPage.goRoutePath}/${MapPage.goRoutePath}');
   }
 

@@ -179,14 +179,28 @@ class _LoginPageState extends State<LoginPage> {
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             _buildIcon(),
-            const Gap(20),
-            ..._buildTextHeadLine(),
-            const Gap(20),
-            ..._buildForms(),
-            const Gap(20),
-            ..._buildButtons(context),
+            _buildContent2(context),
           ],
         ),
+      ),
+    );
+  }
+  
+  Widget _buildContent2(BuildContext context) {
+    return ConstrainedBox(
+      constraints: const BoxConstraints(
+        maxWidth: 700,
+      ),
+      child: Column(
+        children: [
+          const Gap(20),
+          ..._buildTextHeadLine(),
+          const Gap(20),
+          ..._buildForms(),
+          const Gap(20),
+          ..._buildButtons(context),
+          const Gap(20),
+        ],
       ),
     );
   }

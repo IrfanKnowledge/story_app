@@ -119,23 +119,27 @@ class _SignupPageState extends State<SignupPage> {
   Widget _buildContainer(BuildContext context) {
     _checkAndShowError(context);
 
-    return Container(
-      alignment: Alignment.topCenter,
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
-      child: Form(
-        key: _formKey,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            ..._buildName(),
-            const Gap(10),
-            ..._buildEmail(),
-            const Gap(10),
-            ..._buildPassword(),
-            const Gap(20),
-            _buildButtonSignUp(context),
-          ],
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+        constraints: const BoxConstraints(
+          maxWidth: 700,
+        ),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ..._buildName(),
+              const Gap(10),
+              ..._buildEmail(),
+              const Gap(10),
+              ..._buildPassword(),
+              const Gap(20),
+              _buildButtonSignUp(context),
+            ],
+          ),
         ),
       ),
     );

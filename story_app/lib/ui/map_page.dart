@@ -5,7 +5,6 @@ import 'package:provider/provider.dart';
 import 'package:story_app/common/common.dart';
 import 'package:story_app/data/model/location_model.dart';
 import 'package:story_app/provider/location_provider.dart';
-import 'package:story_app/provider/map_provider.dart';
 import 'package:story_app/provider/material_theme_provider.dart';
 import 'package:uuid/uuid.dart';
 import 'package:geocoding/geocoding.dart' as geo;
@@ -255,29 +254,37 @@ class _MapPageState extends State<MapPage> {
   void _onGoogleMapLongPress(BuildContext context, LatLng latLng) async {
     final providerLocation = context.read<LocationProvider>();
 
-    final info = await geo.placemarkFromCoordinates(
-      latLng.latitude,
-      latLng.longitude,
-    );
+    void vShowSnackBar(String text) {
+      _showSnackBar(context: context, text: text);
+    }
 
-    final geo.Placemark place = info.first;
-    final address = _addressFromPlaceMark(place);
+    try {
+      final info = await geo.placemarkFromCoordinates(
+        latLng.latitude,
+        latLng.longitude,
+      );
 
-    setState(() {
-      _placemark = place;
-      _isMyLocationBtnSelected = false;
-    });
+      final geo.Placemark place = info.first;
+      final address = _addressFromPlaceMark(place);
 
-    _defineMarker(
-      provider: providerLocation,
-      latLng: latLng,
-      title: place.street!,
-      description: address,
-    );
+      setState(() {
+        _placemark = place;
+        _isMyLocationBtnSelected = false;
+      });
 
-    _googleMapController.animateCamera(
-      CameraUpdate.newLatLngZoom(latLng, _defaultZoom),
-    );
+      _defineMarker(
+        provider: providerLocation,
+        latLng: latLng,
+        title: place.street!,
+        description: address,
+      );
+
+      _googleMapController.animateCamera(
+        CameraUpdate.newLatLngZoom(latLng, _defaultZoom),
+      );
+    } catch (e, _) {
+      vShowSnackBar(e.toString());
+    }
   }
 
   void _onMyLocationButtonPress(BuildContext context) async {
@@ -316,32 +323,36 @@ class _MapPageState extends State<MapPage> {
       }
     }
 
-    locationData = await location.getLocation();
-    final latLng = LatLng(locationData.latitude!, locationData.longitude!);
+    try {
+      locationData = await location.getLocation();
+      final latLng = LatLng(locationData.latitude!, locationData.longitude!);
 
-    final info = await geo.placemarkFromCoordinates(
-      latLng.latitude,
-      latLng.longitude,
-    );
+      final info = await geo.placemarkFromCoordinates(
+        latLng.latitude,
+        latLng.longitude,
+      );
 
-    final geo.Placemark place = info.first;
-    final address = _addressFromPlaceMark(place);
+      final geo.Placemark place = info.first;
+      final address = _addressFromPlaceMark(place);
 
-    setState(() {
-      _placemark = place;
-      _isMyLocationBtnSelected = true;
-    });
+      setState(() {
+        _placemark = place;
+        _isMyLocationBtnSelected = true;
+      });
 
-    _defineMarker(
-      provider: providerLocation,
-      latLng: latLng,
-      title: place.street!,
-      description: address,
-    );
+      _defineMarker(
+        provider: providerLocation,
+        latLng: latLng,
+        title: place.street!,
+        description: address,
+      );
 
-    _googleMapController.animateCamera(
-      CameraUpdate.newLatLng(latLng),
-    );
+      _googleMapController.animateCamera(
+        CameraUpdate.newLatLng(latLng),
+      );
+    } catch (e, _) {
+      vShowSnackBar(e.toString());
+    }
   }
 
   void _defineMarker({

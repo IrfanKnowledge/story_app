@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:story_app/common/color_scheme/theme.dart';
@@ -31,6 +32,9 @@ class _ListStoryPageState extends State<ListStoryPage>
 
   MaterialScheme? _colorSchemeCustom;
   TextTheme? _textTheme;
+
+  ListStyle _listStyle = ListStyle.listView;
+  int _gridViewCount = 2;
 
   void _initLoadingAnimation() {
     _loadingController = AnimationController(
@@ -270,7 +274,7 @@ class _ListStoryPageState extends State<ListStoryPage>
     return Container(
       alignment: Alignment.topCenter,
       padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: _buildListView(context),
+      child: _listStyle == ListStyle.listView ? _buildListView(context) : _buildGridView(context),
     );
   }
 
@@ -285,6 +289,51 @@ class _ListStoryPageState extends State<ListStoryPage>
           ? const NeverScrollableScrollPhysics()
           : const AlwaysScrollableScrollPhysics(),
       shrinkWrap: _isUseSliverStyle ? true : false,
+      itemBuilder: (context, index) {
+        if (index == savedListStory.length && pageItems != null) {
+          return Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 24),
+              child: WidgetHelper.loadingCustom(
+                loadingController: _loadingController,
+                loadingAnimation: _loadingAnimation,
+                colorSchemeCustom: _colorSchemeCustom!,
+                sizeWidthAndHeight: 10,
+              ),
+            ),
+          );
+        }
+
+        final item = savedListStory[index];
+        void onTap() {
+          context.go(
+            '/${DetailStoryPage.goRoutePath.replaceAll(':id', item.id)}',
+          );
+        }
+
+        return CardStory(
+          photo: item.photoUrl,
+          name: item.name,
+          description: item.description,
+          onTap: onTap,
+        );
+      },
+      itemCount: savedListStory.length + (pageItems != null ? 1 : 0),
+    );
+  }
+  
+  Widget _buildGridView(BuildContext context) {
+    final providerListStory = context.watch<ListStoryProvider>();
+
+    final savedListStory = providerListStory.listStory;
+    final int? pageItems = providerListStory.pageItems;
+
+    return GridView.builder(
+      physics: _isUseSliverStyle
+          ? const NeverScrollableScrollPhysics()
+          : const AlwaysScrollableScrollPhysics(),
+      shrinkWrap: _isUseSliverStyle ? true : false,
+      gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: _gridViewCount),
       itemBuilder: (context, index) {
         if (index == savedListStory.length && pageItems != null) {
           return Center(
@@ -337,8 +386,32 @@ class _ListStoryPageState extends State<ListStoryPage>
     _colorSchemeCustom = context.read<MaterialThemeProvider>().currentSelected;
     _textTheme = Theme.of(context).textTheme;
 
-    return _isUseSliverStyle
-        ? _buildScaffoldSliver(context)
-        : _buildScaffold(context);
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth < 700) {
+          _listStyle = ListStyle.listView;
+        } else {
+          _listStyle = ListStyle.gridView;
+
+          if (constraints.maxWidth < 1050) {
+            _gridViewCount = 2;
+          } else if (constraints.maxWidth < 1400) {
+            _gridViewCount = 3;
+          } else if (constraints.maxWidth < 1750){
+            _gridViewCount = 4;
+          } else {
+            _gridViewCount = 5;
+          }
+        }
+
+        print('constraints: $constraints');
+        
+        return _isUseSliverStyle
+            ? _buildScaffoldSliver(context)
+            : _buildScaffold(context);
+      },
+    );
   }
 }
+
+enum ListStyle { listView, gridView }
