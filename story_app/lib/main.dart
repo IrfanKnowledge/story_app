@@ -2,11 +2,13 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:ui';
 
+import 'package:device_preview_screenshot/device_preview_screenshot.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:story_app/common/color_scheme/theme.dart';
@@ -33,7 +35,7 @@ import 'package:story_app/ui/settings_page.dart';
 import 'package:story_app/ui/signup_page.dart';
 import 'package:story_app/utils/future_helper.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   usePathUrlStrategy();
@@ -59,7 +61,25 @@ void main() {
     ),
   );
 
-  runApp(const MyApp());
+  if (!kIsWeb) {
+    final directory = await getExternalStorageDirectory();
+
+    runApp(
+      DevicePreview(
+        enabled: true,
+        tools: [
+          ...DevicePreview.defaultTools,
+          DevicePreviewScreenshot(
+            multipleScreenshots: true,
+            onScreenshot: screenshotAsFiles(directory!),
+          ),
+        ],
+        builder: (_) => const MyApp(),
+      ),
+    );
+  } else {
+    runApp(const MyApp());
+  }
 }
 
 ///

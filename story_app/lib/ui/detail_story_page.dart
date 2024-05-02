@@ -436,6 +436,7 @@ class _DetailStoryPageState extends State<DetailStoryPage>
     if (locationModel == null) return const Gap(0);
 
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           locationModel.street,
