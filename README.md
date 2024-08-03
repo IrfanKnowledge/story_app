@@ -1,3 +1,4 @@
 # story_app
 
-[this is link](https://www.youtube.com/)
+[link youtube](https://www.youtube.com/)
+[link some app](https://github.com/IrfanKnowledge/story_app)
