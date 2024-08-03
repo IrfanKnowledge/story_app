@@ -10,7 +10,7 @@ import 'package:story_app/data/string/string_data.dart';
 import 'package:story_app/flavor_config.dart';
 import 'package:story_app/main.dart';
 
-void main () async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   usePathUrlStrategy();
@@ -23,8 +23,8 @@ void main () async {
   ]);
 
   LicenseRegistry.addLicense(() async* {
-    final license = await rootBundle
-        .loadString('assets/license/font/OFL_roboto_flex.txt');
+    final license =
+        await rootBundle.loadString('assets/license/font/OFL_roboto_flex.txt');
     yield LicenseEntryWithLineBreaks(['google_fonts'], license);
   });
 

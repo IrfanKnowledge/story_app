@@ -478,7 +478,6 @@ class _DetailStoryPageState extends State<DetailStoryPage>
     );
   }
 
-
   Widget _buildDetailDescription(Story story) {
     final description = story.description;
     final textStyle = _textTheme!.bodyMedium?.copyWith(
