@@ -4,7 +4,7 @@
 [link some app](https://github.com/IrfanKnowledge/story_app/tree/main) | https://github.com/IrfanKnowledge/story_app/tree/main <br>
 [link some app](https://github.com/IrfanKnowledge/story_app/tree/main/.email_verify) | https://github.com/IrfanKnowledge/story_app/tree/main/.email_verify <br>
 [link some app](https://github.com/IrfanKnowledge/story_app/tree/main/additional/.email_verify) | https://github.com/IrfanKnowledge/story_app/tree/main/additional/.email_verify <br>
-[link some app](https://github.com/IrfanKnowledge/story_app/tree/main/additional/a/b/c/.email_verify) | https://github.com/IrfanKnowledge/story_app/tree/main/additional/.email_verify <br>
+[link some app](https://github.com/IrfanKnowledge/story_app/tree/main/additional/a/b/c/.email_verify) | https://github.com/IrfanKnowledge/story_app/tree/main/additional/a/b/c/.email_verify <br>
 [link some app 2](https://api.veloschool.com) | https://api.veloschool.com <br>
 [link some app 3](https://api.veloschool.com/.well-known/assetlinks.json) <br>
 [link some app 4](https://api.veloschool.com/api/login) | https://api.veloschool.com/api/login <br>
