@@ -182,13 +182,6 @@ class _DetailStoryPageState extends State<DetailStoryPage>
         final state = provider.stateDetailStoryModel;
         const sizeWidthAndHeight = 30.0;
 
-        state.map(
-          initial: (value) => value,
-          loading: (value) => value,
-          loaded: (value) => value.data,
-          error: (value) => value.message,
-        );
-
         Widget result = state.when(
           initial: () => WidgetHelper.loadingCustom(
             loadingController: _loadingController,
